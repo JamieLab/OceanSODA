@@ -61,7 +61,7 @@ def calc_basic_metrics(modelOutput, algorithm, dataUsed, outputVariable, setting
     else:
         weights = np.nan;
         hasWeights = False;
-        print("*** No RMSD for", str(type(algorithm.__class__)), "Weighted metrics will not be calculated.");
+        print("*** No RMSD for", algorithm.__class__.__name__, "Weighted metrics will not be calculated.");
     
     #Calculate prediction errors: the difference between reference measurement and model output
     predictionErrors = modelOutput - dataUsed[outputVariable];

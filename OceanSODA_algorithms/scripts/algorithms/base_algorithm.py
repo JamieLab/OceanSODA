@@ -93,12 +93,11 @@ class BaseAlgorithm:
         data = utilities.subset_complete_rows(data); #Select only rows that are complete (no NaNs)
         
         #Filter out any data points outside the regions supported by the algorithm
-        if self.settings["usingTestMatchupDataset"] == False: #When using the test matchup dataset there isn't many datapoints, so don't do algorithm specific filtering
+        if self.settings["algorithmInternalSpatialMasks"] == True:
             data = utilities.subset_from_inclusive_coord_list(self.includedRegionsLons, self.includedRegionsLats, data);
         
-        #Discard data outside the valid range for the algorithm
-        if self.settings["usingTestMatchupDataset"] == False: #When using the test matchup dataset there isn't many datapoints, so don't do algorithm specific filtering
-            data = self._subset_for_restrictions(data); #Sometimes returns 'None' for some reason...?
+        #Discard data outside the valid ocean parameter ranges for the algorithm (e.g. SST or SSS range)
+        data = self._subset_for_restrictions(data); #Sometimes returns 'None' for some reason...?
         
         #Check that there is some data left
         if (data is None) or (len(data) == 0): #if no complete rows so continue to the next algorithm

@@ -13,11 +13,6 @@ import numpy as np;
 from netCDF4 import Dataset;
 import matplotlib.pyplot as plt;
 
-#tmp
-#ncin = Dataset("Peters_LeeEtAl2006_masks.nc", 'r');
-#pregions = ncin.variables["regionNo"][:]; #Peter's region data
-#regionNames = ncin.variables["regionName"][:];
-
 
 outputPath = "../algorithms/algo_data/millero1998_masks_tmh.nc";
 oceanMaskPath = "../../misc/World_Seas-IHO-mask.nc";
@@ -62,6 +57,9 @@ var[:] = zone1;
 zone2 = np.zeros((180, 360), dtype=float);
 zone2[90+30:90+80, :] = 1; #20N - 80N
 zone2[oceans!=ATLANTIC] = 0; #Exclude non-atlantic regions
+#add an extra bit that covers the Gulf of St Lawrens (as this isn't included as 'Atlantic' by the ATLANTIC mask)
+zone2[90+46:90+54, 180-70:180-50] = 1; #Gulf of St Lawrence should be included (also means Millero1998 can be a single algorithm)
+#plt.figure(); plt.imshow(np.flipud(zone2));
 var = nc.createVariable("zone2_mask", int, ("lat", "lon"));
 var.units = "Integer";
 var[:] = zone2;
@@ -114,7 +112,7 @@ tmp = oceans==SOUTHERN;
 tmp[:, 113:328] = 0; #exclude southern ocean between atlantic and indian
 tmp[:90-70,:] = 0; #Don't include below 70S
 zone6p += tmp;
-plt.figure(); plt.imshow(zone6p)
+#plt.figure(); plt.imshow(zone6p)
 var = nc.createVariable("zone6_pacific_mask", int, ("lat", "lon"));
 var.units = "Integer";
 var[:] = zone6p;

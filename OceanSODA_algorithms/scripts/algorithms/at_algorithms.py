@@ -12,12 +12,6 @@ import pandas as pd;
 from algorithms.base_algorithm import BaseAlgorithm;
 from utilities import subset_from_mask, subset_from_inclusive_coord_list;
 
-### Algorithms missing DO:
-#Brewer1995
-#Sasse2013
-#Sasse2013 global (see commented algorithms)
-
-
 
 #Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
 #2004 data, Carribean sea, Eastern sub-basin of the Cariaco basin
@@ -64,11 +58,11 @@ class Astor2017c_at(BaseAlgorithm):
         return modelOutput;
 
 #Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
-#2008 data, Carribean sea, Easten and Western sub-basins of the Cariaco basin
-class Astor2017ad_at(BaseAlgorithm):    
+#2008 data, Carribean sea, Easten sub-basin of the Cariaco basin
+class Astor2017a_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Astor2017ad_at: A17ad(at)";
+        return "Astor2017a_at: A17a(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -82,71 +76,38 @@ class Astor2017ad_at(BaseAlgorithm):
     def __init__(self, settings):
         BaseAlgorithm.__init__(self, settings); #Call the parent class's initator
         self.settings = settings;
-
-    def _eastern_subbasin(self, data):
-        #For coefficients, see fig 7b
-        coefs = [831.5, 42.8]; #intersept, SSS
-        rmsd = None;
         
-        #Subset data to only rows valid for this region. See fig 2 and 3
-        includedLons = [(-65.1, -64.3)];
-        includedLats = [(10.0, 11.4)];
-        dataToUse = subset_from_inclusive_coord_list(includedLons, includedLats, data);
+        self.coefs = [831.5, 42.8]; #intersept, SSS, see fig 7b
+        self.coefsUncertainty = [None, None]; #Uncertainty reported for the coefficients, equation 1
+        self.rmsd = None; #equation 1
+        self.r = None; #But see section 3.3 for quoted values?
         
-        dataToUse = dataToUse[(dataToUse["SSS"] > 35.5) & #See section 3.3
-                              (dataToUse["SSS"] < 37)];
+        #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
+        #See fig 2, 3 for extents used by authors
+        self.includedRegionsLons = [(-65.1, -64.3), #Eastern sub-basin of the Cariaco basin
+                                    ];
+        self.includedRegionsLats = [(10.0, 11.4),
+                                    ];
         
-        #See fig 7b
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        modelOutput = coefs[0] + coefs[1]*(dataToUse["SSS"]);
-        return modelOutput, rmsd;
-    
-    def _western_subbasin(self, data):
-        #For coefficients, see fig 7a
-        coefs = [581.8, 49.7]; #intersept, SSS
-        rmsd = None;
-
-        #Subset data to only rows valid for this region. See fig 2 and 3
-        includedLons = [(-66.1, -65.1)];
-        includedLats = [(10.0, 11.4)];
-        dataToUse = subset_from_inclusive_coord_list(includedLons, includedLats, data);
+        #Algorithm will only be applied to values inside these ranges
+        self.restrictRanges = {"SSS": (35.5, 37), #See section 3.3
+                               };
         
-        dataToUse = dataToUse[(dataToUse["SSS"] > 35.5) & #See section 3.3
-                              (dataToUse["SSS"] < 37)];
+        #If the matchup dataset contains values outside of these ranges they will be flagged to the user
+        self.flagRanges = {
+                           };
         
-        #See fig 7a
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        modelOutput = coefs[0] + coefs[1]*(dataToUse["SSS"]);
-        return modelOutput, rmsd;
-
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
-        #Innernal function used to run, check and assign values for each equation/zone
-        def run_single_zone(function, data, modelOutput, rmsds):
-            zoneData, zoneRmsd = function(data);
-            if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
-                raise RuntimeError("Overlapping zones in Astor2017ad_at. Something has done wrong!");
-            modelOutput[zoneData.index] = zoneData;
-            rmsds[zoneData.index] = zoneRmsd;
-        
-        #Create empty output array
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        
-        #Perform calculations for each zone
-        run_single_zone(self._eastern_subbasin, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._western_subbasin, dataToUse, modelOutput, rmsds);
-        
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-
+        modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7b
         return modelOutput;
 
 #Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
-#2009 data, Carribean sea, Easten and Western sub-basins of the Cariaco basin
-class Astor2017be_at(BaseAlgorithm):    
+#2008 data, Carribean sea, Western sub-basin of the Cariaco basin
+class Astor2017d_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Astor2017be_at: A17be(at)";
+        return "Astor2017d_at: A17d(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -160,64 +121,120 @@ class Astor2017be_at(BaseAlgorithm):
     def __init__(self, settings):
         BaseAlgorithm.__init__(self, settings); #Call the parent class's initator
         self.settings = settings;
-
-    def _eastern_subbasin(self, data):
-        #For coefficients, see fig 7b
-        coefs = [-595, 81.7]; #intersept, SSS
-        rmsd = None;
+        self.coefs = [581.8, 49.7]; #intersept, SSS, see fig 7a
+        self.coefsUncertainty = [None, None]; #Uncertainty reported for the coefficients, equation 1
+        self.rmsd = None; #equation 1
+        self.r = None; #But see section 3.3 for quoted values?
         
-        #Subset data to only rows valid for this region. See fig 2 and 3
-        includedLons = [(-65.1, -64.3)];
-        includedLats = [(10.0, 11.4)];
-        dataToUse = subset_from_inclusive_coord_list(includedLons, includedLats, data);
+        #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
+        #See fig 2, 3 for extents used by authors
+        self.includedRegionsLons = [(-66.1, -65.1), #Eastern sub-basin of the Cariaco basin
+                                    ];
+        self.includedRegionsLats = [(10.0, 11.4),
+                                    ];
         
-        dataToUse = dataToUse[(dataToUse["SSS"] > 35.5) & #See section 3.3
-                              (dataToUse["SSS"] < 37)];
+        #Algorithm will only be applied to values inside these ranges
+        self.restrictRanges = {"SSS": (35.5, 37), #See section 3.3
+                               };
         
-        #See fig 7b
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        modelOutput = coefs[0] + coefs[1]*(dataToUse["SSS"]);
-        return modelOutput, rmsd;
+        #If the matchup dataset contains values outside of these ranges they will be flagged to the user
+        self.flagRanges = {
+                           };
     
-    def _western_subbasin(self, data):
-        #For coefficients, see fig 7a
-        coefs = [1075.8, 94.8]; #intersept, SSS
-        rmsd = None;
-
-        #Subset data to only rows valid for this region. See fig 2 and 3
-        includedLons = [(-66.1, -65.1)];
-        includedLats = [(10.0, 11.4)];
-        dataToUse = subset_from_inclusive_coord_list(includedLons, includedLats, data);
-        
-        dataToUse = dataToUse[(dataToUse["SSS"] > 35.5) & #See section 3.3
-                              (dataToUse["SSS"] < 37)];
-        
-        #See fig 7a
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        modelOutput = coefs[0] + coefs[1]*(dataToUse["SSS"]);
-        return modelOutput, rmsd;
-
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
-        #Innernal function used to run, check and assign values for each equation/zone
-        def run_single_zone(function, data, modelOutput, rmsds):
-            zoneData, zoneRmsd = function(data);
-            if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
-                raise RuntimeError("Overlapping zones in Astor2017be_at. Something has done wrong!");
-            modelOutput[zoneData.index] = zoneData;
-            rmsds[zoneData.index] = zoneRmsd;
-        
-        #Create empty output array
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        
-        #Perform calculations for each zone
-        run_single_zone(self._eastern_subbasin, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._western_subbasin, dataToUse, modelOutput, rmsds);
-        
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-
+        modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7a
         return modelOutput;
+
+#Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
+#2009 data, Carribean sea, Easten sub-basin of the Cariaco basin
+class Astor2017b_at(BaseAlgorithm):    
+    #String representation of the algorithm
+    def __str__(self):
+        return "Astor2017b_at: A17b(at)";
+
+    #common names of input and output variables (see global_settings for definitions of these
+    @staticmethod
+    def input_names():
+        return ["SSS"];
+    @staticmethod
+    def output_name():
+        return "AT";
+    
+    #Set algorithm specific variables
+    def __init__(self, settings):
+        BaseAlgorithm.__init__(self, settings); #Call the parent class's initator
+        self.settings = settings;
+        self.coefs = [-595, 81.7]; #intersept, SSS, see fig 7b
+        self.coefsUncertainty = [None, None]; #Uncertainty reported for the coefficients, equation 1
+        self.rmsd = None; #equation 1
+        self.r = None; #But see section 3.3 for quoted values?
+        
+        #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
+        #See fig 2, 3 for extents used by authors
+        self.includedRegionsLons = [(-65.1, -64.3), #Eastern sub-basin of the Cariaco basin
+                                    ];
+        self.includedRegionsLats = [(10.0, 11.4),
+                                    ];
+        
+        #Algorithm will only be applied to values inside these ranges
+        self.restrictRanges = {"SSS": (35.5, 37), #See section 3.3
+                               };
+        
+        #If the matchup dataset contains values outside of these ranges they will be flagged to the user
+        self.flagRanges = {
+                           };
+    
+    #The main calculation is performed here, returns the model output
+    def _kernal(self, dataToUse):
+        modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7b
+        return modelOutput;
+    
+  
+#Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
+#2008 data, Carribean sea, Western sub-basin of the Cariaco basin
+class Astor2017e_at(BaseAlgorithm):    
+    #String representation of the algorithm
+    def __str__(self):
+        return "Astor2017e_at: A17e(at)";
+
+    #common names of input and output variables (see global_settings for definitions of these
+    @staticmethod
+    def input_names():
+        return ["SSS"];
+    @staticmethod
+    def output_name():
+        return "AT";
+    
+    #Set algorithm specific variables
+    def __init__(self, settings):
+        BaseAlgorithm.__init__(self, settings); #Call the parent class's initator
+        self.settings = settings;
+        self.coefs = [1075.8, 94.8]; #intersept, SSS, see fig 7a
+        self.coefsUncertainty = [None, None]; #Uncertainty reported for the coefficients, equation 1
+        self.rmsd = None; #equation 1
+        self.r = None; #But see section 3.3 for quoted values?
+        
+        #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
+        #See fig 2, 3 for extents used by authors
+        self.includedRegionsLons = [(-66.1, -65.1), #Eastern sub-basin of the Cariaco basin
+                                    ];
+        self.includedRegionsLats = [(10.0, 11.4),
+                                    ];
+        
+        #Algorithm will only be applied to values inside these ranges
+        self.restrictRanges = {"SSS": (35.5, 37), #See section 3.3
+                               };
+        
+        #If the matchup dataset contains values outside of these ranges they will be flagged to the user
+        self.flagRanges = {
+                           };
+    
+    #The main calculation is performed here, returns the model output
+    def _kernal(self, dataToUse):
+        modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7a
+        return modelOutput;
+
 
 
 #Brewer, P.G., Glover, D.M., Goyet, C. and Shafer, D.K., 1995. The pH of the North Atlantic Ocean: Improvements to the global model for sound absorption in seawater. Journal of Geophysical Research: Oceans, 100(C5), pp.8761-8776.
@@ -794,6 +811,7 @@ class Hassoun2015_basins_at(BaseAlgorithm):
         self.regionMasks = Dataset(settings["algorithmSpecificDataPaths"][type(self).__name__], 'r');
     
     
+    #Note, separate models for different regions within the single algorithm is ok here, because together they cover the OceanSODA Mediterranean region completely, with no overlap to other regions
     #east Mediterranean basin, iho definition
     def _east_basin(self, data):
         coefs = [-846.0, 89.0]; #intersept, salinity, see table 1 eq 9
@@ -922,6 +940,7 @@ class Lee2006_at(BaseAlgorithm):
         self.regionMasks = Dataset(settings["algorithmSpecificDataPaths"][type(self).__name__], 'r');
     
     
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent of each model covers all of the OceanSODA regions
     #Subtropics and tropics (excluding zone 2)
     def _zone1(self, data):
         coefs = [2305, 58.66, 2.32, -1.41, 0.040]; #intersept, salinity, salinity^2, SST, SST^2 see table 1
@@ -1143,6 +1162,7 @@ class Millero1998_at(BaseAlgorithm):
         self.flagRanges = {"SSS": (33.75, 36), #See fig 7
                            };
     
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent of each model covers all of the OceanSODA regions
     def _zone1(self, data):
         coefs = [2291.0]; #intersept, see table 4
         rmsd = 4.0; #See table 4
@@ -1434,6 +1454,7 @@ class Rivaro2010_at(BaseAlgorithm):
     
     
     #east Mediterranean basin, iho definition
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent of each model covers all of the OceanSODA regions
     def _east_basin(self, data):
         coefs = [-499.8, 80.04]; #intersept, salinity, see eq 2
         rmsd = None;
@@ -1521,6 +1542,7 @@ class Sasse2013_at(BaseAlgorithm):
                            };
     
     #subtropical
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent of each model covers all of the OceanSODA regions
     def _zone1(self, data):
         #For coefficients, see supplemental table T2
         coefs = [2064.66, -0.3, -47.57, 1.54, 0.13, -1.12, 10.1]; #intersept, SST, SSS, SSS^2, DO, Si, PO4
@@ -1730,6 +1752,8 @@ class Takahashi2013_at(BaseAlgorithm):
                            };
     
     #North Atlantic Drift
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent of each model covers all of the OceanSODA regions (except osoda_mediterranean).
+    #      This algorithm should not be used in the Mediterranean region!
     def _zone7(self, data):
         #For coefficients see table 1
         coefs = [733.0, 45.30]; #intersept, SSS

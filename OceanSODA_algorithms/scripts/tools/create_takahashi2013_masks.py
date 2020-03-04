@@ -45,10 +45,11 @@ var.units = "lon (degrees East)";
 var[:] = np.arange(-180, 180)+0.5;
 
 
-#Zone 7: North Atlantit Drift
+#Zone 7: North Atlantic Drift
 zone7 = np.zeros((180, 360), dtype=float);
 zone7[90+40:90+55, 180-60:180+10] = 1; #40N-55N, 60W-10E
 zone7[oceans!=ATLANTIC] = 0; #Remove non-atlantic regions
+zone7[90+46:90+54, 180-70:180-50] = 1; #Gulf of St Lawrence should be included (also means the algorithm can be a single algorithm - barring Mediterranean)
 var = nc.createVariable("zone7_north_atlantic_drift", int, ("lat", "lon"));
 var.units = "Integer";
 var[:] = zone7;

@@ -4,6 +4,10 @@
 Created on Mon Jan  6 10:49:55 2020
 
 Misc. utilities used for loading and processing data
+Includes:
+    Functions for subsetting the matchup database in different ways
+    Wrapper for seacarb
+    Functions 
 
 @author: tom holding
 """
@@ -12,29 +16,118 @@ from netCDF4 import Dataset;
 import numpy as np;
 import pandas as pd;
 import rpy2.robjects as ro;
+from os import path, makedirs;
+
+#Creates a list of dictionaries containing variable to database mappings for every unique combination of input variables
+#Also generates unique names for each combination and returns a list of these
+def get_dataset_variable_map_combinations(settings):
+    settingsMapAll = settings["variableToDatabaseMap"];
+    variableNames = settingsMapAll.keys();
+    
+    #Make sure all the mappings are lists, even if there is only one possibility.
+    for variableName in variableNames:
+        if isinstance(settingsMapAll[variableName], list) == False:
+            settingsMapAll[variableName] = [settingsMapAll[variableName]];
+    
+    #Build a new variable name to database name maps which is are specific to each possible combination
+    combinations = [{}];
+    labels = ["_"];
+    for variableName in variableNames:
+        newCombinations = [];
+        newLabels = [];
+        for j, datasetName in enumerate(settingsMapAll[variableName]):
+            for i, combination in enumerate(combinations): #For each combination of the previous iteration (not yet including the current variable name), append a combination with also includes this dataset
+                newCombination = combination.copy();
+                newCombination[variableName] = datasetName;
+                newCombinations.append(newCombination);
+                
+                if len(settingsMapAll[variableName]) > 1:
+                    newLabel = labels[i] + "_" + variableName+str(j);
+                else:
+                    newLabel = labels[i];
+                newLabels.append(newLabel);
+        combinations = newCombinations;
+        labels = newLabels;
+    
+    #append to the label
+    labels = ["combination"+str(i)+labels[i] for i in range(len(labels))];
+    
+    #Return a list of specific variable to database mappings
+    return combinations, labels;
+
+
+#Write the specific combination of database inputs to a file
+def write_specific_variable_to_database_mapping(specificVariableToDatabaseMap, outputPath, combinationName=None):
+    if path.exists(path.dirname(outputPath)) == False:
+        makedirs(path.dirname(outputPath));
+    with open(outputPath, 'w') as file:
+        if combinationName==None:
+            combinationName = "Unnamed combination\n\n";
+        file.write(combinationName+"\n");
+        for variableName in specificVariableToDatabaseMap:
+            file.write(variableName+":"+specificVariableToDatabaseMap[variableName]+"\n");
+
+#prints the matchup database inputs that correspond to each combination name code
+def print_combination_name_keys(settings):
+    settingsMapAll = settings["variableToDatabaseMap"];
+    variableNames = settingsMapAll.keys();
+    
+    #Make sure all the mappings are lists, even if there is only one possibility.
+    for variableName in variableNames:
+        if isinstance(settingsMapAll[variableName], list) == False:
+            settingsMapAll[variableName] = [settingsMapAll[variableName]];
+        
+        if len(settingsMapAll[variableName]) > 1:
+            for i, datasetName in enumerate(settingsMapAll[variableName]):
+                print(variableName+str(i)+":\t"+datasetName);
+
+
+#Given a set of inputs, this will return a list of years/time points for which the matchup dataset contains all of these inputs
+def calculate_years_for_input_combination(settings, inputCombination, minYear=1900, maxYear=2050):
+    years = [];
+    
+    for year in range(minYear, maxYear+1):
+        try:
+            nc = Dataset(settings["matchupDatasetTemplate"].safe_substitute(YYYY=year), 'r');
+        except FileNotFoundError:
+            continue; #No file for this, continue as before.
+        
+        #Make sure all input variables exist in this file
+        allExist = True;
+        for key, ncVarName in inputCombination.items():
+            if ncVarName not in nc.variables.keys():
+                allExist = False;
+                break;
+        
+        #include the current year if all input variables exist
+        if allExist == True:
+            years.append(year);
+    
+    return years;
 
 
 #Reads yearly matchup database netCDF files and concatinates them into a single dataframe.
 #   years: and iterable of integer years
 #   settings: the global settings dictionary
-def load_matchup_to_dataframe(settings, commonNames=None):
+def load_matchup_to_dataframe(settings, variableToDatabaseMap, years=None, commonNames=None):
     #Concatinate each year
     dfList = [];
     
     if commonNames == None:
-        commonNames = settings["columnMap"].keys()
+        commonNames = variableToDatabaseMap.keys()
+    if years == None:
+        years = settings["years"];
     
-    for year in settings["years"]:
+    for year in years:
         matchupNC = Dataset(settings["matchupDatasetTemplate"].safe_substitute(YYYY=year), 'r');
         
         #Create a pandas dataframe from the netCDF file
         df = pd.DataFrame();
         for commonName in commonNames:
             try:
-                df[commonName] = matchupNC[settings["columnMap"][commonName]][:];
+                df[commonName] = matchupNC[variableToDatabaseMap[commonName]][:];
             except IndexError:
-                print("Missing data: ", year, commonName, settings["columnMap"][commonName]);
-                #print("Year", year, "has been skipped.");
+                print("Missing data: ", year, commonName, variableToDatabaseMap[commonName]);
         dfList.append(df);
     matchupData = pd.concat(dfList, ignore_index=True);
     
@@ -42,6 +135,8 @@ def load_matchup_to_dataframe(settings, commonNames=None):
     matchupData["date"] = convert_time_to_date(matchupData["date"]);
     
     return matchupData;
+
+        
 
 #Converts time in seconds to data
 #   dt: time delta in seconds from the base date (pandas series)

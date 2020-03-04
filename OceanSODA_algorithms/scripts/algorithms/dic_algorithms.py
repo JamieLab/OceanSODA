@@ -13,129 +13,139 @@ from .base_algorithm import BaseAlgorithm;
 from utilities import subset_from_mask, subset_from_inclusive_coord_list;
 
 
-### Algorithms missing DO
-#Brewer1995
-#Sasse2013
-#Sasse2013 global
-
-
 #Bakker, D.C., de Baar, H.J. and de Jong, E., 1999. The dependence on temperature and salinity of dissolved inorganic carbon in East Atlantic surface waters. Marine Chemistry, 65(3-4), pp.263-280.
-class Bakker1999_dic(BaseAlgorithm):
+#Low salinity region, North of the Congo outflow, north region 1
+class Bakker1999_lcr1_dic(BaseAlgorithm):  
     #String representation of the algorithm
     def __str__(self):
-        return "Bakker1999_dic: B99(dic)";
+        return "Bakker1999_lcr1_dic: B95_lcr1(dic)";
 
-    #common names of input and output variables (see global_settings for definitions of these)
+    #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
     def input_names():
-        return ["SSS", "SST"]; #SSS required for reverse normalisation
+        return ["SSS", "SST"]; #SST for restricted range
     @staticmethod
     def output_name():
         return "DIC";
     
+    #Set algorithm specific variables
     def __init__(self, settings):
-        #super().__init__(settings); #Call the parent class's initator
-        BaseAlgorithm.__init__(self, settings); #Call the parent class's initator
         self.settings = settings;
-        
-        #from netCDF4 import Dataset;
-        #self.regionMasks = Dataset(settings["algorithmSpecificDataPaths"][type(self).__name__], 'r');
-    
-    #low salinity region (north) #1, from table 3
-    def _lsr_north1(self, data):
-        coefs = [-1575, 99.3]; #intersept, SST, Table 3
-        rmsd = 8.6; #See table 3
-        #r = 0.99;
-        
-        #Subset data to only rows valid for this zone.
-        regionLons = [(-30, -8)]; #Approximated from fig 1
-        regionLats = [(7.5, 15.0)]; #From table 3
-        dataToUse = subset_from_inclusive_coord_list(regionLons, regionLats, data);
 
-        #See fig 3
-        dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15) &
-                              (dataToUse["SST"] < 30+273.15) &
-                              (dataToUse["SSS"] > 34) &
-                              (dataToUse["SSS"] < 36.5)
-                              ];
+        self.coefs = [-1575, 99.3]; #intersept, SSS, Table 3
+        self.coefsUncertainty = [None, None]; #Uncertainty reported for the coefficients, see fig 11
+        self.rmsd = 8.6; #See table 3
+        self.r = None;
         
-        #Equation from table 3
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-273.15);
+        #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
+        self.includedRegionsLons = [(-30, -8)]; #Approximated from fig 1
+        self.includedRegionsLats = [(7.5, 15.0)]; #From table 3
+        #TODO: Mask away pacific corner
         
-        return modelOutput, rmsd;
-    
-    #low salinity region (north) #2, from table 3
-    def _lsr_north2(self, data):
-        coefs = [-1415, 95.5]; #intersept, SST, Table 3
-        rmsd = 5.5; #See table 3
-        #r = 0.97;
+        #Algorithm will only be applied to values inside these ranges
+        self.restrictRanges = {"SSS": (34, 36.5), #See fig 3
+                               "SST": (20+273.15, 30+273.15), #See fig 3
+                               };
         
-        #Subset data to only rows valid for this zone.
-        regionLons = [(-30, -0)]; #Approximated from fig 1
-        regionLats = [(-1.0, 4.0)]; #From table 3
-        dataToUse = subset_from_inclusive_coord_list(regionLons, regionLats, data);
+        #If the matchup dataset contains values outside of these ranges they will be flagged to the user
+        self.flagRanges = {
+                           };
 
-        #See fig 3
-        dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15) &
-                              (dataToUse["SST"] < 30+273.15) &
-                              (dataToUse["SSS"] > 34) &
-                              (dataToUse["SSS"] < 36.5)
-                              ];
-        
-        #Equation from table 3
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-273.15);
-        
-        return modelOutput, rmsd;
-    
-    #congo outflow, from table 3
-    def _congo_outflow(self, data):
-        coefs = [-1575, 99.3]; #intersept, SST, Table 3
-        rmsd = 14.1; #See table 3
-        #r = 0.96;
-        
-        #Subset data to only rows valid for this zone.
-        regionLons = [(0.0, 5.0)]; #Approximated from fig 1
-        regionLats = [(-10.0, -5.0)]; #From table 3
-        dataToUse = subset_from_inclusive_coord_list(regionLons, regionLats, data);
-
-        #Fig 3 and section 3.1.2
-        dataToUse = dataToUse[(dataToUse["SST"] > 26.2+273.15) &
-                              (dataToUse["SST"] < 27.9+273.15) &
-                              (dataToUse["SSS"] > 33.0) &
-                              (dataToUse["SSS"] < 36) #35.6)
-                              ];
-        
-        #Equation from table 3
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-273.15);
-        
-        return modelOutput, rmsd;
-    
+    #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
-        #Innernal function used to run, check and assign values for each equation/zone
-        def run_single_zone(function, data, modelOutput, rmsds):
-            zoneData, zoneRmsd = function(data);
-            if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
-                raise RuntimeError("Overlapping zones in Lee00_dic. Something has done wrong!");
-            modelOutput[zoneData.index] = zoneData;
-            rmsds[zoneData.index] = zoneRmsd;
+        #equation from table 3
+        modelOutput = self.coefs[0] + \
+                      self.coefs[1]*dataToUse["SSS"];
+        return modelOutput;
+
+#Bakker, D.C., de Baar, H.J. and de Jong, E., 1999. The dependence on temperature and salinity of dissolved inorganic carbon in East Atlantic surface waters. Marine Chemistry, 65(3-4), pp.263-280.
+#Low salinity region, North of the Congo outflow, north region 2
+class Bakker1999_lcr2_dic(BaseAlgorithm):  
+    #String representation of the algorithm
+    def __str__(self):
+        return "Bakker1999_lcr2_dic: B95_lcr2(dic)";
+
+    #common names of input and output variables (see global_settings for definitions of these
+    @staticmethod
+    def input_names():
+        return ["SSS", "SST"]; #SST for restricted range
+    @staticmethod
+    def output_name():
+        return "DIC";
+    
+    #Set algorithm specific variables
+    def __init__(self, settings):
+        self.settings = settings;
+
+        self.coefs = [-1415, 95.5]; #intersept, SSS, Table 3
+        self.coefsUncertainty = [None, None]; #Uncertainty reported for the coefficients, see fig 11
+        self.rmsd = 5.5; #See table 3
+        self.r = None;
         
+        #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
+        self.includedRegionsLons = [(-30, -0)]; #Approximated from fig 1
+        self.includedRegionsLats = [(-1, 4.0)]; #From table 3
+        #TODO: Mask away pacific corner
         
-        #Create empty output array
-        modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        #Algorithm will only be applied to values inside these ranges
+        self.restrictRanges = {"SSS": (34, 36.5), #See fig 3
+                               "SST": (20+273.15, 30+273.15), #See fig 3
+                               };
         
-        #Perform calculations for each zone
-        run_single_zone(self._lsr_north1, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._lsr_north2, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._congo_outflow, dataToUse, modelOutput, rmsds);
+        #If the matchup dataset contains values outside of these ranges they will be flagged to the user
+        self.flagRanges = {
+                           };
+
+    #The main calculation is performed here, returns the model output
+    def _kernal(self, dataToUse):
+        #equation from table 3
+        modelOutput = self.coefs[0] + \
+                      self.coefs[1]*dataToUse["SSS"];
+        return modelOutput;
+
+#Bakker, D.C., de Baar, H.J. and de Jong, E., 1999. The dependence on temperature and salinity of dissolved inorganic carbon in East Atlantic surface waters. Marine Chemistry, 65(3-4), pp.263-280.
+#Congo outflow region
+class Bakker1999_outflow_dic(BaseAlgorithm):  
+    #String representation of the algorithm
+    def __str__(self):
+        return "Bakker1999_outflow_dic: B95_outflow(dic)";
+
+    #common names of input and output variables (see global_settings for definitions of these
+    @staticmethod
+    def input_names():
+        return ["SSS", "SST"]; #SST for restricted range
+    @staticmethod
+    def output_name():
+        return "DIC";
+    
+    #Set algorithm specific variables
+    def __init__(self, settings):
+        self.settings = settings;
+
+        self.coefs = [-1575, 99.3]; #intersept, SSS, Table 3
+        self.coefsUncertainty = [None, None, None, None, None, None]; #Uncertainty reported for the coefficients, see fig 11
+        self.rmsd = 14.1; #See table 3
+        self.r = None;
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
+        #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
+        self.includedRegionsLons = [(0.0, 5.0)]; #Approximated from fig 1
+        self.includedRegionsLats = [(-10.0, -5.0)]; #From table 3
+        #TODO: Mask away pacific corner?
+        
+        #Algorithm will only be applied to values inside these ranges
+        self.restrictRanges = {"SSS": (33, 36), #See fig 3
+                               "SST": (26.2+273.15, 29.9+273.15), #See fig 3
+                               };
+        
+        #If the matchup dataset contains values outside of these ranges they will be flagged to the user
+        self.flagRanges = {
+                           };
+
+    #The main calculation is performed here, returns the model output
+    def _kernal(self, dataToUse):
+        #equation from table 3
+        modelOutput = self.coefs[0] + \
+                      self.coefs[1]*dataToUse["SSS"];
         return modelOutput;
 
 
@@ -173,7 +183,6 @@ class Brewer1995_dic(BaseAlgorithm):
         self.restrictRanges = {"SSS": (31, 37.5), #See fig 4
                                "SST": (-2+273.15, 28+273.15), #See fig 5
                                "PO4": (0, 2.2), #See fig 5 (continued, second page)
-                               "SiO4": (0, 65), #See fig 5 (continues, 3rd page)
                                "NO3": (0, 34), #See fig 5 (continues, 3rd page)
                                "DO": (100, 420), #See fig 5...
                                };
@@ -494,6 +503,7 @@ class Hassoun2015_basins_dic(BaseAlgorithm):
     
     
     #east Mediterranean basin, iho definition
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent OceanSODA Mediterranean region and do not overlap any other regions
     def _east_basin(self, data):
         coefs = [-292.6, 66.0]; #intersept, salinity, see table 2 eq 7
         rmsd = 20.0; #See table 1 eq 9
@@ -587,6 +597,7 @@ class Lee2000_dic(BaseAlgorithm):
         self.southernSummer = np.array([10, 11, 12, 1, 2, 3, 4]); #Oct - April
         self.southernWinter = np.array([5, 6, 7, 8, 9]); #May-Sept
     
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent of each model covers all of the OceanSODA regions
     def _equation1(self, data):
         coefs = [1940.0, -10.327, -0.451, 7.829]; #intersept, SST, SST^2, NO3. Table 3
         rmsd = 8.1; #See table 3
@@ -1405,6 +1416,7 @@ class Sasse2013_dic(BaseAlgorithm):
         self.southernSummer = np.array([11, 12, 1, 2, 3, 4]); #Nov-Apr
         self.southernWinter = np.array([5, 6, 7, 8, 9, 10]); #May-Oct
     
+    #Note: Multiple models for a single algorithm is ok here because together spatial extent of each model covers all of the OceanSODA regions
     #north pacific summer
     def _zone1s(self, data):
         #For coefficients, see supplemental table T1
