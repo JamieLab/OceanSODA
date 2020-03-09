@@ -17,6 +17,11 @@ import numpy as np;
 import pandas as pd;
 import rpy2.robjects as ro;
 from os import path, makedirs;
+from string import Template;
+
+import rpy2.robjects.numpy2ri;
+import rpy2;
+from rpy2.robjects.packages import importr;
 
 #Creates a list of dictionaries containing variable to database mappings for every unique combination of input variables
 #Also generates unique names for each combination and returns a list of these
@@ -214,73 +219,75 @@ def subset_from_inclusive_coord_list(includedLons, includedLats, data):
 
 
 
+#Returns the name of the best AT and DIC algorithm for a particular input combination and region
+#Intended to be used after the metrics have been computed for each algorithm and region
+#metricsRootDirectory should include the input combination directory, if using input combinations
+def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], useWeightedRMSDe=True, verbose=False):
+    finalScoresTemplatePath = Template(path.join(metricsRootDirectory, "${OUTPUTVAR}/${REGION}/final_scores.csv"));
+    
+    rmsdeCol="final_wrmsd" if useWeightedRMSDe else "final_rmsd";
+    
+    bestAlgorithms = {}; #Store the names of the best algorithms for each output variable
+    for outputVar in outputVars:
+        finalScoresPath = finalScoresTemplatePath.safe_substitute(OUTPUTVAR=outputVar, REGION=region);
+        try:
+            finalScores = pd.read_csv(finalScoresPath);
+        except FileNotFoundError:
+            if verbose:
+                print("No output file found at:", finalScoresPath);
+            bestAlgorithms[outputVar] = None;
+            continue;
+        
+        if np.all(np.isfinite(finalScores[rmsdeCol])==False):
+            if verbose:
+                print("*** All NaN encountered in finalScores.csv", rmsdeCol, "row at", finalScoresPath);
+                print("    \tThis means no pairwise weighted metrics for this region could be calculated (e.g. because there were no spatially overlapping algorithms or no algorithms reported their RMSD.");
+            bestAlgorithms[outputVar] = None;
+            continue;
+        
+        #Now we know there is at least one non-NaN value, find the best algorithm and store its name
+        ibestAlgo = np.nanargmin(finalScores[rmsdeCol]);
+        bestAlgoName = finalScores["algorithm"][ibestAlgo];
+        numAlgosCompared = sum(finalScores[rmsdeCol].isna()==False);
+        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo], numAlgosCompared); #store tuple of algorithm name and selected RMSDe
+        
+        if verbose:
+            print("Best algorithm:", outputVar, region, bestAlgoName);
+    
+    return bestAlgorithms;
 
-#Adapted from: https://github.com/iga202/Pathfinders_SeaCarb
-def run_sea_carb(tflag, atData, dicData, sssData, sstData, verbose = False):
-    '''Creates an R function to arrange data and run the carb function within the SeaCarb package.
-    It assumes data are in a python dictionary, with the optional inputs defined by variable name
-    At present this only takes the pHscale switch
-    Ian Ashton, 22/07/2015
-    Added k1k2, kf, ks and b switches
-    Peter Land 18/11/15'''
+
+
+#Calculates other carbonate parameters from AT and DIC using the SeaCarb package for R
+#Requires numpy objects as inputs
+#See for details of SeaCarb's 'carb' function:
+#https://cran.r-project.org/web/packages/seacarb/seacarb.pdf
+def calculate_carbonate_parameters(tflag, atData, dicData, sssData, sstData, pAtm, pHydrostatic, k1k2="x"):
+    #Get a handle to the SeaCarb R library
+    try:
+        seacarb = importr("seacarb");
+    except rpy2.RRuntimeError: #If the library isn't installed, install it for the rpy2 version of r
+        print("Installing R package: seacarb");
+        utils = importr('utils');
+        utils.install_packages('seacarb', repos='https://cloud.r-project.org');
+        seacarb = importr("seacarb");
     
-    ro.r('library(seacarb)');
-    #Perturb the data here (or make a sister function that perturbs the data to be called if necessary.
-    ro.r('''
-    f<-function(flags,val1,val2,S,T,Patm,P,Pt,Sit,k1k2,kf,ks,b,pHs){
-        flags = as.numeric(matrix(data = flags, nrow = length(flags), ncol = 1))
-        val1 = as.numeric(matrix(data = val1, nrow = length(val1), ncol = 1))
-        val2 = as.numeric(matrix(data = val2, nrow = length(val2), ncol = 1))
-        S = as.numeric(matrix(data = S, nrow = length(S), ncol = 1))
-        T = as.numeric(matrix(data = T, nrow = length(T), ncol = 1))
-        out = carb(flags,val1,val2,S,T,Patm,P,Pt,Sit,k1k2=k1k2,kf=kf,ks=ks,b=b,pHscale=pHs)
-        return(out)
-     }
-     ''');
+    rpy2.robjects.numpy2ri.activate();
+    output = seacarb.carb(tflag, atData, dicData, S=35.0, T=20.0, Patm=pAtm, P=pHydrostatic, k1k2=k1k2);
+    #output = seacarb.carb(15, at, dic, S=35.0, T=20.0, Patm=1.0, Pt=0.0, k1k2="x");
+    output = pd.DataFrame(output);
     
-    rCarb = ro.r['f']#define rCarb as above function
-    nd = len(indata[var1name])
-    out = {}
-    fails = []
-    if 1: #try:
-        res = rCarb(tflag, indata[var1name], indata[var2name], indata['SSS'], indata['SST'], 0, 0, "x", "x", "d", "u74", "T") # Call R function
-        for l,v in res.items(): # For each parameter in the output, convert into Python dictionary, out
-            out[l] = []
-            for j in range(len(v)):
-                if not type(v[j]) in [float, int]:
-                    raise ValueError(res.items(),l,v,j,v[j])
-                out[l].append(v[j])
-    if 0: #except:
-        out = {}
-        nfails = 0
-        for index in np.xrange(nd):
-            try:
-                res = rCarb(tflag, indata[var1name][index],
-                    indata[var2name][index], indata['S'][index],
-                    indata['T'][index], indata['Patm'], indata['P'],
-                    indata['Pt'], indata['Sit'], indata['k1k2'], indata['kf'],
-                    indata['ks'], indata['b'], indata['pHscale']) # Call R function
-                for l,v in res.items(): # For each parameter in the output, convert into Python dictionary, out
-                    if l in out:
-                        out[l].append(v[0])
-                    else:
-                        out[l] = [v[0]]
-                    if not type(v[0]) in [float, int]:
-                        raise ValueError(res.items(), l, v)
-            except:
-                #traceback.print_exc()
-                nfails+=1
-                fails.append(index)
-                for key in out:
-                    out[key].append(-99999)
-       
-                print(nfails, 'fails out of', nd)
-                # print('GOOD ->',indata[var1name][index-10],indata[var2name][index-10],indata['S'][index-10],indata['T'][index-10], indata['Patm'], indata['P'],indata['Pt'], indata['Sit'], indata['k1k2'], indata['kf'],indata['ks'], indata['b'], indata['pHscale'])
-                # print('BAD ->',indata[var1name][index],indata[var2name][index],indata['S'][index],indata['T'][index], indata['Patm'], indata['P'],indata['Pt'], indata['Sit'], indata['k1k2'], indata['kf'],indata['ks'], indata['b'], indata['pHscale'])
-            if verbose:# or nfails == nd:
-                print(nfails, 'fails out of', nd);
-    for l in out:
-        out[l] = np.array(out[l])
-    
-    return(out,fails)
+    return output;
+
+
+#Converts a pandas DataFrame into a list of 2D numpy arrays (gridded spatially according to lonlatIndices)
+def convert_dataframe_to_gridded_list(df, latColName, lonColName):
+    output = {};
+    for variable in df.keys():
+        if variable not in [latColName, lonColName]:
+            griddedOutput = df.pivot(index=latColName, columns=lonColName, values=variable); #unstack into a grid again
+            output[variable] = np.array(griddedOutput);
+    return output;
+
+
 

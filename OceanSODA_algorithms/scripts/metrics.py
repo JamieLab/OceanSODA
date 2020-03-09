@@ -260,7 +260,8 @@ def calc_all_metrics(algorithmFunctorList, modelOutputList, matchupRowsUsedList,
     finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     finalWScoreArray = np.nanmean(pairedWScoreMatrix, axis=1);
     finalScores["final_wscore"] = finalWScoreArray;
-    finalScores["w_algos_compared"] = [np.sum(np.isfinite(pairedWScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
+    #finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
+    #finalScores["w_algos_compared"] = [np.sum(np.isfinite(pairedWScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     finalScores["n"] = [basicMetric["n"] for basicMetric in basicMetrics];
     
     #Calculate representative RMSD

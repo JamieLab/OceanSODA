@@ -1,2 +1,14 @@
-Started execution at: 2020-03-04 14:52:34.083188
-Started execution at: 2020-03-04 14:52:34.083188
+Started execution at: 2020-03-06 14:58:05.501134
+Begining new combination of input variables: combination0__SST0_SSS0
+Beginning new region: oceansoda_amazon_plume
+Output calculated (region:oceansoda_amazon_plume, algo: Astor2017a_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Astor2017d_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Astor2017b_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Astor2017e_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Astor2017c_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Brewer1995_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Cai2010a_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Cooley2006a_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Goyet1998_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Lee2006_at)
+Output calculated (region:oceansoda_amazon_plume, algo: Lefevre2010_at)

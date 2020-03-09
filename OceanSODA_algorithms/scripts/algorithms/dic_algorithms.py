@@ -1421,7 +1421,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone1s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [1066.9, 24.76, 0.38, 5.07]; #intersept, SSS, DO, NO3
-        rmsd = None;
+        rmsd = 16.8; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone1_north_pacific");
@@ -1443,7 +1443,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone1w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [868.73, -7.95, 36.54, 4.73, -0.01]; #intersept, SST, SSS, SiO4, SiO4*DO
-        rmsd = None;
+        rmsd = 16.8; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone1_north_pacific");
@@ -1466,7 +1466,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone2s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [698.74, 35.84, 0.25, 0.42, 83.28]; #intersept, SSS, DO, SiO4, PO4
-        rmsd = None;
+        rmsd = 16.4; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone2_southern_ocean");
@@ -1486,11 +1486,11 @@ class Sasse2013_dic(BaseAlgorithm):
         return modelOutput, rmsd;
     
     
-    #north southern ocean winter
+    #southern ocean winter
     def _zone2w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [1494.14, -48.81, 22.3, -0.31, 0.48, 0.03, 0.92]; #intersept, SST, SSS, DO, SiO4, SST*DO, SST*SSS
-        rmsd = None;
+        rmsd = 16.4; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone2_southern_ocean");
@@ -1516,7 +1516,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone3s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [1709.15, 9.13, 9.14]; #intersept, SSS, NO3
-        rmsd = None;
+        rmsd = 15.5; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone3_northwest_atlantic");
@@ -1537,7 +1537,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone3w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [1128.79, -5.93, 28.71, 17.31, -0.05]; #intersept, SST, SSS, NO3, NO3*DO
-        rmsd = None;
+        rmsd = 15.5; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone3_northwest_atlantic");
@@ -1561,7 +1561,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone4s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [1625.17, 12.35, 6.13]; #intersept, SSS, NO3
-        rmsd = None;
+        rmsd = 15.5; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone4_northeast_atlantic");
@@ -1582,7 +1582,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone4w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [1013.95, 61.48, 32.75, -61.93, -2.05, -12.54, 0.4, -0.3, -1.67, 1.78]; #intersept, SST, SSS, NO3, SiO4, PO4, NO3*SiO4, SST*DO, SST*SSS
-        rmsd = None;
+        rmsd = 15.5; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone4_northeast_atlantic");
@@ -1610,7 +1610,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone5(self, data):
         #For coefficients, see supplemental table T1
         coefs = [467.55, -7.11, 48.4, 2.34, 1.44, 38.85]; #intersept, SST, SSS, NO3, SiO4, PO4
-        rmsd = None;
+        rmsd = 18.9; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone5_equatorial_pacific");
@@ -1630,7 +1630,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone6s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [519.77, -9.98, 48.97, 20.25, 1.92]; #intersept, SST, SSS, NO3, PO4
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone6_north_subtropical_pacific");
@@ -1653,7 +1653,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone6w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [236.82, -5.32, 50.65, 0.38, -1.5, 139.22]; #intersept, SST, SSS, DO, NO3, PO4
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone6_north_subtropical_pacific");
@@ -1678,7 +1678,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone7s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [147.12, -4.61, 52.63, 0.34, 7.48, 1.67, 72.68]; #intersept, SST, SSS, DO, NO3, SiO4, PO4
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone7_south_subtropical_pacific");
@@ -1703,7 +1703,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone7w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [643.05, -12.01, 46.68, -1.28, 107.88]; #intersept, SST, SSS, SiO4, PO4
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone7_south_subtropical_pacific");
@@ -1727,7 +1727,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone8s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [551.82, -6.59, 45.21, 27.16, 0.14]; #intersept, SST, SSS, PO4
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone8_indian_ocean");
@@ -1750,7 +1750,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone8w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [1733.55, -1.84, -4.78, 18.13, 2.64, 67.1, 0.17]; #intersept, SST, DO, NO3, SiO4, PO4, DO*SSS
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone8_indian_ocean");
@@ -1776,7 +1776,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone9s(self, data):
         #For coefficients, see supplemental table T1
         coefs = [619.34, -8.18, 46.94, -0.37, -31.07]; #intersept, SST, SSS, DO, NO3
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone9_north_subtropical_atlantic");
@@ -1799,7 +1799,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone9w(self, data):
         #For coefficients, see supplemental table T1
         coefs = [765.0, -7.36, 39.89, -4.88, 109.27]; #intersept, SST, SiO4, PO4
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone9_north_subtropical_atlantic");
@@ -1822,7 +1822,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone10(self, data):
         #For coefficients, see supplemental table T1
         coefs = [163.5, -8.91, 59.32, -0.17]; #intersept, SST, SSS, DO
-        rmsd = None;
+        rmsd = 18.9; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone10_equatorial_atlantic");
@@ -1840,7 +1840,7 @@ class Sasse2013_dic(BaseAlgorithm):
     def _zone11(self, data):
         #For coefficients, see supplemental table T1
         coefs = [2277.89, -6.15, -7.48, -5.08, 74.92, 0.2]; #intersept, SST, DO, NO3, PO4, DO*SSS
-        rmsd = None;
+        rmsd = 15.2; #RSE from testing dataset (see table 3)
         
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "DIC_zone11_south_subtropical_atlantic");
@@ -1918,7 +1918,7 @@ class Sasse2013_global_dic(BaseAlgorithm):
         #For coefficients see supplemental table T1
         self.coefs = [596.77, -8.21, 45.5, -0.17, 1.12, 0.45, 17.83, 0.01, 1.52]; #intersept, SST, SSS, DO, NO3, SiO4, PO4, SST*DO, SST*PO4
         self.coefsUncertainty = [None, None, None, None, None, None, None, None, None]; #Uncertainty reported for the coefficients, equation 1
-        self.rmsd = None;
+        self.rmsd = 15.6; #RSE from testing dataset (see table 3)
         self.r = None;
         
         #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.

@@ -36,9 +36,9 @@ def get_default_settings():
     repoRoot = "../";
     
     settings = {};
-    settings["matchupDatasetTemplate"] = Template(path.join("../../matchup_datasets/v1_with_DO", "${YYYY}_soda_mdb.nc")); #Location of the matchup dataset
-    settings["regionMasksPath"] = path.join("../region_masks/osoda_region_masks_v2.nc"); #Where OSODA region masks can be found
-    settings["outputPathRoot"] = "../output"; #Where outputs are written
+    settings["matchupDatasetTemplate"] = Template(path.join(projectRoot, "matchup_datasets/v1_with_DO", "${YYYY}_soda_mdb.nc")); #Location of the matchup dataset
+    settings["regionMasksPath"] = path.join(repoRoot, "region_masks/osoda_region_masks_v2.nc"); #Where OSODA region masks can be found
+    settings["outputPathRoot"] = path.join(repoRoot, "output"); #Where outputs are written
     settings["outputPathMetrics"] = path.join(settings["outputPathRoot"], "metric_outputs"); #Where algorithm metrics outputs are written
     
     #Mask file and variable for the depth mask and distance to coast mask. Set to None to turn off.
@@ -61,13 +61,14 @@ def get_default_settings():
                                               };
     
     #Which years to analysis for
-    settings["years"] = range(2002, 2016); #[2010, 2011, 2012, 2013, 2014, 2016]; #range(2010, 2018); 
+    settings["years"] = range(1991, 2018); #[2010, 2011, 2012, 2013, 2014, 2016]; #range(2010, 2018); 
     
 #    settings["usingTestMatchupDataset"] = False; #If true, this indicates the whole matchup dataset isn't being used
 #                                                #and the driver script will skip subsetting for algorithm specific restrictions
     
     settings["algorithmInternalSpatialMasks"] = False; #Allow algorithms to use their own spatial masks to further subset matchup data (e.g. in addition to the OceanSODA region masks)
-    settings["useErrorRatios"] = True;
+    settings["useErrorRatios"] = True; #rather than static error for in situ AT and DIC
+    settings["assessUsingWeightedRMSDe"] = True; #When calculating the 'best' algorithm, should it use the weighted version of RMSDe? (True=yes, False=no, weighted RMSDe is not available for algorithms which do not report uncertainty)
     
     #nominal 'state-of-the-art' in situ measurement errors used in PATHFINDERS
     settings["insituError"] = {"DIC":2.5,
@@ -91,6 +92,19 @@ def get_default_settings():
                              "DIC": "DIC_mean",
                              "AT": "AT_mean",
                              };
+    
+    ### Settings for prediction
+    #Output location of gridded predicted timeseries
+    settings["griddedPredictionOutputTemplate"] = Template(path.join(repoRoot, "output/gridded_predictions/${INPUTCOMBINATION}/gridded_${REGION}_${LATRES}x${LONRES}.nc"));
+    
+    #Input dataset locations for making predictions from. Dictionary containing inputParameterName:(netCDFVariableName, netCDFFileTemplate) where YYYY and MM are substituted for string representations of year and month
+    settings["predictionDataPaths"] = {"SSS": ("salinity_mean", Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc")),
+                                       "SST": ("sst_mean", Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc")),
+                                       "DO": ("o_an", Template("../../prediction_datasets/WOA_dissolved_oxygen/woa18_all_o${MM}_01.nc")),
+                                       "NO3": ("n_an", Template("../../prediction_datasets/WOA_nitrate/woa18_all_n${MM}_01.nc")),
+                                       "PO4": ("p_an", Template("../../prediction_datasets/WOA_phosphate/woa18_all_p${MM}_01.nc")),
+                                       "SiO4": ("i_an", Template("../../prediction_datasets/WOA_silicate/woa18_all_i${MM}_01.nc")),
+                                       };
     
     #This defines both the region names and algorithms to use
     import algorithms.at_algorithms as at_algorithms;

@@ -22,7 +22,7 @@ import utilities;
 import osoda_global_settings;
 
 #control flags (turn parts of the script on/off)
-runAlgorithmsAndCalculateMetrics = False;
+runAlgorithmsAndCalculateMetrics = True;
 diagnosticPlots = False; #Diagnostic plots to help see if algorithms are making sensible predictions
 
 
@@ -86,43 +86,6 @@ def write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, paire
     with open(path.join(outputDirectory, "algorithms_used.csv"), 'w') as file:
         for algoName in algoNameOrder:
             file.write(algoName+",");
-
-
-#Returns the name of the best AT and DIC algorithm
-def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], useWeightedRMSDe=True, verbose=False):
-    finalScoresTemplatePath = Template(path.join(metricsRootDirectory, "${OUTPUTVAR}/${REGION}/final_scores.csv"));
-    
-    rmsdeCol="final_wrmsd" if useWeightedRMSDe else "final_rmsd";
-    
-    bestAlgorithms = {}; #Store the names of the best algorithms for each output variable
-    for outputVar in outputVars:
-        finalScoresPath = finalScoresTemplatePath.safe_substitute(OUTPUTVAR=outputVar, REGION=region);
-        try:
-            finalScores = pd.read_csv(finalScoresPath);
-        except FileNotFoundError:
-            if verbose:
-                print("No output file found at:", finalScoresPath);
-            bestAlgorithms[outputVar] = None;
-            continue;
-        
-        if np.all(np.isfinite(finalScores[rmsdeCol])==False):
-            if verbose:
-                print("*** All NaN encountered in finalScores.csv", rmsdeCol, "row at", finalScoresPath);
-                print("    \tThis means no pairwise weighted metrics for this region could be calculated (e.g. because there were no spatially overlapping algorithms or no algorithms reported their RMSD.");
-            bestAlgorithms[outputVar] = None;
-            continue;
-        
-        #Now we know there is at least one non-NaN value, find the best algorithm and store its name
-        ibestAlgo = np.nanargmin(finalScores[rmsdeCol]);
-        bestAlgoName = finalScores["algorithm"][ibestAlgo];
-        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo]); #store tuple of algorithm name and selected RMSDe
-        
-        if verbose:
-            print("Best algorithm:", outputVar, region, bestAlgoName);
-    
-    return bestAlgorithms;
-
-
 
 
 if __name__ == "__main__":
@@ -230,11 +193,12 @@ if __name__ == "__main__":
         
     ##############################
     ### Calculating best metrics #
-    bestAlgosAT = []; bestAlgosDIC = []; bestRMSDesAT = []; bestRMSDesDIC = []; regionNamesList = []; combinationNamesList = [];
+    #FIXME: appending columns to dataframe in two different ways, this is confusing and annoying...
+    bestAlgosAT = []; bestAlgosDIC = []; bestRMSDesAT = []; bestRMSDesDIC = []; regionNamesList = []; combinationNamesList = []; numAlgosComparedAT = []; numAlgosComparedDIC = [];
     for region in settings["regions"]:
         for inputCombinationName in specificVariableToDatabaseMapNames:
             metricsRootDirectory = path.join(settings["outputPathMetrics"], inputCombinationName);
-            bestAlgorithmInfo = find_best_algorithm(metricsRootDirectory, region, useWeightedRMSDe=True, verbose=False);
+            bestAlgorithmInfo = utilities.find_best_algorithm(metricsRootDirectory, region, useWeightedRMSDe=settings["assessUsingWeightedRMSDe"], verbose=False);
             
             #Append to columns
             combinationNamesList.append(inputCombinationName);
@@ -242,15 +206,19 @@ if __name__ == "__main__":
             if bestAlgorithmInfo["AT"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
                 bestAlgosAT.append(bestAlgorithmInfo["AT"][0]);
                 bestRMSDesAT.append(bestAlgorithmInfo["AT"][1]);
+                numAlgosComparedAT.append(bestAlgorithmInfo["AT"][2]);
             else: #No best algorithm, fill with default data
                 bestAlgosAT.append(np.nan);
                 bestRMSDesAT.append(np.nan);
+                numAlgosComparedAT.append(np.nan);
             if bestAlgorithmInfo["DIC"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
                 bestAlgosDIC.append(bestAlgorithmInfo["DIC"][0]);
                 bestRMSDesDIC.append(bestAlgorithmInfo["DIC"][1]);
+                numAlgosComparedDIC.append(bestAlgorithmInfo["DIC"][2]);
             else: #No best algorithm, fill with default data
                 bestAlgosDIC.append(np.nan);
                 bestRMSDesDIC.append(np.nan);
+                numAlgosComparedDIC.append(np.nan);
     
     summaryTable = pd.DataFrame();
     summaryTable["region"] = regionNamesList;
@@ -260,10 +228,12 @@ if __name__ == "__main__":
     summaryTable["overall_best_in_region"] = [False]*len(summaryTable);
     summaryTable["AT_best_algorithm"] = bestAlgosAT;
     summaryTable["AT_RMSDe"] = bestRMSDesAT;
-    summaryTable["AT_n"] = [0]*len(summaryTable);
+    summaryTable["AT_n"] = [np.nan]*len(summaryTable);
+    summaryTable["AT_algos_compared"] = numAlgosComparedAT;
     summaryTable["DIC_best_algorithm"] = bestAlgosDIC;
     summaryTable["DIC_RMSDe"] = bestRMSDesDIC;
-    summaryTable["DIC_n"] = [0]*len(summaryTable);
+    summaryTable["DIC_n"] = [np.nan]*len(summaryTable);
+    summaryTable["DIC_algos_compared"] = numAlgosComparedDIC;
     summaryTable["n_years"] = [0]*len(summaryTable);
     summaryTable["min_year"] = [0]*len(summaryTable);
     summaryTable["max_year"] = [0]*len(summaryTable);
@@ -315,7 +285,7 @@ if __name__ == "__main__":
     summaryTable.to_csv(summaryTableOutputPath, sep=",", index=False);     
     print("Full summary table written to:", path.abspath(summaryTableOutputPath));
     
-    print("Combination name variable keys as follows:");
+    print("Combination name variable key as follows:");
     utilities.print_combination_name_keys(settings);
     
     
