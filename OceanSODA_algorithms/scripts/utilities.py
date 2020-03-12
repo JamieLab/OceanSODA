@@ -19,7 +19,8 @@ import rpy2.robjects as ro;
 from os import path, makedirs;
 from string import Template;
 
-import rpy2.robjects.numpy2ri;
+import rpy2.robjects.numpy2ri; #Convert between R objects and numpy objects
+import rpy2.robjects.pandas2ri; #Convert between R objects and pandas objects
 import rpy2;
 from rpy2.robjects.packages import importr;
 
@@ -266,7 +267,7 @@ def calculate_carbonate_parameters(tflag, atData, dicData, sssData, sstData, pAt
     #Get a handle to the SeaCarb R library
     try:
         seacarb = importr("seacarb");
-    except rpy2.RRuntimeError: #If the library isn't installed, install it for the rpy2 version of r
+    except rpy2.rinterface.RRuntimeError: #If the library isn't installed, install it for the rpy2 version of r
         print("Installing R package: seacarb");
         utils = importr('utils');
         utils.install_packages('seacarb', repos='https://cloud.r-project.org');
@@ -275,7 +276,14 @@ def calculate_carbonate_parameters(tflag, atData, dicData, sssData, sstData, pAt
     rpy2.robjects.numpy2ri.activate();
     output = seacarb.carb(tflag, atData, dicData, S=35.0, T=20.0, Patm=pAtm, P=pHydrostatic, k1k2=k1k2);
     #output = seacarb.carb(15, at, dic, S=35.0, T=20.0, Patm=1.0, Pt=0.0, k1k2="x");
-    output = pd.DataFrame(output);
+    
+    
+    output = rpy2.robjects.pandas2ri.ri2py(output);
+#    from rpy2.robjects.conversion import localconverter;
+#    with localconverter(ro.default_converter + pandas2ri.converter):
+#        tmp = ro.conversion.ri2py(output)
+#    
+#    output = pd.DataFrame(output);
     
     return output;
 
