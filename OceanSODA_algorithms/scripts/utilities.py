@@ -27,35 +27,37 @@ from rpy2.robjects.packages import importr;
 #Creates a list of dictionaries containing variable to database mappings for every unique combination of input variables
 #Also generates unique names for each combination and returns a list of these
 def get_dataset_variable_map_combinations(settings):
-    settingsMapAll = settings["variableToDatabaseMap"];
-    variableNames = settingsMapAll.keys();
+    datasetInfoMap = settings["datasetInfoMap"];
+    commonVariableNames = datasetInfoMap.keys();
     
     #Make sure all the mappings are lists, even if there is only one possibility.
-    for variableName in variableNames:
-        if isinstance(settingsMapAll[variableName], list) == False:
-            settingsMapAll[variableName] = [settingsMapAll[variableName]];
+    for variableName in commonVariableNames:
+        if isinstance(datasetInfoMap[variableName], list) == False:
+            datasetInfoMap[variableName] = [datasetInfoMap[variableName]];
     
     #Build a new variable name to database name maps which is are specific to each possible combination
+    #Create a list combination names and a dictionary mapping common variable name to datasetInfo objects for each
     combinations = [{}];
     labels = ["_"];
-    for variableName in variableNames:
+    for variableName in commonVariableNames:
         newCombinations = [];
         newLabels = [];
-        for j, datasetName in enumerate(settingsMapAll[variableName]):
+        for j, datasetInfo in enumerate(datasetInfoMap[variableName]):
             for i, combination in enumerate(combinations): #For each combination of the previous iteration (not yet including the current variable name), append a combination with also includes this dataset
                 newCombination = combination.copy();
-                newCombination[variableName] = datasetName;
+                newCombination[variableName] = datasetInfo;
                 newCombinations.append(newCombination);
                 
-                if len(settingsMapAll[variableName]) > 1:
-                    newLabel = labels[i] + "_" + variableName+str(j);
-                else:
+                #If this variable is one we're trying different combinations of (e.g. more than one dataset listed for it), then include it in the name of the combination
+                if len(datasetInfoMap[variableName]) > 1:
+                    newLabel = labels[i] + "_" + datasetInfo.datasetName; #New label/name is the previous label plus the current dataset name appended to it
+                else: #Not trying different combinations of this variable, so it doesn't need to be added to the combination name
                     newLabel = labels[i];
                 newLabels.append(newLabel);
         combinations = newCombinations;
         labels = newLabels;
     
-    #append to the label
+    #append "combination" to the start of each label to give the final combination name
     labels = ["combination"+str(i)+labels[i] for i in range(len(labels))];
     
     #Return a list of specific variable to database mappings
@@ -70,22 +72,22 @@ def write_specific_variable_to_database_mapping(specificVariableToDatabaseMap, o
         if combinationName==None:
             combinationName = "Unnamed combination\n\n";
         file.write(combinationName+"\n");
-        for variableName in specificVariableToDatabaseMap:
-            file.write(variableName+":"+specificVariableToDatabaseMap[variableName]+"\n");
+        for variableName in specificVariableToDatabaseMap.keys():
+            file.write(variableName+":"+specificVariableToDatabaseMap[variableName].datasetName+"\n");
 
-#prints the matchup database inputs that correspond to each combination name code
-def print_combination_name_keys(settings):
-    settingsMapAll = settings["variableToDatabaseMap"];
-    variableNames = settingsMapAll.keys();
-    
-    #Make sure all the mappings are lists, even if there is only one possibility.
-    for variableName in variableNames:
-        if isinstance(settingsMapAll[variableName], list) == False:
-            settingsMapAll[variableName] = [settingsMapAll[variableName]];
-        
-        if len(settingsMapAll[variableName]) > 1:
-            for i, datasetName in enumerate(settingsMapAll[variableName]):
-                print(variableName+str(i)+":\t"+datasetName);
+##prints the matchup database inputs that correspond to each combination name code
+#def print_combination_name_keys(settings):
+#    settingsMapAll = settings["variableToDatabaseMap"];
+#    variableNames = settingsMapAll.keys();
+#    
+#    #Make sure all the mappings are lists, even if there is only one possibility.
+#    for variableName in variableNames:
+#        if isinstance(settingsMapAll[variableName], list) == False:
+#            settingsMapAll[variableName] = [settingsMapAll[variableName]];
+#        
+#        if len(settingsMapAll[variableName]) > 1:
+#            for i, datasetName in enumerate(settingsMapAll[variableName]):
+#                print(variableName+str(i)+":\t"+datasetName);
 
 
 #Given a set of inputs, this will return a list of years/time points for which the matchup dataset contains all of these inputs
@@ -100,8 +102,8 @@ def calculate_years_for_input_combination(settings, inputCombination, minYear=19
         
         #Make sure all input variables exist in this file
         allExist = True;
-        for key, ncVarName in inputCombination.items():
-            if ncVarName not in nc.variables.keys():
+        for key, datasetInfo in inputCombination.items():
+            if datasetInfo.matchupVariableName not in nc.variables.keys():
                 allExist = False;
                 break;
         
@@ -115,12 +117,13 @@ def calculate_years_for_input_combination(settings, inputCombination, minYear=19
 #Reads yearly matchup database netCDF files and concatinates them into a single dataframe.
 #   years: and iterable of integer years
 #   settings: the global settings dictionary
-def load_matchup_to_dataframe(settings, variableToDatabaseMap, years=None, commonNames=None):
+#   datasetInfoMap: dictionary mapping common variable names to DatasetInfo objects which contain all the information needed to load a dataset
+def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=None):
     #Concatinate each year
     dfList = [];
     
     if commonNames == None:
-        commonNames = variableToDatabaseMap.keys()
+        commonNames = datasetInfoMap.keys()
     if years == None:
         years = settings["years"];
     
@@ -131,9 +134,9 @@ def load_matchup_to_dataframe(settings, variableToDatabaseMap, years=None, commo
         df = pd.DataFrame();
         for commonName in commonNames:
             try:
-                df[commonName] = matchupNC[variableToDatabaseMap[commonName]][:];
+                df[commonName] = matchupNC[datasetInfoMap[commonName].matchupVariableName][:];
             except IndexError:
-                print("Missing data: ", year, commonName, variableToDatabaseMap[commonName]);
+                print("Missing data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupVariableName);
         dfList.append(df);
     matchupData = pd.concat(dfList, ignore_index=True);
     

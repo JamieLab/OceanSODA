@@ -30,8 +30,8 @@ settings = osoda_global_settings.get_default_settings();
 reefLocationsPath = "../reefbase/ReefLocations.csv";
 finalScoresTemplatePath = Template(path.join(settings["outputPathMetrics"], "${INPUTCOMBINATION}/${OUTPUTVAR}/${REGION}/final_scores.csv"));
 griddedPredictionResolution = 1.0; #resolution of the gridded predictions
-reefIndividualOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "${INPUTCOMBINATION}/individual_${REGION}/reef_${REEFID}.csv"));
-reefSummaryOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "${INPUTCOMBINATION}/all_reef_${SUMMARYVAR}_summary_metrics.csv"));
+reefIndividualOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "individual_${REGION}/reef_${REEFID}.csv"));
+reefSummaryOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "all_reef_${SUMMARYVAR}_summary_metrics.csv"));
 
 
 #Sort reef locations by region. Returns a dictionary of region:reefsInLocationDF
@@ -99,65 +99,87 @@ reefsByRegion = sort_reefs_by_region(settings, reefLocationsPath);
 
 #Extract ocean carbonate predictions for each reef
 if extractReefData:
-    for inputCombinationName in utilities.get_dataset_variable_map_combinations(settings)[1]: #Just get the names
-        #Create a dataframe to store the summary metrics for each reef
-        summaryColNames = ["region", "algorithm", "reef_id", "mean", "median", "sd", "nt", "max", "min", "annual_max_mean", "annual_min_mean",
-                           "annual_max_sd", "annual_min_sd", "annual_range_mean", "annual_range_sd"]; #Defines order of columns. The specific names must match those used in calculate_reef_summary_metrics
-        reefSummaryMetricsDF = pd.DataFrame(columns=summaryColNames);
+    #Create a dataframe to store the summary metrics for each reef
+    summaryColNames = ["region", "algorithm", "reef_id", "mean", "median", "sd", "nt", "max", "min", "annual_max_mean", "annual_min_mean",
+                       "annual_max_sd", "annual_min_sd", "annual_range_mean", "annual_range_sd"]; #Defines order of columns. The specific names must match those used in calculate_reef_summary_metrics
+    reefSummaryMetricsDF_AT = pd.DataFrame(columns=summaryColNames);
+    reefSummaryMetricsDF_DIC = pd.DataFrame(columns=summaryColNames);
+    
+    for region in settings["regions"]:
+        if len(reefsByRegion[region]) == 0: #No reefs in this region, so move onto the next region
+            continue;
         
-        for region in settings["regions"]:
-            if len(reefsByRegion[region]) == 0: #No reefs in this region, so move onto the next region
-                continue;
+        #load the gridded carbonate parameter predictions for this input/region combination
+        griddedPredictionsPath = settings["griddedPredictionOutputTemplate"].safe_substitute(REGION=region, LATRES=griddedPredictionResolution, LONRES=griddedPredictionResolution, OUTPUTVAR="DIC");
+        griddedPredictionsPathAT = settings["griddedPredictionOutputTemplate"].safe_substitute(REGION=region, LATRES=griddedPredictionResolution, LONRES=griddedPredictionResolution, OUTPUTVAR="AT");
+        try:
+            griddedPredictionNC = Dataset(griddedPredictionsPath, 'r');
+            griddedPredictionNC_at = Dataset(griddedPredictionsPathAT, 'r');
+        except FileNotFoundError: #This can occur if there was no best algorithm (e.g. because no matchup data for this region and inpu combination)
+            continue; #Ignore the region
+        
+        #For each reef, extract a time series and output to file
+        for r, reefRow in reefsByRegion[region].iterrows():
+            print(region, "reef_"+str(r));
             
-            #load the gridded carbonate parameter predictions for this input/region combination
-            griddedPredictionsPath = settings["griddedPredictionOutputTemplate"].safe_substitute(INPUTCOMBINATION=inputCombinationName, REGION=region, LATRES=griddedPredictionResolution, LONRES=griddedPredictionResolution)
-            try:
-                griddedPredictionNC = Dataset(griddedPredictionsPath, 'r');
-            except FileNotFoundError: #This can occur if there was no best algorithm (e.g. because no matchup data for this region and inpu combination)
-                continue; #Ignore the region
+            #grid indices corresponding to the reef location
+            ilat, ilon = get_grid_indices_from_latlon(reefRow["lon"], reefRow["lat"], griddedPredictionResolution);
             
-            #For each reef, extract a time series and output to file
-            for r, reefRow in reefsByRegion[region].iterrows():
-                print(inputCombinationName, region, "reef_"+str(r));
+            #Copy time series for the single grid point into a data frame
+            reefDF = pd.DataFrame();
+            reefDF["time_s_since_1980"] = griddedPredictionNC.variables["time"][:];
+            for varName in list(griddedPredictionNC.variables.keys()) + ["AT_pred"]:
+                if varName in ["time", "lat", "lon"]: #Depending on the algorithm, some inputs may not be present
+                    continue;
                 
-                #grid indices corresponding to the reef location
-                ilat, ilon = get_grid_indices_from_latlon(reefRow["lon"], reefRow["lat"], griddedPredictionResolution);
-                
-                #Copy time series for the single grid point into a data frame
-                reefDF = pd.DataFrame();
-                reefDF["time_s_since_1980"] = griddedPredictionNC.variables["time"][:];
-                for varName in griddedPredictionNC.variables.keys():
-                    if varName in ["time", "lat", "lon"]: #Depending on the algorithm, some inputs may not be present
-                        continue;
+                if varName == "AT_pred": #Special case, AT comes from a differentfile. This is awkward but avoids duplicate input layers
+                    var = griddedPredictionNC_at.variables[varName][:, ilat, ilon]
+                    var[var.mask] = np.nan;
+                    reefDF[varName] = var;
+                else: #All other variables come from DIC netCDF file
                     var = griddedPredictionNC.variables[varName][:, ilat, ilon];
                     var[var.mask] = np.nan; #Replace default missing value with nan
                     reefDF[varName] = var;
-                
-                #Write reef time series to csv file
-                reefOutputPath = reefIndividualOutputPathTemplate.safe_substitute(INPUTCOMBINATION=inputCombinationName, REGION=region, REEFID=reefRow["id"]);
-                if path.exists(path.dirname(reefOutputPath)) == False:
-                    os.makedirs(path.dirname(reefOutputPath))
-                reefDF.to_csv(reefOutputPath, index=False, sep=",");
-                
-                ### Summary metrics for each reef
-                #Construct summary data for the reef.
-                summaryMetrics = calculate_reef_summary_metrics(reefDF, "AT_pred");
-                if summaryMetrics is not None:
-                    summaryMetrics["reef_id"] = reefRow["id"];
-                    summaryMetrics["region"] = region;
-                    summaryMetrics["algorithm"] = griddedPredictionNC.getncattr("algorithmNameAT");
-                
+            
+            #Write reef time series to csv file
+            reefOutputPath = reefIndividualOutputPathTemplate.safe_substitute(REGION=region, REEFID=reefRow["id"]);
+            if path.exists(path.dirname(reefOutputPath)) == False:
+                os.makedirs(path.dirname(reefOutputPath))
+            reefDF.to_csv(reefOutputPath, index=False, sep=",");
+            
+            ### Summary metrics for each reef
+            #Construct summary data for AT
+            summaryMetricsAT = calculate_reef_summary_metrics(reefDF, "AT_pred");
+            if summaryMetricsAT is not None:
+                summaryMetricsAT["reef_id"] = reefRow["id"];
+                summaryMetricsAT["region"] = region;
+                summaryMetricsAT["algorithm"] = griddedPredictionNC_at.getncattr("algorithmName");
+            
                 #append this reef's summary metrics to the end of the summary dataframe (with the columns in the prescribed order)
-                    reefSummaryMetricsDF.loc[len(reefSummaryMetricsDF)] = [summaryMetrics[key] for key in summaryColNames];
-                else: #None, because no data was available to summarise for the selected variable, fill row with nan
-                    reefSummaryMetricsDF.loc[len(reefSummaryMetricsDF)] = [np.nan for key in summaryColNames];
-                
+                reefSummaryMetricsDF_AT.loc[len(reefSummaryMetricsDF_AT)] = [summaryMetricsAT[key] for key in summaryColNames];
+            else: #None, because no data was available to summarise for the selected variable, fill row with nan
+                reefSummaryMetricsDF_AT.loc[len(reefSummaryMetricsDF_AT)] = [np.nan for key in summaryColNames];
+            
+            #Construct summary data for DIC
+            summaryMetricsDIC = calculate_reef_summary_metrics(reefDF, "DIC_pred");
+            if summaryMetricsDIC is not None:
+                summaryMetricsDIC["reef_id"] = reefRow["id"];
+                summaryMetricsDIC["region"] = region;
+                summaryMetricsDIC["algorithm"] = griddedPredictionNC.getncattr("algorithmName");
+            
+                #append this reef's summary metrics to the end of the summary dataframe (with the columns in the prescribed order)
+                reefSummaryMetricsDF_DIC.loc[len(reefSummaryMetricsDF_DIC)] = [summaryMetricsDIC[key] for key in summaryColNames];
+            else: #None, because no data was available to summarise for the selected variable, fill row with nan
+                reefSummaryMetricsDF_DIC.loc[len(reefSummaryMetricsDF_DIC)] = [np.nan for key in summaryColNames];
+            
             
         #write reef summary metrics dataframe to file
-        reefSummaryOutputPath = reefSummaryOutputPathTemplate.safe_substitute(INPUTCOMBINATION=inputCombinationName, SUMMARYVAR="AT");
-        if path.exists(path.dirname(reefSummaryOutputPath)) == False:
-            os.makedirs(path.dirname(reefSummaryOutputPath));
-        reefSummaryMetricsDF.to_csv(reefSummaryOutputPath);
+        reefSummaryOutputPathAT = reefSummaryOutputPathTemplate.safe_substitute(SUMMARYVAR="AT");
+        if path.exists(path.dirname(reefSummaryOutputPathAT)) == False:
+            os.makedirs(path.dirname(reefSummaryOutputPathAT));
+        reefSummaryMetricsDF_AT.to_csv(reefSummaryOutputPathAT);
+        reefSummaryOutputPathDIC = reefSummaryOutputPathTemplate.safe_substitute(SUMMARYVAR="DIC");
+        reefSummaryMetricsDF_DIC.to_csv(reefSummaryOutputPathDIC);
 
             
 

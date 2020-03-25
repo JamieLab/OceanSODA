@@ -9,6 +9,21 @@ Created on Tue Dec 10 15:12:50 2019
 from string import Template;
 from os import path;
 
+#encapsulates meta data about a data set, including file path info
+class DatasetInfo:
+    def __init__(self, commonName, datasetName, matchupVariableName, matchupDatabaseTemplate, matchupDatabaseError=None, predictionDatasetTemplate=None, predictionDatasetVariable=None, predictionDatasetError=None):
+        self.commonName = commonName;
+        self.datasetName = datasetName;
+        self.matchupVariableName = matchupVariableName;
+        self.matchupDatabaseTemplate = matchupDatabaseTemplate;
+        self.predictionDatasetTemplate = predictionDatasetTemplate;
+        self.predictionDatasetVariable = predictionDatasetVariable;
+        self.predictionDatasetError = predictionDatasetError;
+    
+    def __str__(self):
+        return "DatasetInfo: "+" ".join([self.commonName, self.dataset]);
+
+
 #These are the names used within the scripts to refer to input and output variables.
 #settings["columnMap"] maps these common names to dataset columns allowing different input datasets to be used
 #   with different settings objects.
@@ -78,27 +93,34 @@ def get_default_settings():
     settings["insituErrorRatio"] = {"DIC": 0.005, #0.5% nominal 'state-of-the-art' errors: Bockmon, E.E. and Dickson, A.G., 2015. An inter-laboratory comparison assessing the quality of seawater carbon dioxide measurements. Marine Chemistry, 171, pp.36-43.
                                     "AT": 0.005}; #0.5% nominal 'state-of-the-art' errors: Bockmon, E.E. and Dickson, A.G., 2015. An inter-laboratory comparison assessing the quality of seawater carbon dioxide measurements. Marine Chemistry, 171, pp.36-43.
     
-    #map between common name and netCDF variablename:
-    settings["variableToDatabaseMap"] = {"date": "time",
-                             "lon": "lon",
-                             "lat": "lat",
-                             "SST": ["OSTIA-ESACCI-L4-v02.1_mean", "SST_mean"],
-                             "SSS": ["ISAS15PSAL_mean", "ESACCI-SSS-L4-SSS-MERGED-OI-7DAY-RUNNINGMEAN-DAILY-25km_mean", "SSS_mean"],
-                             "OC": "ESACCI-OC-L3S-OC_PRODUCTS-MERGED-1D_DAILY_4km_GEO_PML_OCx_QAA_mean", #ocean colour
-                             "DO": "WOA18_Oxygen_o_an",
-                             "NO3": "WOA18_Nitrate_n_an",
-                             "PO4": "WOA18_Phosphate_p_an",
-                             "SiO4": "WOA18_Silicate_i_an",
-                             "DIC": "DIC_mean",
-                             "AT": "AT_mean",
-                             };
+    #Dictionary mapping common parameter names to dataset info
+    #Each entry can be a single DatasetInfo object, or a list of them (where there is more than on data set for a single 'common name')
+    settings["datasetInfoMap"] = {"date": DatasetInfo(commonName="date", datasetName="time", matchupVariableName="time", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "lon": DatasetInfo(commonName="lon", datasetName="lon", matchupVariableName="lon", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "lat": DatasetInfo(commonName="lat", datasetName="lat", matchupVariableName="lat", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "SST": [DatasetInfo(commonName="SST", datasetName="SST-ESACCI", matchupVariableName="OSTIA-ESACCI-L4-v02.1_mean", matchupDatabaseError="OSTIA-ESACCI-L4-v02.1_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc"), predictionDatasetVariable="sst_mean", predictionDatasetError="sst_stddev"),
+                                           DatasetInfo(commonName="SST", datasetName="SST-insitu", matchupVariableName="SST_mean", matchupDatabaseError="SST_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc"), predictionDatasetVariable="sst_mean", predictionDatasetError="sst_stddev"),
+                                           ],
+                                   "SSS": [DatasetInfo(commonName="SSS", datasetName="SSS-ISAS", matchupVariableName="ISAS15PSAL_mean", matchupDatabaseError="ISAS15PSAL_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="salinity_mean", predictionDatasetError="salinity_err"),
+                                           DatasetInfo(commonName="SSS", datasetName="SSS-ESACCI", matchupVariableName="ESACCI-SSS-L4-SSS-MERGED-OI-7DAY-RUNNINGMEAN-DAILY-25km_mean", matchupDatabaseError="ESACCI-SSS-L4-SSS-MERGED-OI-7DAY-RUNNINGMEAN-DAILY-25km_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="salinity_mean", predictionDatasetError="salinity_err"),
+                                           DatasetInfo(commonName="SSS", datasetName="SSS-insitu", matchupVariableName="SSS_mean", matchupDatabaseError="SSS_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="salinity_mean", predictionDatasetError="salinity_err"),
+                                           ],
+                                   "OC": DatasetInfo(commonName="OC", datasetName="OC-ESACCI", matchupVariableName="ESACCI-OC-L3S-OC_PRODUCTS-MERGED-1D_DAILY_4km_GEO_PML_OCx_QAA_mean", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]), #ocean colour
+                                   "DO": DatasetInfo(commonName="DO", datasetName="DO-WOA", matchupVariableName="WOA18_Oxygen_o_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_dissolved_oxygen/woa18_all_o${MM}_01.nc"), predictionDatasetVariable="o_an", predictionDatasetError="o_sd"),
+                                   "NO3": DatasetInfo(commonName="NO3", datasetName="NO3-WOA", matchupVariableName="WOA18_Nitrate_n_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_nitrate/woa18_all_n${MM}_01.nc"), predictionDatasetVariable="n_an", predictionDatasetError="n_sd"),
+                                   "PO4": DatasetInfo(commonName="PO4", datasetName="PO4-WOA", matchupVariableName="WOA18_Phosphate_p_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_phosphate/woa18_all_p${MM}_01.nc"), predictionDatasetVariable="p_an", predictionDatasetError="p_sd"),
+                                   "SiO4":DatasetInfo(commonName="SiO4", datasetName="SiO4-WOA", matchupVariableName="WOA18_Silicate_i_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_silicate/woa18_all_i${MM}_01.nc"), predictionDatasetVariable="i_an", predictionDatasetError="i_sd"),
+                                   "DIC": DatasetInfo(commonName="DIC", datasetName="DIC-matchup", matchupVariableName="DIC_mean", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "AT": DatasetInfo(commonName="AT", datasetName="AT-matchup", matchupVariableName="AT_mean", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   };
     
     ### Settings for prediction
     #Output location of gridded predicted timeseries
-    settings["griddedPredictionOutputTemplate"] = Template(path.join(repoRoot, "output/gridded_predictions/${INPUTCOMBINATION}/gridded_${REGION}_${LATRES}x${LONRES}.nc"));
+    settings["griddedPredictionOutputTemplate"] = Template(path.join(repoRoot, "output/gridded_predictions/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc"));
     
     #Input dataset locations for making predictions from. Dictionary containing inputParameterName:(netCDFVariableName, netCDFFileTemplate) where YYYY and MM are substituted for string representations of year and month
     settings["predictionDataPaths"] = {"SSS": ("salinity_mean", Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc")),
+                                       "SSS_err": ("salinity_err", Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc")),
                                        "SST": ("sst_mean", Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc")),
                                        "DO": ("o_an", Template("../../prediction_datasets/WOA_dissolved_oxygen/woa18_all_o${MM}_01.nc")),
                                        "NO3": ("n_an", Template("../../prediction_datasets/WOA_nitrate/woa18_all_n${MM}_01.nc")),

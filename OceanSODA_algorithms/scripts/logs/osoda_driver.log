@@ -1,5 +1,5 @@
-Started execution at: 2020-03-09 08:14:27.847189
-Begining new combination of input variables: combination0__SST0_SSS0
+Started execution at: 2020-03-24 07:03:15.057424
+Begining new combination of input variables: combination0__SST-ESACCI_SSS-ISAS
 Beginning new region: oceansoda_amazon_plume
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017a_at)
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017d_at)
@@ -92,7 +92,7 @@ Output calculated (region:oceansoda_mediterranean, algo: CopinMontegut2002b_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Gemayel2015_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_full_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_basins_dic)
-Begining new combination of input variables: combination1__SST1_SSS0
+Begining new combination of input variables: combination1__SST-insitu_SSS-ISAS
 Beginning new region: oceansoda_amazon_plume
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017a_at)
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017d_at)
@@ -185,7 +185,7 @@ Output calculated (region:oceansoda_mediterranean, algo: CopinMontegut2002b_dic)
 No matchup data left after subsettings (region:oceansoda_mediterranean, algo: Gemayel2015_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_full_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_basins_dic)
-Begining new combination of input variables: combination2__SST0_SSS1
+Begining new combination of input variables: combination2__SST-ESACCI_SSS-ESACCI
 Beginning new region: oceansoda_amazon_plume
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017a_at)
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017d_at)
@@ -279,7 +279,7 @@ Output calculated (region:oceansoda_mediterranean, algo: CopinMontegut2002b_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Gemayel2015_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_full_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_basins_dic)
-Begining new combination of input variables: combination3__SST1_SSS1
+Begining new combination of input variables: combination3__SST-insitu_SSS-ESACCI
 Beginning new region: oceansoda_amazon_plume
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017a_at)
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017d_at)
@@ -373,7 +373,7 @@ Output calculated (region:oceansoda_mediterranean, algo: CopinMontegut2002b_dic)
 No matchup data left after subsettings (region:oceansoda_mediterranean, algo: Gemayel2015_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_full_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_basins_dic)
-Begining new combination of input variables: combination4__SST0_SSS2
+Begining new combination of input variables: combination4__SST-ESACCI_SSS-insitu
 Beginning new region: oceansoda_amazon_plume
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017a_at)
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017d_at)
@@ -466,7 +466,7 @@ Output calculated (region:oceansoda_mediterranean, algo: CopinMontegut2002b_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Gemayel2015_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_full_dic)
 Output calculated (region:oceansoda_mediterranean, algo: Hassoun2015_basins_dic)
-Begining new combination of input variables: combination5__SST1_SSS2
+Begining new combination of input variables: combination5__SST-insitu_SSS-insitu
 Beginning new region: oceansoda_amazon_plume
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017a_at)
 Output calculated (region:oceansoda_amazon_plume, algo: Astor2017d_at)

@@ -285,9 +285,25 @@ if __name__ == "__main__":
     summaryTable.to_csv(summaryTableOutputPath, sep=",", index=False);     
     print("Full summary table written to:", path.abspath(summaryTableOutputPath));
     
-    print("Combination name variable key as follows:");
-    utilities.print_combination_name_keys(settings);
+#    print("Combination name variable key as follows:");
+#    utilities.print_combination_name_keys(settings);
     
+    ### Calculate overall best algorithms / input combinations for each egion
+    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared"]);
+    for region in settings["regions"]:
+        #find best AT algorithm info by sorting a subset of the summary table for just this region
+        regionTable = summaryTable[summaryTable["region"] == region];
+        regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared", "DIC_RMSDe"], ascending=[True, False, False, True]);
+        overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"], regionTable.iloc[0]["AT_algos_compared"]];
+        
+        #find best DIC algorithm info by sorting a subset of the summary table for just this region
+        regionTable = summaryTable[summaryTable["region"] == region];
+        regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared", "AT_RMSDe"], ascending=[True, False, False, True]);
+        overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"]];
+    
+    overallBestAlgosOutputPath = path.join(settings["outputPathMetrics"], "overall_best_algos.csv");
+    overallBestAlgos.to_csv(overallBestAlgosOutputPath, sep=",", index=False);     
+    print("Overall best algorithm table written to:", path.abspath(overallBestAlgosOutputPath));
     
     #Shutdown logger
     loggerFileHandle.close();
