@@ -10,6 +10,9 @@ import pyproj;
 import numpy as np;
 from datetime import datetime;
 import pandas as pd;
+from os import path, makedirs;
+from netCDF4 import Dataset;
+
 
 ####################
 # Simple utilities #
@@ -298,7 +301,168 @@ def calculate_annual_values(interyearDF):
     return df;
 
 
+##############
+# outputting #
+##############
 
+#Create an empty netCDF file ready to write results of the uncertainty analysis into
+def create_netCDF_file(outputPath, carbonateParameterNC, numSamples, regionMask, gridAreas):
+    if path.exists(path.dirname(outputPath)) == False:
+        makedirs(path.dirname(outputPath));
+    
+    ncout = Dataset(outputPath, 'w');
+    ncout.createDimension("time", len(carbonateParameterNC.variables["time"]));
+    ncout.createDimension("lat", len(carbonateParameterNC.variables["lat"]));
+    ncout.createDimension("lon", len(carbonateParameterNC.variables["lon"]));
+    ncout.createDimension("month", 12);
+    ncout.DICAlgorithmName = carbonateParameterNC.getncattr("algorithmName");
+    ncout.DICAlgorithmRMSDe = carbonateParameterNC.getncattr("algorithmRMSDe");
+    ncout.DICAlgorithmSampleSize = carbonateParameterNC.getncattr("sampleSize");
+    ncout.DICAlgorithmNumAlgosCompared = carbonateParameterNC.getncattr("num_algos_compared");
+    ncout.DICAlgorithmInputCombinationName = carbonateParameterNC.getncattr("input_combination_name");
+    ncout.region = carbonateParameterNC.getncattr("region");
+    ncout.numSamplesForUncertaintyAnalysis = numSamples;
+    
+    #dimension variables
+    var = ncout.createVariable("lat", float, ("lat",));
+    var.units = "lat (degrees North)";
+    var[:] = carbonateParameterNC.variables["lat"][:];
+    var = ncout.createVariable("lon", float, ("lon",));
+    var.units = "lon (degrees East)";
+    var[:] = carbonateParameterNC.variables["lon"][:];
+    var = ncout.createVariable("time", int, ("time",));
+    var.units = "seconds since 1980-01-01";
+    var[:] = carbonateParameterNC.variables["time"][:];
+    var = ncout.createVariable("month", int, ("month",));
+    var.units = "month (1=JAN, 12=DEC)";
+    var[:] = range(1,13);
+    
+    #data variables
+    #Write data to netCDF file
+    var = ncout.createVariable("DIC_pred", float, ("time", "lat", "lon"));
+    var.units = carbonateParameterNC.variables["DIC_pred"].units;
+    var.long_name = carbonateParameterNC.variables["DIC_pred"].long_name;
+    var[:] = carbonateParameterNC.variables["DIC_pred"][:]
+    
+    #Write data to netCDF file
+    var = ncout.createVariable("SSS", float, ("time", "lat", "lon"));
+    var.units = carbonateParameterNC.variables["SSS"].units;
+    var.long_name = carbonateParameterNC.variables["SSS"].long_name;
+    var[:] = carbonateParameterNC.variables["SSS"][:]
+    
+    #Write data to netCDF file
+    var = ncout.createVariable("SSS_err", float, ("time", "lat", "lon"));
+    var.units = carbonateParameterNC.variables["SSS_err"].units;
+    var.long_name = carbonateParameterNC.variables["SSS_err"].long_name;
+    var[:] = carbonateParameterNC.variables["SSS_err"][:]
+    
+    var = ncout.createVariable("grid_areas", float, ("lat", "lon"));
+    var.units = "m^3";
+    var.long_name = "Grid cell surface area";
+    
+    var = ncout.createVariable("plume_volume_total", float, ("time"));
+    var.units = "m^3";
+    var.long_name = "Total plume volume at each point in time";
+    
+    var = ncout.createVariable("plume_volume_total_stddev", float, ("time"));
+    var.units = "m^3";
+    var.long_name = "Standard deviation in total plume volume at each point in time";
+    
+    var = ncout.createVariable("plume_volume_gridded", float, ("time", "lat", "lon"));
+    var.units = "m^3";
+    var.long_name = "Plume volume in each grid cell";
+    
+    var = ncout.createVariable("plume_volume_gridded_stddev", float, ("time", "lat", "lon"));
+    var.units = "m^3";
+    var.long_name = "tandard deviation in plume volume in each grid cell";
+    
+    var = ncout.createVariable("plume_dic_total", float, ("time"));
+    var.units = "mol";
+    var.long_name = "Total DIC contained in the plume over time";
+    
+    var = ncout.createVariable("plume_dic_total_stddev", float, ("time"));
+    var.units = "mol";
+    var.long_name = "Standard deviation in the total DIC contained in the plume over time";
+    
+    var = ncout.createVariable("plume_dic_total_gridded", float, ("time", "lat", "lon"));
+    var.units = "mol";
+    var.long_name = "Total DIC contained in the plume for each grid cell";
+    
+    var = ncout.createVariable("plume_dic_total_gridded_stddev", float, ("time", "lat", "lon"));
+    var.units = "mol";
+    var.long_name = "Standard deviation in the total DIC contained in the plume for each grid cell";
+    
+    var = ncout.var = ncout.createVariable("discharge_dic", float, ("time"));
+    var.units = "TgC";
+    var.long_name = "Discharge of DIC into the ocean in teragrams of carbon";
+    
+    var = ncout.var = ncout.createVariable("discharge_dic_stddev", float, ("time"));
+    var.units = "TgC";
+    var.long_name = "Standard deviation in the discharge of DIC into the ocean in teragrams of carbon";
+    
+    var = ncout.createVariable("discharge", float, ("time"));
+    var.units = "m^3";
+    var.long_name = "Total monthly river discharge estimated from daily discharge rate from gauging station";
+    
+    var = ncout.createVariable("discharge_dic_between_year_mean", float, ("month"));
+    var.units = "TgC";
+    var.long_name = "Mean total monthly river discharge of DIC into the ocean in teragrams of carbon";
+    
+    var = ncout.createVariable("discharge_dic_between_year_uncertainty", float, ("month"));
+    var.units = "TgC";
+    var.long_name = "Standard deviation in the between year monthly mean discharge of DIC into the ocean in teragrams of carbon";
+    
+    var = ncout.createVariable("discharge_stddev", float, ("time"));
+    var.units = "m^3";
+    var.long_name = "Standard deviation of the total monthly river discharge estimated from daily discharge rate from gauging station";
+
+    var = ncout.createVariable("region_mask", float, ("lat", "lon"));
+    var.units = "integer";
+    var.long_name = "Mask defining the region (1=keep, 0=discard)";
+    
+    var = ncout.createVariable("plume_mask", float, ("time", "lat", "lon"));
+    var.units = "integer";
+    var.long_name = "Mask defining region defined as the plume, over time (1=keep, 0=discard)";
+    
+    #Write some one off 2D data
+    ncout.variables["region_mask"][:] = regionMask;
+    ncout.variables["grid_areas"][:] = gridAreas;
+    
+    return ncout;
+    
+
+#Update an open netCDF file with gridded outputs for a single time point
+def update_gridded_time_point_netCDF(ncout, timeIndex, griddedPlumeVolume, griddedPlumeVolumeUncertainty, griddedPlumeDIC, griddedPlumeDICUncertainty, plumeMask):
+    ncout.variables["plume_volume_gridded"][timeIndex,:,:] = griddedPlumeVolume;
+    ncout.variables["plume_volume_gridded_stddev"][timeIndex,:,:] = griddedPlumeVolumeUncertainty;
+    ncout.variables["plume_dic_total_gridded"][timeIndex,:,:] = griddedPlumeDIC;
+    ncout.variables["plume_dic_total_gridded_stddev"][timeIndex,:,:] = griddedPlumeDICUncertainty;
+    ncout.variables["plume_mask"][timeIndex,:,:] = plumeMask;
+
+
+#Write non-gridded time series outputs (e.g. best estimate time series and estimated uncertainty time series)
+def write_timeseries_to_netCDF(ncout, plumeVolume, plumeVolumeUncertainty, totalPlumeDIC, totalPlumeDICUncertainty, dischargeDIC, dischargeDICUncertainty,
+                               dischargeTotal, dischargeTotalUncertainty, dischargeDICBetweenYearMean, dischargeDICBetweenYearMeanUncertainty):
+    ncout.variables["plume_volume_total"][:] = plumeVolume;
+    ncout.variables["plume_volume_total_stddev"][:] = plumeVolumeUncertainty;
+    ncout.variables["plume_dic_total"][:] = totalPlumeDIC;
+    ncout.variables["plume_dic_total_stddev"][:] = totalPlumeDICUncertainty;
+    
+    ncout.variables["discharge_dic"][:] = dischargeDIC;
+    ncout.variables["discharge_dic_stddev"][:] = dischargeDICUncertainty;
+    
+    ncout.variables["discharge"][:] = dischargeTotal;
+    ncout.variables["discharge_stddev"][:] = dischargeTotalUncertainty;
+    
+    ncout.variables["discharge_dic_between_year_mean"][:] = dischargeDICBetweenYearMean;
+    ncout.variables["discharge_dic_between_year_uncertainty"][:] = dischargeDICBetweenYearMeanUncertainty;
+
+
+
+
+######################
+# plotting functions #
+######################
 
 
 
