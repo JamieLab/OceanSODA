@@ -15,12 +15,26 @@ import matplotlib.pyplot as plt;
 from os import path, makedirs;
 from datetime import datetime, timedelta;
 
+import analysis_tools;
+
 import sys;
 if path.abspath("../../") not in sys.path:
     sys.path.append(path.abspath("../../"));
     sys.path.append(path.abspath("../../OceanSODA_algorithms/scripts"));
 #import OceanSODA_algorithms.scripts.utilities as utilities;
 import osoda_global_settings;
+
+writeOutput = False;
+settings = osoda_global_settings.get_default_settings();
+lonRes = latRes = 1.0;
+plumeSalinityThreshold = 35.0; #Below this salinity is considered plume
+numSamples = 1;#25; #How many SSS and DIC samples to use
+verbose = True;
+#regions = ["oceansoda_amazon_plume", "oceansoda_congo", "oceansoda_mississippi", "oceansoda_st_lawrence", "oceansoda_mediterranean"];
+regions = ["oceansoda_amazon_plume"];
+region = "oceansoda_amazon_plume";
+
+
 
 #Returns area of each grid cell (in meters^2)
 def calculate_grid_areas(latRes, lonRes):
@@ -129,14 +143,19 @@ def plume_thickness_coles2013(salinity, plumeMask, useModelled=False, sampleUnce
 #Assumes DIC is perfectly conservative with salinity (no biological activity etc.)
 #Uses the uses proportion mean plume salinity to salinity and assumes same relationship, e.g.:
 #   meanPlumeDIC = surfaceDIC * (meanPlumeSalinity / surfaceSalinity)
-def calc_mean_plume_dic(surfaceSalinity, surfaceDIC, interceptUncertaintyRatio=0.1, slopeUncertaintyRatio=0.1):
+def calc_mean_plume_dic(surfaceSalinity, surfaceDIC, plumeMask, interceptUncertaintyRatio=0.1, slopeUncertaintyRatio=0.1):
     intercept = np.random.normal(4.352, interceptUncertaintyRatio);
     slope = np.random.normal(0.881, slopeUncertaintyRatio);
     meanPlumeSalinity = intercept + slope*surfaceSalinity;
+    meanPlumeSalinity[plumeMask!=1] = np.nan;
     
     meanPlumeProportion = meanPlumeSalinity/surfaceSalinity;
     meanPlumeDIC = surfaceDIC * meanPlumeProportion;
-    return meanPlumeDIC;
+    return meanPlumeDIC, meanPlumeSalinity;
+
+
+def mol_to_TgC(valueInMols):
+    return valueInMols * 12.0107 / 1000000000000.0; #convert from mols to TgC
 
 
 #Calculates an estimate of the monthly DIC outflow from a river, given DIC plume content, river discharge, and plume volume.
@@ -149,7 +168,7 @@ def calculate_dic_outflow(outflowMonthlyTotalDischarge, plumeVolume, totalPlumeD
     
     dischargeVolumeProportion = sampledOutflowMonthlyTotalDischarge / plumeVolume;
     dischargeDIC = totalPlumeDIC.data * dischargeVolumeProportion;
-    dischargeDIC = dischargeDIC*12.0107 / 1000000000000.0; #convert from mols to TgC
+    dischargeDIC = mol_to_TgC(dischargeDIC); #convert from mols to TgC
     
     return dischargeDIC;
 
@@ -295,22 +314,36 @@ def write_netCDF(outputPath, carbonateParameterNC, gridAreas, plumeVolume, plume
     ncout.close();
 
 
+#Given a time series containing monthly values (and their uncertainties), calculate annual mean (and uncertainty)
+#   and mean (and uncertainty) for each month of the year across all years
+#Returns (annual mean, annual uncertainty, between year monthly means, between year monthly uncertainties)
+#   cumulative: when set to true the annual value is treated as cumulative and calculates the annual total (e.g. total flux), when false annual value is treated as mean (e.g. average plume volume)
+def calculate_monthly_annual_stats(monthlyTimeseries, monthlyTimeseriesUncertainty, dates, cumulative=True):
+    monthlyBetweenYearMeans = np.zeros((12,), dtype=float);
+    monthlyBetweenYearUncertainties = np.zeros((12,), dtype=float);
+    for imonth in range(0, 12):
+        #subset data for the current month
+        monthValues = monthlyTimeseries[(dates.month == imonth+1) & (monthlyTimeseries != 0.0) & (np.isfinite(monthlyTimeseries))];
+        monthsUncertainties = monthlyTimeseriesUncertainty[(dates.month == imonth+1) & (monthlyTimeseriesUncertainty != 0.0) & (np.isfinite(monthlyTimeseriesUncertainty))];
+        #calculate mean (and uncertainty) for this month across all years
+        monthlyBetweenYearMeans[imonth] = np.mean(monthValues);
+        monthlyBetweenYearUncertainties[imonth] = np.sqrt(np.nansum(monthsUncertainties**2))/len(monthsUncertainties);
+    
+    #calculate annual mean
+    if cumulative==True:
+        annualValue = np.sum(monthlyBetweenYearMeans);
+        annualUncertainty = np.sqrt(np.sum(monthlyBetweenYearUncertainties**2)); #give the total value (e.g. total DIC outflow)
+    else: #cumulative is False
+        annualValue = np.mean(monthlyBetweenYearMeans);
+        annualUncertainty = np.sqrt(np.sum(monthlyBetweenYearUncertainties**2))/12; #give the average value (e.g. mean annual plume size)
+    
+    return annualValue, annualUncertainty, monthlyBetweenYearMeans, monthlyBetweenYearUncertainties;
+
 
 #Settings and constants
 carbonateParametersTemplate = Template("../../OceanSODA_algorithms/output/gridded_predictions/gridded_${REGION}_1.0x1.0_${OUTPUTVAR}.nc");
 regionMaskPath = "../../OceanSODA_algorithms/region_masks/osoda_region_masks_v2.nc";
-regions = ["oceansoda_amazon_plume", "oceansoda_congo", "oceansoda_mississippi", "oceansoda_st_lawrence", "oceansoda_mediterranean"];
 amazonFlowPath = "/home/verwirrt/Projects/Work/20190816_OceanSODA/OceanSODA_riverine_outflow/data/obidos/17050001_debits.csv";
-
-
-settings = osoda_global_settings.get_default_settings();
-lonRes = latRes = 1.0;
-plumeSalinityThreshold = 35.0; #Below this salinity is considered plume
-numSamples = 30; #How many SSS and DIC samples to use
-verbose = True;
-
-regions = ["oceansoda_amazon_plume"];
-region = "oceansoda_amazon_plume";
 
 carbonateParameters = Dataset(carbonateParametersTemplate.safe_substitute(REGION=region, OUTPUTVAR="DIC"));
 regionMaskNC = Dataset(regionMaskPath, 'r');
@@ -344,16 +377,18 @@ amazonOutflowMonthlyTotalSD.index = amazonOutflowMonthlyTotal.index;
 
 #subset to just the time range we're interested in (note, this is done after monthly resampling so that whole months are preserved)
 toKeep = (amazonOutflowMonthlyTotal.index >= carbonateParamsTimeRange[0]) & (amazonOutflowMonthlyTotal.index <= carbonateParamsTimeRange[1]);
+dates = amazonOutflowMonthlyTotal.index[toKeep];
 amazonOutflowMonthlyTotal = amazonOutflowMonthlyTotal[toKeep];
 amazonOutflowMonthlyTotalSD = amazonOutflowMonthlyTotalSD[toKeep];
-
 
 #Calculate grid cell surface areas
 gridAreas = calculate_grid_areas(latRes, lonRes);
 
 
-
 for region in regions:
+    summaryTable = [];
+    summaryTableMonths = [];
+    
     #####################
     ### Estimate DIC outflow from the river. Uncertainty is estimated by resampling SSS, DIC etc. according to RMSD
     #####################
@@ -364,6 +399,7 @@ for region in regions:
     griddedPlumeSurfaceArea = np.full(sss.shape, np.nan, dtype=float); #m^2
     for t in range(griddedPlumeSurfaceArea.shape[0]):
         griddedPlumeSurfaceArea[t, plumeMask[t,:,:]==1] = gridAreas[plumeMask[t,:,:]==1];
+    plumeSurfaceAreaTotal = np.nansum(griddedPlumeSurfaceArea, axis=(1,2));
     
     griddedPlumeDepth = plume_thickness_coles2013(sss, plumeMask, useModelled=False, sampleUncertainty=False); #m
     griddedPlumeVolume = griddedPlumeSurfaceArea * griddedPlumeDepth; #m^3
@@ -374,7 +410,8 @@ for region in regions:
     #and assumes DIC is perfectly conservative with salinity
     #I.e. the proportion mean plume salinity to surface salinity is assumed to equal mean plume DIC / surface DIC, thus rearranging gives:
     #   meanPlumeDIC = surfaceDIC * (meanPlumeSalinity / surfaceSalinity)
-    meanGriddedPlumeDIC = calc_mean_plume_dic(sss, dic, interceptUncertaintyRatio=0.0, slopeUncertaintyRatio=0.0);
+    meanGriddedPlumeDIC, meanGriddedPlumeSalinity = calc_mean_plume_dic(sss, dic, plumeMask, interceptUncertaintyRatio=0.0, slopeUncertaintyRatio=0.0);
+    meanPlumeSalinity = np.nanmean(meanGriddedPlumeSalinity, axis=(1,2));
     
     #Estimate total DIC in the plume
     gridPlumeDIC = meanGriddedPlumeDIC*griddedPlumeVolume;
@@ -386,8 +423,11 @@ for region in regions:
     
     #################
     ### Now calculate uncertainty
+    sampleGriddedPlumeSurfaceAreas = np.full((numSamples,sss.shape[0],sss.shape[1],sss.shape[2]), np.nan, dtype=float);
+    sampleGriddedPlumeDepths = np.full((numSamples,sss.shape[0],sss.shape[1],sss.shape[2]), np.nan, dtype=float);
     sampleVolumes = np.full((numSamples,sss.shape[0]), np.nan, dtype=float);
     sampleGriddedVolumes = np.full((numSamples,sss.shape[0],sss.shape[1],sss.shape[2]), np.nan, dtype=float);
+    sampleMeanGriddedPlumeSalinities = np.full((numSamples,sss.shape[0],sss.shape[1],sss.shape[2]), np.nan, dtype=float);
     sampleTotalPlumeDICs = np.full((numSamples,sss.shape[0]), np.nan, dtype=float);
     sampleMeanGriddedPlumeDICs = np.full((numSamples,sss.shape[0],sss.shape[1],sss.shape[2]), np.nan, dtype=float);
     sampleDischargeDICs = np.full((numSamples,sss.shape[0]), np.nan, dtype=float);
@@ -408,9 +448,11 @@ for region in regions:
         sampleGriddedPlumeSurfaceArea = np.full(sssSample.shape, np.nan, dtype=float);
         for t in range(sampleGriddedPlumeSurfaceArea.shape[0]):
             sampleGriddedPlumeSurfaceArea[t, samplePlumeMask[t,:,:]==1] = gridAreas[samplePlumeMask[t,:,:]==1];
+        sampleGriddedPlumeSurfaceAreas[i,:,:,:] = sampleGriddedPlumeSurfaceArea;
         
         #Calculate plume depth (this is a sample, using the uncertainty)
         sampleGriddedPlumeDepth = plume_thickness_coles2013(sssSample, samplePlumeMask, useModelled=False, sampleUncertainty=True); #m
+        sampleGriddedPlumeDepths[i, :, :, :] = sampleGriddedPlumeDepth;
         
         #Calculate plume volume
         sampleGriddedPlumeVolume = sampleGriddedPlumeSurfaceArea*sampleGriddedPlumeDepth; #m^3
@@ -424,7 +466,8 @@ for region in regions:
         #and assumes DIC is perfectly conservative with salinity
         #I.e. the proportion mean plume salinity to surface salinity is assumed to equal mean plume DIC / surface DIC, thus rearranging gives:
         #   meanPlumeDIC = surfaceDIC * (meanPlumeSalinity / surfaceSalinity)
-        sampleMeanGriddedPlumeDIC = calc_mean_plume_dic(sssSample, dicSample);
+        sampleMeanGriddedPlumeDIC, sampleMeanGriddedPlumeSalinity = calc_mean_plume_dic(sssSample, dicSample, samplePlumeMask);
+        sampleMeanGriddedPlumeSalinities[i,:,:,:] = sampleMeanGriddedPlumeSalinity;
         
         #Estimate total DIC in the plume for this sample
         sampleGridPlumeDIC = sampleMeanGriddedPlumeDIC*sampleGriddedPlumeVolume;
@@ -439,12 +482,55 @@ for region in regions:
         sampledDischargeDIC = calculate_dic_outflow(amazonOutflowMonthlyTotal["discharge"], samplePlumeVolume, sampleTotalPlumeDIC, outflowMonthlyTotalDischargeUncertainty=amazonOutflowMonthlyTotalSD);
         sampleDischargeDICs[i,:] = sampledDischargeDIC;
     
+    #calculate stddev in sampled plume depth
+    plumeDepthMean = np.nanmean(griddedPlumeDepth, axis=(1,2));
+    plumeDepthUncertainty = np.nanstd(np.nanmean(sampleGriddedPlumeDepths, axis=(2,3)), axis=0);
+    #plume depth annual and monthly stats
+    annualPlumeDepthMean, annualPlumeDepthUncertainty, monthlyBetweenYearPlumeDepthMean, monthlyBetweenyearPlumeDepthUncertainty = calculate_monthly_annual_stats(plumeDepthMean, plumeDepthUncertainty, dates, cumulative=False);
+    summaryTable.append(("mean annual plume depth", annualPlumeDepthMean, annualPlumeDepthUncertainty, "m"));
+    summaryTableMonths.append(("mean monthly plume depth", monthlyBetweenYearPlumeDepthMean, monthlyBetweenyearPlumeDepthUncertainty, "m"));
+    
+    #calculate stddev in plume surface area
+    plumeSurfaceAreaUncertainty = np.nanstd(np.nanmean(sampleGriddedPlumeSurfaceAreas, axis=(2,3)), axis=0);
+    #plume surface area annual and monthly stats
+    annualPlumeSurfaceAreaTotal, annualPlumeSurfaceAreaUncertainty, monthlyBetweenYearPlumeSurfaceAreaMean, monthlyBetweenYearPlumeSurfaceAreaUncertainty = calculate_monthly_annual_stats(plumeSurfaceAreaTotal, plumeSurfaceAreaUncertainty, dates, cumulative=True);
+    summaryTable.append(("mean annual plume surface area", annualPlumeSurfaceAreaTotal, annualPlumeSurfaceAreaUncertainty, "m^2"));
+    summaryTableMonths.append(("mean monthly plume surface area", monthlyBetweenYearPlumeSurfaceAreaMean, annualPlumeSurfaceAreaUncertainty, "m^2"));
+    
+    #calculate stddev in mean plume salinity
+    meanPlumeSalinityUncertainty = np.nanstd(np.nanmean(sampleMeanGriddedPlumeSalinities, axis=(2,3)), axis=0);
+    #mean plume salinity annual and monthly stats
+    annualPlumeSalinityMean, annualPlumeSalinityUncertainty, monthlyBetweenYearsPlumeSalinity, monthlyBetweenYearsPlumeSalinityUncertainty = calculate_monthly_annual_stats(meanPlumeSalinity, meanPlumeSalinityUncertainty, dates, cumulative=False);
+    summaryTable.append(("mean annual plume salinity", annualPlumeSalinityMean, annualPlumeSalinityUncertainty, "PSU"));
+    summaryTableMonths.append(("mean monthly plume salinity", monthlyBetweenYearsPlumeSalinity, monthlyBetweenYearsPlumeSalinityUncertainty, "PSU"));
+    
     #calculate stddev in sampled plume volume
     plumeVolumeUncertainty = np.nanstd(sampleVolumes, axis=0);
     griddedPlumeVolumeUncertainty = np.nanstd(sampleGriddedVolumes, axis=(0));
+    #plume volume annual and monthly stats
+    annualPlumeVolumeMean, annualPlumeVolumeUncertainty, monthlyBetweenYearPlumeVolumeMeans, monthlyBetweenYearPlumeVolumeUncertainties = calculate_monthly_annual_stats(plumeVolume, plumeVolumeUncertainty, dates, cumulative=False);
+    summaryTable.append(("mean annual plume volume", annualPlumeVolumeMean, annualPlumeVolumeUncertainty, "m^3"));
+    summaryTableMonths.append(("mean monthly plume volume", monthlyBetweenYearPlumeVolumeMeans, monthlyBetweenYearPlumeVolumeUncertainties, "m^3"));
+    
+    #calculate stddev in sampled total plume DIC content
     totalPlumeDICUncertainty = np.nanstd(sampleTotalPlumeDICs, axis=0);
     meanGriddedPlumeDICUncertainty = np.nanstd(sampleMeanGriddedPlumeDICs, axis=(0));
+    #total plume DIC annual and monthly stats
+    annualTotalPlumeDIC, annualTotalPlumeDICUncertainty, monthlyBetweenYearTotalPlumeDIC, monthlyBetweenYearTotalPlumeDICUncertainty = calculate_monthly_annual_stats(totalPlumeDIC, totalPlumeDICUncertainty, dates, cumulative=False);
+    summaryTable.append(("total annual plume DIC", mol_to_TgC(annualTotalPlumeDIC), mol_to_TgC(annualTotalPlumeDICUncertainty), "TgC"));
+    summaryTableMonths.append(("total monthly plume DIC", mol_to_TgC(monthlyBetweenYearTotalPlumeDIC), mol_to_TgC(monthlyBetweenYearTotalPlumeDICUncertainty), "TgC"));
+    
+    #calculate uncertainty in DIC discharge
     dischargeDICUncertainty = np.nanstd(sampleDischargeDICs, axis=0);
+    #DIC discharge annual and monthly starts
+    annualDischargeDIC, annualDischargeDICUncertainty, monthlyBetweenYearDischargeDIC, monthlyBetweenYearDischargeDICUncertainty = calculate_monthly_annual_stats(dischargeDIC, dischargeDICUncertainty, dates, cumulative=True);
+    summaryTable.append(("total annual DIC discharge", annualDischargeDIC, mol_to_TgC(annualDischargeDICUncertainty), "TgC"));
+    summaryTableMonths.append(("total monthly DIC discharge", monthlyBetweenYearDischargeDIC, mol_to_TgC(monthlyBetweenYearDischargeDICUncertainty), "TgC"));
+    
+    #river discharge annual and monthly stats
+    annualRiverDischarge, annualRiverDischargeUncertainty, monthlyBetweenYearRiverDischarge, monthlyBetweenYearRiverDischargeUncertainty = calculate_monthly_annual_stats(amazonOutflowMonthlyTotal["discharge"], amazonOutflowMonthlyTotalSD, dates, cumulative=True);
+    summaryTable.append(("mean annual river discharge", annualRiverDischarge, annualRiverDischargeUncertainty, "m^3"));
+    summaryTableMonths.append(("mean monthly river discharge", monthlyBetweenYearRiverDischarge, monthlyBetweenYearRiverDischargeUncertainty, "m^3"));
     
     if False: #Visualise plume volume area over time (with estimated uncertainty)
         plt.figure();
@@ -461,53 +547,43 @@ for region in regions:
         plt.title("DIC discharge from the Amazon");
         plt.xlabel("time (months)");
         plt.ylabel("Monthly discharge of DIC (TgC)");
-    
-    
-    #Summary stats (whole period)
-    dischargeDICMean = np.mean(dischargeDIC);
-    dischargeDICSD = np.std(dischargeDIC);
-    amazonOutflowMonthlyTotal["dischargeDIC"] = dischargeDIC;
-    amazonOutflowMonthlyTotal["dischargeDICUncertainty"] = dischargeDICUncertainty;
-    amazonOutflowMonthlyTotal["year"] = [d.year for d in amazonOutflowMonthlyTotal.index];
-    amazonOutflowMonthlyTotal["month"] = [d.month for d in amazonOutflowMonthlyTotal.index];
-    
-    dischargeDICBetweenYearGroup = amazonOutflowMonthlyTotal.groupby(["month"]);
-    dischargeDICBetweenYearMean = dischargeDICBetweenYearGroup["dischargeDIC"].mean();
-    #dischargeDICBetweenYearSD = dischargeDICBetweenYearGroup["dischargeDIC"].std();
-    
-    dischargeDICBetweenYearUncertainty = np.zeros((12,), dtype=float);
-    for month in range(1,13):
-        monthUncertainties = amazonOutflowMonthlyTotal[amazonOutflowMonthlyTotal["month"]==month]["dischargeDICUncertainty"];
-        #Propagate error, sandard deviation of the mean, see Taylor section 4.4
-        dischargeDICBetweenYearUncertainty[month-1] = np.nansum(monthUncertainties) / np.sqrt(np.sum(np.isfinite(monthUncertainties))); #sum reuslt of isfinite instead of length as to exclude nans
-    
-    if False:
+    if False: #Visualise DIC discharge (between years)
         plt.figure();
-        plt.fill_between(range(1, 13), dischargeDICBetweenYearMean-dischargeDICBetweenYearUncertainty, dischargeDICBetweenYearMean+dischargeDICBetweenYearUncertainty, alpha=0.5);
-        plt.plot(range(1, 13), dischargeDICBetweenYearMean);
+        plt.fill_between(range(1, 13), monthlyBetweenYearDischargeDIC-monthlyBetweenYearDischargeDICUncertainty, monthlyBetweenYearDischargeDIC+monthlyBetweenYearDischargeDICUncertainty, alpha=0.5);
+        plt.plot(range(1, 13), monthlyBetweenYearDischargeDIC);
         plt.xlabel("month");
         plt.ylabel("Amazon DIC source to the ocean (TgC)");
         plt.title("Between year monthly mean");
-
+    
+    #print summary table
+    for r in range(len(summaryTable)):
+        row = summaryTable[r];
+        print("%s: %f +/- %f (%s)" % (row[0], row[1], row[2], row[3]));
     
     ### Write to netCDF
-    outputPath = "../output/dic_outflow_"+region+".nc";
-    if path.exists(path.dirname(outputPath)) == False:
-        makedirs(path.dirname(outputPath));
-    write_netCDF(outputPath, carbonateParameters, gridAreas, plumeVolume, plumeVolumeUncertainty, griddedPlumeVolume, griddedPlumeVolumeUncertainty,
-                 totalPlumeDIC, totalPlumeDICUncertainty, meanGriddedPlumeDIC, meanGriddedPlumeDICUncertainty,
-                 dischargeDIC, dischargeDICUncertainty, amazonOutflowMonthlyTotal["discharge"].as_matrix(), amazonOutflowMonthlyTotalSD.as_matrix(),
-                 dischargeDICBetweenYearMean.as_matrix(), dischargeDICBetweenYearUncertainty,
-                 regionMaskNC.variables[region][:], plumeMask, numSamples);
+    if writeOutput == True:
+        outputPath = "../output/dic_outflow_"+region+".nc";
+        if path.exists(path.dirname(outputPath)) == False:
+            makedirs(path.dirname(outputPath));
+        write_netCDF(outputPath, carbonateParameters, gridAreas, plumeVolume, plumeVolumeUncertainty, griddedPlumeVolume, griddedPlumeVolumeUncertainty,
+                     totalPlumeDIC, totalPlumeDICUncertainty, meanGriddedPlumeDIC, meanGriddedPlumeDICUncertainty,
+                     dischargeDIC, dischargeDICUncertainty, amazonOutflowMonthlyTotal["discharge"].as_matrix(), amazonOutflowMonthlyTotalSD.as_matrix(),
+                     monthlyBetweenYearDischargeDIC, monthlyBetweenYearDischargeDICUncertainty,
+                     regionMaskNC.variables[region][:], plumeMask, numSamples);
+   
     
-    #Summary stats (whole period)
-    dischargeAnnual = np.sum(dischargeDICBetweenYearMean);
-    dischargeAnnualUncertainty = np.sqrt(np.nansum([uncertainty**2 for uncertainty in dischargeDICBetweenYearUncertainty]));
+    #Some diagnostic visualisations
+    averageMonthPlumes = analysis_tools.average_month_plumes(plumeMask, dates);
     
-    #Table output
-    print("DIC annual discharge (PgC)", dischargeAnnual/1000, dischargeAnnualUncertainty/1000, sep=",");
-
-
-
-
-
+    monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    worldSeas = Dataset("/home/verwirrt/Projects/Work/20190816_OceanSODA/OceanSODA_algorithms/misc/World_Seas-IHO-mask.nc", 'r').variables["sea-mask"][:].squeeze();
+    fig, subplots = plt.subplots(3, 4, sharex=True, sharey=True);
+    for imonth in range(0, 12):
+        toPlot = np.flipud(averageMonthPlumes[imonth,:,:]);
+        toPlot[worldSeas==0] -= 0.1;
+        subplots[imonth//4][imonth%4].imshow(toPlot);
+        subplots[imonth//4][imonth%4].set_title(monthNames[imonth]);
+    
+    #plt.colorbar();
+    
+    #analysis_tools.plot_average_month_plumes(averageMonthPlumes);

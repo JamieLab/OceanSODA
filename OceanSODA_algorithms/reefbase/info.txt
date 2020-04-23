@@ -1,3 +1,7 @@
 Reef locations.
 
 Downloaded from: http://www.reefbase.org/gis_maps/datasets.aspx
+
+Acknowledgement:
+"Coral reef provided by UNEP-WCMC"
+(http://www.reefbase.org/gis_maps/faq.aspx)

@@ -33,6 +33,11 @@ griddedPredictionResolution = 1.0; #resolution of the gridded predictions
 reefIndividualOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "individual_${REGION}/reef_${REEFID}.csv"));
 reefSummaryOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "all_reef_${SUMMARYVAR}_summary_metrics.csv"));
 
+df = pd.DataFrame(columns=["col1", "col2"])
+for i in range(10):
+    newRow = pd.Series({"col1":i, "col2":i*2})
+    df.loc[len(df)] = newRow
+
 
 #Sort reef locations by region. Returns a dictionary of region:reefsInLocationDF
 def sort_reefs_by_region(settings, reefLocationsPath):
@@ -181,7 +186,9 @@ if extractReefData:
         reefSummaryOutputPathDIC = reefSummaryOutputPathTemplate.safe_substitute(SUMMARYVAR="DIC");
         reefSummaryMetricsDF_DIC.to_csv(reefSummaryOutputPathDIC);
 
-            
+       
+for key in reefsByRegion:
+    print(key, len(reefsByRegion[key]));
 
 
 #if calculateMetaMetrics:
