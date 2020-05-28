@@ -14,7 +14,7 @@ from netCDF4 import Dataset;
 import pickle;
 import logging;
 import datetime;
-from string import Template;
+#from string import Template;
 import pandas as pd;
 
 import metrics;
@@ -52,14 +52,16 @@ def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=No
     
     #Run the algorithm to make predictions using the subsetted matchup dataset as input
     try:
-        modelOutput, dataUsed = algorithm(subsetData); #model output is the predictions, dataUsed indicates a further subset of the matchup dataset (e.g. some rows may not contain values for all required inputs, or may exceed the valid ranges for the algorithm)
+        algorithmOutputTuple = algorithmInstance(subsetData); #model output is the predictions, dataUsed indicates a further subset of the matchup dataset (e.g. some rows may not contain values for all required inputs, or may exceed the valid ranges for the algorithm)
+        modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = algorithmOutputTuple;
     except ValueError: #After subsetting there's no data left to make predictions with.
         raise; #Pass exception up the stack
     
-    return modelOutput, dataUsed;
-  
+    return modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed;
+
+
 #Writes basic metrics objects, paired metrics matrices, final score dataframe, appended matchup dataset subsets (with predicted values), and algorithm name ordered list to file
-def write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, algorithmFunctorList, matchupRowsUsedList):
+def write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs):
     if path.exists(outputDirectory) == False:
         makedirs(outputDirectory);
     
@@ -73,16 +75,22 @@ def write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, paire
     finalScores.to_csv(path.join(outputDirectory, "final_scores.csv"), sep=",", na_rep="nan", index=False);
     
     #Construct new matchup datasets with additional predicted column and output this to file
-    for i in range(len(algorithmFunctorList)):
-        algorithmName = type(algorithmFunctorList[i]).__name__;
-        outputVariable = algorithmFunctorList[i].output_name(); #The common name of the output variable (i.e. 'AT' or 'DIC')
-        reconstructedData = matchupData.loc[matchupRowsUsedList[i]];
-        algorithmOutput = basicMetrics[i]["model_output"];
-        reconstructedData[outputVariable.upper()+"_pred"] = algorithmOutput;
+    for i in range(len(currentAlgorithmOutputs)):
+        algorithmName = type(currentAlgorithmOutputs[i]["instance"]).__name__;
+        outputVariable = currentAlgorithmOutputs[i]["instance"].output_name(); #The common name of the output variable (i.e. 'AT' or 'DIC')
+        reconstructedData = matchupData.loc[currentAlgorithmOutputs[i]["dataUsedIndices"]];
+        reconstructedData[outputVariable.upper()+"_pred"] = basicMetrics[i]["model_output"];
+        reconstructedData[outputVariable.upper()+"_pred_model_uncertainty"] = basicMetrics[i]["model_uncertainty"]; #RMSD of the model
+        reconstructedData[outputVariable.upper()+"_pred_propagated_input_uncertainty"] = basicMetrics[i]["model_propagated_input_uncertainty"]; #Uncertainty due purely to inputs used by the model
+        reconstructedData[outputVariable.upper()+"_pred_combined_output_uncertainty"] = basicMetrics[i]["model_combined_output_uncertainty"]; #combined RMSD of model and input uncertainty
+        reconstructedData[outputVariable.upper()+"_reference_output_uncertainty"] = basicMetrics[i]["reference_output_uncertainty"]; #uncertainty of the reference (in situ) outputs
+        
+        
+        #reconstructedData[outputVariable.upper()+"_pred_err"] = basicMetrics[i]["model_output_err"];
         reconstructedData.to_csv(path.join(outputDirectory, "matchup_appended_"+algorithmName+".csv"), sep=",");
 
     #write algorithm list/order to file
-    algoNameOrder = np.array([type(algoFunctor).__name__ for algoFunctor in algorithmFunctorList]);
+    algoNameOrder = np.array([type(algorithmOutput["instance"]).__name__ for algorithmOutput in currentAlgorithmOutputs]);
     with open(path.join(outputDirectory, "algorithms_used.csv"), 'w') as file:
         for algoName in algoNameOrder:
             file.write(algoName+",");
@@ -95,7 +103,6 @@ if __name__ == "__main__":
     loggerFileHandle = logging.FileHandler('logs/osoda_driver.log', mode='w');
     loggerFileHandle.setLevel(logging.DEBUG);
     logger.addHandler(loggerFileHandle);
-    
     logger.info("Started execution at: "+str(datetime.datetime.now()));
     
     #Load the settings for this run
@@ -105,7 +112,6 @@ if __name__ == "__main__":
     #This gets a list of dictionaries, each dictionary represents the mapping of the ocean parameter names to database variable names for one specific combination input variables
     #Also returns a string representation of the names for these (which is used later for creating output directories and distinguishing combinations from one another)
     specificVariableToDatabaseMaps, specificVariableToDatabaseMapNames = utilities.get_dataset_variable_map_combinations(settings);
-    
     
     if runAlgorithmsAndCalculateMetrics == True:
         ### Iterate through each specific combination of input variables (aka specific variable to database mappings)
@@ -130,9 +136,7 @@ if __name__ == "__main__":
             for region in settings["regions"]:
                 print("Running for region:", region);
                 logger.info("Beginning new region: "+region);
-                algorithmFunctorList = [];
-                modelOutputList = [];
-                matchupRowsUsedList = [];
+                algorithmOutputList = [];
                 
                 
                 ######################################
@@ -141,10 +145,19 @@ if __name__ == "__main__":
                     algorithm = AlgorithmFunctor(settings); #Create an instance of the algorithm functor, this is the handle used to access the algorithm
                     
                     try:
-                        modelOutput, dataUsed = run_algorithm(algorithm, matchupData,
-                                                              regionMaskPath=settings["regionMasksPath"], region=region,
-                                                              depthMaskPath=settings["depthMaskPath"], depthMaskVar=settings["depthMaskVar"],
-                                                              distToCoastMaskPath=settings["distToCoastMaskPath"], distToCoastMaskVar=settings["distToCoastMaskVar"]);
+                        modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = \
+                                  run_algorithm(algorithm, matchupData,
+                                  regionMaskPath=settings["regionMasksPath"], region=region,
+                                  depthMaskPath=settings["depthMaskPath"], depthMaskVar=settings["depthMaskVar"],
+                                  distToCoastMaskPath=settings["distToCoastMaskPath"], distToCoastMaskVar=settings["distToCoastMaskVar"]);
+                        algorithmOutput = {};
+                        algorithmOutput["instance"] = algorithm;
+                        algorithmOutput["modelOutput"] = modelOutput;
+                        algorithmOutput["propagatedInputUncertainty"] = propagatedInputUncertainty;
+                        algorithmOutput["rmsd"] = rmsd;
+                        algorithmOutput["combinedUncertainty"] = combinedUncertainty;
+                        algorithmOutput["dataUsedIndices"] = dataUsedIndices;
+                        
                         logger.info("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
                     except ValueError as e: #Raised if there are no matchup data rows left after spatial mask and algorithm internal subsetting has taken place
                         print(algorithm, e.args[0]);
@@ -152,9 +165,7 @@ if __name__ == "__main__":
                         continue;
                     
                     #Store the data/objects which we'll used later
-                    algorithmFunctorList.append(algorithm);
-                    modelOutputList.append(modelOutput);
-                    matchupRowsUsedList.append(dataUsed.index);
+                    algorithmOutputList.append(algorithmOutput);
                     
                     ######################
                     ### Diagnostic plots #
@@ -167,28 +178,26 @@ if __name__ == "__main__":
                 
                 #######################################
                 ### Calculate metrics for each region #
-                if len(algorithmFunctorList) == 0:
+                if len(algorithmOutputList) == 0:
                     print("*** WARNING: No algorithms were executed for region", region, " possibly because there was no matchup data in this region.");
                     logger.error("No algorithms were executed for region '"+region+"' possibly because there was no matchup data in this region.");
                     continue; #Skip calculating metrics for this region
                 
                 #Only compare algorithms which predict the same output variable, so we need a list of all the output variables
-                uniqueOutputVars = np.unique([algorithm.output_name() for algorithm in algorithmFunctorList]); #Get a list of all the output variables
+                uniqueOutputVars = np.unique([algorithmOutput["instance"].output_name() for algorithmOutput in algorithmOutputList]); #Get a list of all the output variables
                 for currentOutputVar in uniqueOutputVars:
                     #filter algorithm list, output list etc. by the current output variable (in order to compare like-for-like)
-                    toKeep = [i for i in range(len(algorithmFunctorList)) if algorithmFunctorList[i].output_name()==currentOutputVar];
-                    currentAlgorithmFunctorList = [algorithmFunctorList[i] for i in toKeep];
-                    currentModelOutputList = [modelOutputList[i] for i in toKeep];
-                    currentMatchupRowsUsedList = [matchupRowsUsedList[i] for i in toKeep];
+                    algosMatchingCurrentOutputVar = [i for i in range(len(algorithmOutputList)) if algorithmOutputList[i]["instance"].output_name()==currentOutputVar];
+                    currentAlgorithmOutputs = [algorithmOutputList[i] for i in algosMatchingCurrentOutputVar];
                     
                     basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
-                        metrics.calc_all_metrics(currentAlgorithmFunctorList, currentModelOutputList, currentMatchupRowsUsedList, matchupData, settings);
+                        metrics.calc_all_metrics(currentAlgorithmOutputs, matchupData, settings);
                     
                     ###########################
                     ### Write outputs to file #
                     outputDirectory = path.join(currentCombinationOutputDirectory, currentOutputVar, region);
                     print("Writing metrics to: ", outputDirectory);
-                    write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmFunctorList, currentMatchupRowsUsedList);
+                    write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs);
         
         
     ##############################

@@ -10,7 +10,8 @@ import numpy as np;
 import pandas as pd;
 
 
-#Calculates the exected uncertainty on an in situ data variable (i.e. DIC or AT)
+#Calculates the expected type B uncertainty on an in situ data variable (i.e. DIC or AT)
+#Based on the uncertainties suggested in Bockmon 2015: https://www.sciencedirect.com/science/article/pii/S0304420315000213
 #   using "nominal state of the art" uncertainties for in situ measurements
 #   see: Bockmon, E.E. and Dickson, A.G., 2015. An inter-laboratory comparison assessing the quality of seawater carbon dioxide measurements. Marine Chemistry, 171, pp.36-43.
 #Returns an iterable containing an uncertainty for each row in insituData
@@ -19,14 +20,38 @@ import pandas as pd;
 #settings: the global setting dictionary
 def calc_insitu_uncertainty(insituData, variable, settings):
     if settings["useErrorRatios"]:
-        insituUncertainty = (insituData[variable]*settings["insituErrorRatio"][variable])**2;
+        insituUncertainty = (insituData[variable]*settings["insituErrorRatio"][variable]);
     else:
-        insituUncertainty = [settings["insituError"][variable]**2]*len(insituData);
+        insituUncertainty = [settings["insituError"][variable]]*len(insituData);
     return insituUncertainty
+
+#Calculates/gets the matchup database reference uncertainty for the output variable
+#Uses the type A uncertainty calculated from AT / DIC (std dev) if available
+#   otherwise the 'state-of-the-art' uncertainty from Bockmon et al 2015: https://www.sciencedirect.com/science/article/pii/S0304420315000213
+#Arguments:
+#   dataUsed: dataframe containing all the rows used to assess the algorithm
+#   outputVar: name of the output variable (i.e. 'AT' or 'DIC')
+#   settings: the global settings dictionary
+def calc_reference_uncertainty(dataUsed, outputVar, settings):
+    uncertainties = dataUsed[outputVar+"_err"]; #type A uncertainties
+    
+    missingTypeA = np.isfinite(uncertainties) == False; #Which rows are missing type A uncertainty
+    
+    #Fill missing type A values with the nominal / state-of-the-art type B error from Bockmon 2015 ( https://www.sciencedirect.com/science/article/pii/S0304420315000213 )
+    if settings["useErrorRatios"]:
+        outputVarValues = dataUsed[outputVar];
+        uncertainties[missingTypeA] = outputVarValues[missingTypeA]*settings["insituErrorRatio"][outputVar]
+    else:
+        uncertainties[missingTypeA] = settings["insituError"][outputVar];
+    
+    return uncertainties;
 
 
 ###Calculate weights based on normalised inverse size of combined insitu and algorithm uncertainty
-def calc_weights(combinedUncertainty):
+# algorithmUncertainty - rmsd from the algorithms original paper
+# matchupOutputUncertainty - uncertainty estimate in the matchup dataset (type A or type B as a fallback)
+def calc_weights(algorithmUncertainty, matchupOutputVarUncertainty):
+    combinedUncertainty = np.sqrt( algorithmUncertainty**2 + matchupOutputVarUncertainty**2 );
     weights = 1.0 / combinedUncertainty;
     weights /= weights.sum(); #normalise
     return weights;
@@ -48,23 +73,33 @@ def calc_weights(combinedUncertainty):
 #   dataUsed: dataframe containing the matchup database subsetted for the rows used to calculate modelOutput
 #   outputVariable: the common name of the output variable (i.e. 'DIC' or 'AT') (see global settings for definitions)
 #   settings: the global settings dictionary
-def calc_basic_metrics(modelOutput, algorithm, dataUsed, outputVariable, settings):
+def calc_basic_metrics(algorithmOutput, dataUsed, settings):
     ####Calculate basic statistics
-    insituOutputUncertainties = calc_insitu_uncertainty(dataUsed, outputVariable, settings);
+    outputVariable = algorithmOutput["instance"].output_name();
     
     #Uncertainty combined for in situ output variable and model output variable #Note: Called "squaredErrors" in Peter's 'printFit' function.
     #This is used to calculate weights based on normalised inverse size of combined insitu and algorithm uncertainty
-    if np.any(algorithm.rmsd != None):
-        combinedUncertainty = algorithm.rmsd + insituOutputUncertainties;
-        weights = calc_weights(combinedUncertainty);
+    if np.any(algorithmOutput["rmsd"] is not None): #cannot calculate weights for algorithms with no combined uncertainty
+        #insituOutputUncertainties = calc_insitu_uncertainty(dataUsed, outputVariable, settings);
+        #combinedUncertainty = np.sqrt(algorithm.rmsd**2 + insituOutputUncertainties**2); #Old Pathfinders method
+        #calculate combined uncertainty
+        if type(algorithmOutput["rmsd"]) is float:
+            #If a single algorithm uncertainty is used, turn it into an array (one copied value for each model output)
+            algorithmOutput["rmsd"] = np.array(algorithmOutput["rmsd"]*len(algorithmOutput["modelOutput"]));
+        
+        matchupOutputVarUncertainty = calc_reference_uncertainty(dataUsed, outputVariable, settings);
+        
+        #Calculate weights
+        weights = calc_weights(algorithmOutput["rmsd"], matchupOutputVarUncertainty);
         hasWeights = True;
     else:
         weights = np.nan;
+        matchupOutputVarUncertainty = np.nan;
         hasWeights = False;
-        print("*** No RMSD for", algorithm.__class__.__name__, "Weighted metrics will not be calculated.");
+        print("*** No RMSD for", algorithmOutput["instance"].__class__.__name__, "Weighted metrics will not be calculated.");
     
     #Calculate prediction errors: the difference between reference measurement and model output
-    predictionErrors = modelOutput - dataUsed[outputVariable];
+    predictionErrors = algorithmOutput["modelOutput"] - dataUsed[outputVariable];
     bias = np.mean(predictionErrors);
     predictionErrorsSquared = predictionErrors**2; #Named 'squaredError' in Peter's 'printFit' function
     absPredictionError = abs(predictionErrors);
@@ -80,10 +115,10 @@ def calc_basic_metrics(modelOutput, algorithm, dataUsed, outputVariable, setting
         wpredictionMad = np.nan;
     
     #Calculates means of model and reference values (unweighted and weighted)
-    meanModelOutput = modelOutput.mean();
+    meanModelOutput = algorithmOutput["modelOutput"].mean();
     meanReferenceOutput = dataUsed[outputVariable].mean();
     if hasWeights:
-        wMeanModelOutput = (weights*modelOutput).sum(); #weighted mean of the model/predicted output. Note sum is used, not mean, as weights are already normalised to sum to 1
+        wMeanModelOutput = (weights*algorithmOutput["modelOutput"]).sum(); #weighted mean of the model/predicted output. Note sum is used, not mean, as weights are already normalised to sum to 1
         wMeanInSituOutput = (weights*dataUsed[outputVariable]).sum(); #weighted mean of the in situ measured output. Note sum is used, not mean, as weights are already normalised to sum to 1
     else:
         wMeanModelOutput = np.nan;
@@ -92,7 +127,7 @@ def calc_basic_metrics(modelOutput, algorithm, dataUsed, outputVariable, setting
     #Calculating standard deviation
     #Using Peters method: TODO: repeat / check with other method
     if len(dataUsed) > 1: #Can't calculate SD from 1 data point
-        covariance = np.ma.cov(dataUsed[outputVariable], y = modelOutput) # covariance matrix
+        covariance = np.ma.cov(dataUsed[outputVariable], y = algorithmOutput["modelOutput"]) # covariance matrix
         referenceOutputSD = covariance[0, 0] ** .5
         modelOutputSD = covariance[1, 1] ** .5
         r = covariance[0, 1] / (referenceOutputSD * modelOutputSD)
@@ -104,8 +139,8 @@ def calc_basic_metrics(modelOutput, algorithm, dataUsed, outputVariable, setting
         #weighted standard deviations and correlation coefficient
         if hasWeights:
             sumX2 = (weights * (dataUsed[outputVariable] - wMeanInSituOutput) ** 2).sum()
-            sumY2 = (weights * (modelOutput - wMeanModelOutput) ** 2).sum()
-            sumXY = ((weights * (dataUsed[outputVariable] - wMeanInSituOutput) * (modelOutput - wMeanModelOutput)).sum())
+            sumY2 = (weights * (algorithmOutput["modelOutput"] - wMeanModelOutput) ** 2).sum()
+            sumXY = ((weights * (dataUsed[outputVariable] - wMeanInSituOutput) * (algorithmOutput["modelOutput"] - wMeanModelOutput)).sum())
             try:
                 referenceOutputWSD = sumX2 ** .5 #wsd = weighted standard deviation
             except:
@@ -128,8 +163,12 @@ def calc_basic_metrics(modelOutput, algorithm, dataUsed, outputVariable, setting
         
     
     ####Calculate performance metrics (pairwise statistics)
-    basicMetrics = {"model_output": modelOutput,
+    basicMetrics = {"model_output": algorithmOutput["modelOutput"],
+                    "model_uncertainty": algorithmOutput["rmsd"],
+                    "model_propagated_input_uncertainty": algorithmOutput["propagatedInputUncertainty"],
+                    "model_combined_output_uncertainty": algorithmOutput["combinedUncertainty"],
                     "model_output_mean": meanModelOutput,
+                    "reference_output_uncertainty": matchupOutputVarUncertainty,
                     "reference_output_mean": meanReferenceOutput,
                     "model_output_sd": modelOutputSD,
                     "reference_output_sd": referenceOutputSD,
@@ -159,11 +198,7 @@ def calc_basic_metrics(modelOutput, algorithm, dataUsed, outputVariable, setting
 #   matchupRowsUsedList: Defines the subset of the matchup database used by the algorithm
 #   matchupData: pandas dataframe containing all the matchup data
 #   settings: the global settings dictionary
-def calc_all_metrics(algorithmFunctorList, modelOutputList, matchupRowsUsedList, matchupData, settings):
-    #Sanity check:
-    if len(algorithmFunctorList) != len(modelOutputList) != len(matchupRowsUsedList):
-        raise ValueError("Number of algorithms used, number of model outputs provides and number of specified matchup subsets must match!");
-    
+def calc_all_metrics(algorithmOutputList, matchupData, settings):
     #Create some space for storing metrics (pairwise metrics are stored as matrices.)
     basicMetrics = []; #Stores simple non-paired metrics like mean, standard deviation, RMSD and MAD
 #    nIntersectMatrix = np.ma.masked_all((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=int); #Symetrical
@@ -171,27 +206,29 @@ def calc_all_metrics(algorithmFunctorList, modelOutputList, matchupRowsUsedList,
 #    pairedWScoreMatrix = np.ma.masked_all((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=float); #Pairwise weighted score. Index order is [ith, jth]
 #    pairedRmsdMatrix = np.ma.masked_all((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=float); #Pairwise RMSD. Index order is [ith, jth]
 #    pairedWRmsdMatrix = np.ma.masked_all((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=float); #Pairwise weighted RMSD. Index order is [ith, jth]
-    nIntersectMatrix = np.ma.zeros((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=int); nIntersectMatrix.mask=False; #Symetrical
-    pairedScoreMatrix = np.ma.empty((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=float); pairedScoreMatrix[:]=np.nan; pairedScoreMatrix.mask=False; #Pairwise score (see Land2019 Remote Sensing of Environment, section 2.3.2). Index order is [ith, jth]
-    pairedWScoreMatrix = np.ma.empty((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=float); pairedWScoreMatrix[:]=np.nan; pairedWScoreMatrix.mask=False; #Pairwise weighted score. Index order is [ith, jth]
-    pairedRmsdMatrix = np.ma.empty((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=float); pairedRmsdMatrix[:]=np.nan; pairedRmsdMatrix.mask=False; #Pairwise RMSD. Index order is [ith, jth]
-    pairedWRmsdMatrix = np.ma.empty((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=float); pairedWRmsdMatrix[:]=np.nan; pairedWRmsdMatrix.mask=False; #Pairwise weighted RMSD. Index order is [ith, jth]
+    nIntersectMatrix = np.ma.zeros((len(algorithmOutputList), len(algorithmOutputList)), dtype=int); nIntersectMatrix.mask=False; #Symetrical
+    pairedScoreMatrix = np.ma.empty((len(algorithmOutputList), len(algorithmOutputList)), dtype=float); pairedScoreMatrix[:]=np.nan; pairedScoreMatrix.mask=False; #Pairwise score (see Land2019 Remote Sensing of Environment, section 2.3.2). Index order is [ith, jth]
+    pairedWScoreMatrix = np.ma.empty((len(algorithmOutputList), len(algorithmOutputList)), dtype=float); pairedWScoreMatrix[:]=np.nan; pairedWScoreMatrix.mask=False; #Pairwise weighted score. Index order is [ith, jth]
+    pairedRmsdMatrix = np.ma.empty((len(algorithmOutputList), len(algorithmOutputList)), dtype=float); pairedRmsdMatrix[:]=np.nan; pairedRmsdMatrix.mask=False; #Pairwise RMSD. Index order is [ith, jth]
+    pairedWRmsdMatrix = np.ma.empty((len(algorithmOutputList), len(algorithmOutputList)), dtype=float); pairedWRmsdMatrix[:]=np.nan; pairedWRmsdMatrix.mask=False; #Pairwise weighted RMSD. Index order is [ith, jth]
     
     #### Calculate pairwise metrics as described in section 2.3.2 of Land, P.E., Findlay, H.S., Shutler, J.D., Ashton, I.G., Holding, T., Grouazel, A., Girard-Ardhuin, F., Reul, N., Piolle, J.F., Chapron, B. and Quilfen, Y., 2019. Optimum satellite remote sensing of the marine carbonate system using empirical algorithms in the global ocean, the Greater Caribbean, the Amazon Plume and the Bay of Bengal. Remote Sensing of Environment, 235, p.111469.
-    for i in range(len(algorithmFunctorList)):
-        outputVariable = algorithmFunctorList[i].output_name();
-        
+    for i in range(len(algorithmOutputList)):
+        algorithmOutput = algorithmOutputList[i];
+        outputVariable = algorithmOutput["instance"].output_name();
+        matchupDataUsed = matchupData.loc[algorithmOutput["dataUsedIndices"]];
+
         #Calculate means, standard deviations, rmse, mad, r
-        basicMetrics.append(calc_basic_metrics(modelOutputList[i], algorithmFunctorList[i], matchupData.loc[matchupRowsUsedList[i]], algorithmFunctorList[i].output_name(), settings));
+        basicMetrics.append(calc_basic_metrics(algorithmOutput, matchupDataUsed, settings));
         
         #Calculate pairwise metrics
         for j in range(i): #for each pair of algorithms ((self, self) pair excluded)
             #Sanity check - can only compare algorithms which are predicting the same variable
-            if outputVariable != algorithmFunctorList[j].output_name():
+            if algorithmOutput["instance"].output_name() != algorithmOutputList[j]["instance"].output_name():
                 raise ValueError("Cannot compare algorithms which estimate different output variables.");
             
             #Only use data points from the matchup dataset that have been predicted by both algorithms
-            intersectingRows = set(matchupRowsUsedList[i]).intersection(set(matchupRowsUsedList[j]));
+            intersectingRows = set(algorithmOutputList[i]["dataUsedIndices"]).intersection(set(algorithmOutputList[j]["dataUsedIndices"]));
             if len(intersectingRows) == 0:
                 continue;
             
@@ -204,8 +241,8 @@ def calc_all_metrics(algorithmFunctorList, modelOutputList, matchupRowsUsedList,
                 pairHasWeights = False; #Indicate to the rest of the function that this pair won't calculate weighted metrics
             
             #Calculate the 'error' (difference between model/predicted and measured reference)
-            diffFromReferencei = modelOutputList[i].loc[intersectingRows] - matchupData[outputVariable].loc[intersectingRows]; #Differences between model and reference output for ith algorithm at only intersecting locations
-            diffFromReferencej = modelOutputList[j].loc[intersectingRows] - matchupData[outputVariable].loc[intersectingRows]; #Differences between model and reference output for jth algorithm at only intersecting locations;
+            diffFromReferencei = algorithmOutputList[i]["modelOutput"].loc[intersectingRows] - matchupData[outputVariable].loc[intersectingRows]; #Differences between model and reference output for ith algorithm at only intersecting locations
+            diffFromReferencej = algorithmOutputList[j]["modelOutput"].loc[intersectingRows] - matchupData[outputVariable].loc[intersectingRows]; #Differences between model and reference output for jth algorithm at only intersecting locations;
             #And again with weighted difference
             if pairHasWeights:
                 wdiffFromReferencei = weightsi * diffFromReferencei;
@@ -254,10 +291,10 @@ def calc_all_metrics(algorithmFunctorList, modelOutputList, matchupRowsUsedList,
     
     #Calculate final scores and final RMSD (RMSDs)
     finalScores = pd.DataFrame();
-    finalScores["algorithm"] = [algorithm.__class__.__name__ for algorithm in algorithmFunctorList];
+    finalScores["algorithm"] = [algorithmOutput["instance"].__class__.__name__ for algorithmOutput in algorithmOutputList];
     finalScoreArray = np.nanmean(pairedScoreMatrix, axis=1);
     finalScores["final_score"] = finalScoreArray;
-    finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
+    finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmOutputList))];
     finalWScoreArray = np.nanmean(pairedWScoreMatrix, axis=1);
     finalScores["final_wscore"] = finalWScoreArray;
     #finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
@@ -270,12 +307,12 @@ def calc_all_metrics(algorithmFunctorList, modelOutputList, matchupRowsUsedList,
     
     iRMSDrep = np.nanargmin(finalScoreArray/nArray);
     RMSDrep = basicMetrics[iRMSDrep]["rmsd"];
-    finalRMSDs = [RMSDrep*finalScoreArray[i]/finalScoreArray[iRMSDrep] for i in range(len(algorithmFunctorList))];
+    finalRMSDs = [RMSDrep*finalScoreArray[i]/finalScoreArray[iRMSDrep] for i in range(len(algorithmOutputList))];
     finalScores["final_rmsd"] = finalRMSDs;
     
     wiRMSDrep = np.nanargmin(finalWScoreArray/nArray);
     wRMSDrep = basicMetrics[wiRMSDrep]["wrmsd"];
-    wfinalRMSDs = [wRMSDrep*finalWScoreArray[i]/finalWScoreArray[wiRMSDrep] for i in range(len(algorithmFunctorList))];
+    wfinalRMSDs = [wRMSDrep*finalWScoreArray[i]/finalWScoreArray[wiRMSDrep] for i in range(len(algorithmOutputList))];
     finalScores["final_wrmsd"] = wfinalRMSDs;
     
     

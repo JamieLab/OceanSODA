@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+ #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
 Created on Tue Dec 10 15:12:50 2019
@@ -15,6 +15,7 @@ class DatasetInfo:
         self.commonName = commonName;
         self.datasetName = datasetName;
         self.matchupVariableName = matchupVariableName;
+        self.matchupDatabaseError = matchupDatabaseError;
         self.matchupDatabaseTemplate = matchupDatabaseTemplate;
         self.predictionDatasetTemplate = predictionDatasetTemplate;
         self.predictionDatasetVariable = predictionDatasetVariable;
@@ -41,6 +42,8 @@ COMMON_NAMES = ["date", #datetime object (converted from time in seconds since 1
                 "PO4", #Phosphate ()
                 "DIC", #dissolved inorganic carbon ()
                 "AT", #total alkalinity ()
+                #"DIC_err", #Uncertainty (std dev) in matchup dataset reference DIC
+                #"AT_err", #Uncertainty (std dev) in matchup dataset reference AT
                 "DIC_pred", #predicted DIC ()
                 "AT_pred", #predicted AT ()
                 ];
@@ -99,19 +102,19 @@ def get_default_settings():
                                    "lon": DatasetInfo(commonName="lon", datasetName="lon", matchupVariableName="lon", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "lat": DatasetInfo(commonName="lat", datasetName="lat", matchupVariableName="lat", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "SST": [DatasetInfo(commonName="SST", datasetName="SST-ESACCI", matchupVariableName="OSTIA-ESACCI-L4-v02.1_mean", matchupDatabaseError="OSTIA-ESACCI-L4-v02.1_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc"), predictionDatasetVariable="sst_mean", predictionDatasetError="sst_stddev"),
-                                           DatasetInfo(commonName="SST", datasetName="SST-insitu", matchupVariableName="SST_mean", matchupDatabaseError="SST_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc"), predictionDatasetVariable="sst_mean", predictionDatasetError="sst_stddev"),
+                                           #DatasetInfo(commonName="SST", datasetName="SST-insitu", matchupVariableName="SST_mean", matchupDatabaseError="SST_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc"), predictionDatasetVariable="sst_mean", predictionDatasetError="sst_stddev"),
                                            ],
-                                   "SSS": [DatasetInfo(commonName="SSS", datasetName="SSS-ISAS", matchupVariableName="ISAS15PSAL_mean", matchupDatabaseError="ISAS15PSAL_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="salinity_mean", predictionDatasetError="salinity_err"),
-                                           DatasetInfo(commonName="SSS", datasetName="SSS-ESACCI", matchupVariableName="ESACCI-SSS-L4-SSS-MERGED-OI-7DAY-RUNNINGMEAN-DAILY-25km_mean", matchupDatabaseError="ESACCI-SSS-L4-SSS-MERGED-OI-7DAY-RUNNINGMEAN-DAILY-25km_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="salinity_mean", predictionDatasetError="salinity_err"),
-                                           DatasetInfo(commonName="SSS", datasetName="SSS-insitu", matchupVariableName="SSS_mean", matchupDatabaseError="SSS_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="salinity_mean", predictionDatasetError="salinity_err"),
+                                   "SSS": [DatasetInfo(commonName="SSS", datasetName="SSS-ISAS", matchupVariableName="ISAS15PSAL_mean", matchupDatabaseError="ISAS15PSAL_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifreme_L4a_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="sss_mean", predictionDatasetError="sss_stddev"),
+                                           DatasetInfo(commonName="SSS", datasetName="SSS-ESACCI", matchupVariableName="ESACCI-SSS-L4-SSS-MERGED-OI-7DAY-RUNNINGMEAN-DAILY-25km_mean", matchupDatabaseError="ESACCI-SSS-L4-SSS-MERGED-OI-7DAY-RUNNINGMEAN-DAILY-25km_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifreme_L4a_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="sss_mean", predictionDatasetError="sss_stddev"),
+                                           #DatasetInfo(commonName="SSS", datasetName="SSS-insitu", matchupVariableName="SSS_mean", matchupDatabaseError="SSS_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/smos_ifreme_L4a_salinity/processed/${YYYY}${MM}_smos_sss.nc"), predictionDatasetVariable="sss_mean", predictionDatasetError="sss_stddev"),
                                            ],
-                                   "OC": DatasetInfo(commonName="OC", datasetName="OC-ESACCI", matchupVariableName="ESACCI-OC-L3S-OC_PRODUCTS-MERGED-1D_DAILY_4km_GEO_PML_OCx_QAA_mean", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]), #ocean colour
-                                   "DO": DatasetInfo(commonName="DO", datasetName="DO-WOA", matchupVariableName="WOA18_Oxygen_o_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_dissolved_oxygen/woa18_all_o${MM}_01.nc"), predictionDatasetVariable="o_an", predictionDatasetError="o_sd"),
-                                   "NO3": DatasetInfo(commonName="NO3", datasetName="NO3-WOA", matchupVariableName="WOA18_Nitrate_n_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_nitrate/woa18_all_n${MM}_01.nc"), predictionDatasetVariable="n_an", predictionDatasetError="n_sd"),
-                                   "PO4": DatasetInfo(commonName="PO4", datasetName="PO4-WOA", matchupVariableName="WOA18_Phosphate_p_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_phosphate/woa18_all_p${MM}_01.nc"), predictionDatasetVariable="p_an", predictionDatasetError="p_sd"),
-                                   "SiO4":DatasetInfo(commonName="SiO4", datasetName="SiO4-WOA", matchupVariableName="WOA18_Silicate_i_an", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_silicate/woa18_all_i${MM}_01.nc"), predictionDatasetVariable="i_an", predictionDatasetError="i_sd"),
-                                   "DIC": DatasetInfo(commonName="DIC", datasetName="DIC-matchup", matchupVariableName="DIC_mean", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
-                                   "AT": DatasetInfo(commonName="AT", datasetName="AT-matchup", matchupVariableName="AT_mean", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "OC": DatasetInfo(commonName="OC", datasetName="OC-ESACCI", matchupVariableName="ESACCI-OC-L3S-OC_PRODUCTS-MERGED-1D_DAILY_4km_GEO_PML_OCx_QAA_mean", matchupDatabaseError="ESACCI-OC-L3S-OC_PRODUCTS-MERGED-1D_DAILY_4km_GEO_PML_OCx_QAA_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]), #ocean colour
+                                   "DO": DatasetInfo(commonName="DO", datasetName="DO-WOA", matchupVariableName="WOA18_Oxygen_o_an", matchupDatabaseError="WOA18_Oxygen_o_se", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_dissolved_oxygen/woa18_all_o${MM}_01.nc"), predictionDatasetVariable="o_an", predictionDatasetError="o_sd"),
+                                   "NO3": DatasetInfo(commonName="NO3", datasetName="NO3-WOA", matchupVariableName="WOA18_Nitrate_n_an", matchupDatabaseError="WOA18_Nitrate_n_se", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_nitrate/woa18_all_n${MM}_01.nc"), predictionDatasetVariable="n_an", predictionDatasetError="n_sd"),
+                                   "PO4": DatasetInfo(commonName="PO4", datasetName="PO4-WOA", matchupVariableName="WOA18_Phosphate_p_an", matchupDatabaseError="WOA18_Phosphate_p_se", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_phosphate/woa18_all_p${MM}_01.nc"), predictionDatasetVariable="p_an", predictionDatasetError="p_sd"),
+                                   "SiO4":DatasetInfo(commonName="SiO4", datasetName="SiO4-WOA", matchupVariableName="WOA18_Silicate_i_an", matchupDatabaseError="WOA18_Silicate_i_se", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template("../../prediction_datasets/WOA_silicate/woa18_all_i${MM}_01.nc"), predictionDatasetVariable="i_an", predictionDatasetError="i_sd"),
+                                   "DIC": DatasetInfo(commonName="DIC", datasetName="DIC-matchup", matchupVariableName="DIC_mean", matchupDatabaseError="DIC_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "AT": DatasetInfo(commonName="AT", datasetName="AT-matchup", matchupVariableName="AT_mean", matchupDatabaseError="AT_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    };
     
     ### Settings for prediction

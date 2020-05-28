@@ -10,7 +10,7 @@ import pandas as pd;
 import numpy as np;
 
 from .base_algorithm import BaseAlgorithm;
-from utilities import subset_from_mask, subset_from_inclusive_coord_list;
+from utilities import subset_from_mask;
 
 
 #Bakker, D.C., de Baar, H.J. and de Jong, E., 1999. The dependence on temperature and salinity of dissolved inorganic carbon in East Atlantic surface waters. Marine Chemistry, 65(3-4), pp.263-280.
@@ -51,12 +51,16 @@ class Bakker1999_lcr1_dic(BaseAlgorithm):
         self.flagRanges = {
                            };
 
+
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #equation from table 3
         modelOutput = self.coefs[0] + \
                       self.coefs[1]*dataToUse["SSS"];
-        return modelOutput;
+        
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
+    
 
 #Bakker, D.C., de Baar, H.J. and de Jong, E., 1999. The dependence on temperature and salinity of dissolved inorganic carbon in East Atlantic surface waters. Marine Chemistry, 65(3-4), pp.263-280.
 #Low salinity region, North of the Congo outflow, north region 2
@@ -96,12 +100,16 @@ class Bakker1999_lcr2_dic(BaseAlgorithm):
         self.flagRanges = {
                            };
 
+    
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #equation from table 3
         modelOutput = self.coefs[0] + \
                       self.coefs[1]*dataToUse["SSS"];
-        return modelOutput;
+        
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Bakker, D.C., de Baar, H.J. and de Jong, E., 1999. The dependence on temperature and salinity of dissolved inorganic carbon in East Atlantic surface waters. Marine Chemistry, 65(3-4), pp.263-280.
 #Congo outflow region
@@ -140,13 +148,16 @@ class Bakker1999_outflow_dic(BaseAlgorithm):
         #If the matchup dataset contains values outside of these ranges they will be flagged to the user
         self.flagRanges = {
                            };
-
+    
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #equation from table 3
         modelOutput = self.coefs[0] + \
                       self.coefs[1]*dataToUse["SSS"];
-        return modelOutput;
+        
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Brewer, P.G., Glover, D.M., Goyet, C. and Shafer, D.K., 1995. The pH of the North Atlantic Ocean: Improvements to the global model for sound absorption in seawater. Journal of Geophysical Research: Oceans, 100(C5), pp.8761-8776.
@@ -191,6 +202,7 @@ class Brewer1995_dic(BaseAlgorithm):
         self.flagRanges = {
                            };
 
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #equation 10
@@ -200,8 +212,16 @@ class Brewer1995_dic(BaseAlgorithm):
                       self.coefs[3]*dataToUse["DO"] + \
                       self.coefs[4]*dataToUse["PO4"] + \
                       self.coefs[5]*dataToUse["NO3"];
-        return modelOutput;
-
+        
+        #equation 10
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (self.coefs[1]*dataToUse["SSS_err"])**2 + \
+                                          (self.coefs[2]*dataToUse["SST_err"])**2 + \
+                                          (self.coefs[3]*dataToUse["DO_err"])**2 + \
+                                          (self.coefs[4]*dataToUse["PO4_err"])**2 + \
+                                          (self.coefs[5]*dataToUse["NO3_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Cooley, S.R. and Yager, P.L., 2006. Physical and biological contributions to the western tropical North Atlantic Ocean carbon sink formed by the Amazon River plume. Journal of Geophysical Research: Oceans, 111(C8).
@@ -237,11 +257,12 @@ class Cooley2006a_dic(BaseAlgorithm):
         #If the matchup dataset contains values outside of these ranges they will be flagged to the user
         self.flagRanges = {"SST": (20+273.15, 30+273.15), #+273.15 to convert from C to K. See figure 4
                            };
-
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5c
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Copin‐Montégut, C., 1993. Alkalinity and carbon budgets in the Mediterranean Sea. Global Biogeochemical Cycles, 7(4), pp.915-925.
@@ -278,10 +299,12 @@ class CopinMontegut1993_dic(BaseAlgorithm):
         self.flagRanges = {#none reported
                            };
 
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See second equation in Results
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Copin-Montégut, C. and Bégovic, M., 2002. Distributions of carbonate properties and oxygen along the water column (0–2000 m) in the central part of the NW Mediterranean Sea (Dyfamed site): influence of winter vertical mixing on air–sea CO2 and O2 exchanges. Deep Sea Research Part II: Topical Studies in Oceanography, 49(11), pp.2049-2066.
@@ -319,10 +342,12 @@ class CopinMontegut2002a_dic(BaseAlgorithm):
         self.flagRanges = {"SST": (12+273.15, 25.5+273.15), #See fig 3a
                            };
 
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See second unnamed equation of seciton 3.4
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Copin-Montégut, C. and Bégovic, M., 2002. Distributions of carbonate properties and oxygen along the water column (0–2000 m) in the central part of the NW Mediterranean Sea (Dyfamed site): influence of winter vertical mixing on air–sea CO2 and O2 exchanges. Deep Sea Research Part II: Topical Studies in Oceanography, 49(11), pp.2049-2066.
 #Relationship with salinity below the salinity maximum
@@ -358,11 +383,15 @@ class CopinMontegut2002b_dic(BaseAlgorithm):
         #If the matchup dataset contains values outside of these ranges they will be flagged to the user
         self.flagRanges = {"SST": (12+273.15, 25.5+273.15), #See fig 3a
                            };
-
+    
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See first unnamed equation of seciton 3.4
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
+    
+    
 
 #Gemayel, E., Hassoun, A.E.R., Benallal, M.A., Goyet, C., Rivaro, P., Abboud-Abi Saab, M., Krasakopoulou, E., Touratier, F. and Ziveri, P., 2015. Climatological variations of total alkalinity and total dissolved inorganic carbon in the Mediterranean Sea surface waters. Earth System Dynamics, 6(2), pp.789-800.
 class Gemayel2015_dic(BaseAlgorithm):    
@@ -417,20 +446,55 @@ class Gemayel2015_dic(BaseAlgorithm):
         self.flagRanges = {
                            };
 
+    #Calculate the uncertainty on the main calculation here, returns the uncertainty on the model output.
+    def _uncertainty_kernal(self, dataToUse):
+        SSS = dataToUse["SSS"]-38.2; #Simplify things by applying offsets / unit conversion and storing it
+        SST = dataToUse["SST"]-273.15-17.7; #Simplify things by applying offsets / unit conversion and storing it
+        SSS_err = dataToUse["SSS_err"];
+        SST_err = dataToUse["SST_err"];
+        
+        #calculate each uncertainty term seperately then add in quadrature
+        uterm1 = self.coefs[1] * SSS_err; #B*SSS
+        uterm2 = self.coefs[2] * 2*SSS_err*SSS; # B*SSS^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = self.coefs[3] * 3*SSS_err*(SSS**2); # B*SSS^3: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm4 = self.coefs[4] * SST_err; #B*SST
+        uterm5 = self.coefs[5] * 2*SST_err*SST; # B*SSS^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm6 = self.coefs[6] * 3*SST_err*(SST**2); # B*SSS^3: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm7 = self.coefs[7] * ((SSS_err/SSS) + (SST_err/SST)) * (SSS*SST); #B*SSS*SST
+        uterm8 = self.coefs[8] * ((2*SSS/SSS_err) + (SST_err/SST)) * ((SSS**2)*SST); #B*(SSS^2)*SST
+        uterm9 = self.coefs[9] * ((SSS/SSS_err) + (2*SST_err/SST)) * (SSS*(SST**2)); #B*SSS*(SST^2)
+        
+        #Add absolute uncertainty terms in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (uterm1)**2 + \
+                                          (uterm2)**2 + \
+                                          (uterm3)**2 + \
+                                          (uterm4)**2 + \
+                                          (uterm5)**2 + \
+                                          (uterm6)**2 + \
+                                          (uterm7)**2 + \
+                                          (uterm8)**2 + \
+                                          (uterm9)**2 );
+        return outputUncertaintyDueToInputUncertainty;
+
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
-        #From equation 1
+        SSS = dataToUse["SSS"]-38.2; #Simplify things by applying offsets / unit conversion and storing it
+        SST = dataToUse["SST"]-273.15-17.7; #Simplify things by applying offsets / unit conversion and storing it
+        
+        #From equation 2
         modelOutput = self.coefs[0] + \
-            self.coefs[1]*(dataToUse["SSS"]-38.2) + \
-            self.coefs[2]*((dataToUse["SSS"]-38.2)**2) + \
-            self.coefs[3]*((dataToUse["SSS"]-38.2)**3) + \
-            self.coefs[4]*(dataToUse["SST"]-(17.7-273.15)) + \
-            self.coefs[5]*(((dataToUse["SST"]-273.15)-17.7)**2) + \
-            self.coefs[6]*(((dataToUse["SST"]-273.15)-17.7)**3) + \
-            self.coefs[7]*(dataToUse["SSS"]-38.2)*(dataToUse["SST"]-(17.7-273.15)) + \
-            self.coefs[8]*((dataToUse["SSS"]-38.2)**2)*(dataToUse["SST"]-(17.7-273.15)) + \
-            self.coefs[9]*(dataToUse["SSS"]-38.2)*((dataToUse["SST"]-(17.7-273.15))**2);
-        return modelOutput;
+                      self.coefs[1]*SSS + \
+                      self.coefs[2]*SSS**2 + \
+                      self.coefs[3]*SSS**3 + \
+                      self.coefs[4]*SST + \
+                      self.coefs[5]*SST**2 + \
+                      self.coefs[6]*SST**3 + \
+                      self.coefs[7]*SSS*SST + \
+                      self.coefs[8]*(SSS**2)*SST + \
+                      self.coefs[9]*SSS*(SST**2);
+        
+        outputUncertaintyDueToInputUncertainty = self._uncertainty_kernal(dataToUse);
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Hassoun, A.E.R., Gemayel, E., Krasakopoulou, E., Goyet, C., Saab, M.A.A., Ziveri, P., Touratier, F., Guglielmi, V. and Falco, C., 2015. Modeling of the total alkalinity and the total inorganic carbon in the Mediterranean Sea.
@@ -476,7 +540,10 @@ class Hassoun2015_full_dic(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 11
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
+
+
 
 #Hassoun, A.E.R., Gemayel, E., Krasakopoulou, E., Goyet, C., Saab, M.A.A., Ziveri, P., Touratier, F., Guglielmi, V. and Falco, C., 2015. Modeling of the total alkalinity and the total inorganic carbon in the Mediterranean Sea.
 #Mediterranean split into East and West basins (surface 0-25m) - see table 2 eq 5 and 7
@@ -512,18 +579,14 @@ class Hassoun2015_basins_dic(BaseAlgorithm):
         #Subset data to only rows valid for this zone. See Table 2
         dataToUse = subset_from_mask(data, self.regionMasks, "east_basin_mask");
         
-        ### No condition ranges given
-#        dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15) &
-#                              (dataToUse["SSS"] > 31) &
-#                              (dataToUse["SSS"] < 38)
-#                              ];
-        
         #Equation from table 1
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
         
-        return modelOutput, rmsd;
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #east Mediterranean basin, iho definition
     def _west_basin(self, data):
@@ -534,40 +597,40 @@ class Hassoun2015_basins_dic(BaseAlgorithm):
         #Subset data to only rows valid for this zone. See Table 2
         dataToUse = subset_from_mask(data, self.regionMasks, "west_basin_mask");
         
-        ### No condition ranges given
-#        dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15) &
-#                              (dataToUse["SSS"] > 31) &
-#                              (dataToUse["SSS"] < 38)
-#                              ];
-        
         #Equation from table 1
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
         
-        return modelOutput, rmsd;
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
-        rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        modelRmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         #Perform calculations for each basin
-        zoneData, zoneRmsd = self._east_basin(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._east_basin(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Hassoun2015_basins_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
-        rmsds[zoneData.index] = zoneRmsd;
+        outputUncertaintyDueToInputUncertainty[zoneUncertainty.index] = zoneUncertainty;
+        modelRmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._west_basin(dataToUse);
+        zoneData, zomeUncertainty, zoneRmsd = self._west_basin(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Hassoun2015_basins_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
-        rmsds[zoneData.index] = zoneRmsd;
+        outputUncertaintyDueToInputUncertainty[zoneUncertainty.index] = zoneUncertainty;
+        modelRmsds[zoneData.index] = zoneRmsd;
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty; #Update the instance's rmsd to reflect the computation just carried out.
+        return modelOutput, outputUncertaintyDueToInputUncertainty, modelRmsds;
+
 
 
 #Lee, K., Wanninkhof, R., Feely, R.A., Millero, F.J. and Peng, T.H., 2000. Global relationships of total inorganic carbon with temperature and nitrate in surface seawater. Global Biogeochemical Cycles, 14(3), pp.979-994.
@@ -609,18 +672,30 @@ class Lee2000_dic(BaseAlgorithm):
                               (dataToUse["NO3"] > 0.5)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 3
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * 2.0*dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2);
+        
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _equation2(self, data):
         coefs = [1950.0, -7.604, -0.178, 6.883]; #intersept, SST, SST^2, NO3. Table 3 eq 2
@@ -633,18 +708,29 @@ class Lee2000_dic(BaseAlgorithm):
                               (dataToUse["NO3"] > 0.5)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 3
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2);
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 1 equation 3 for SST between 20 and 29 C
     def _equation3a(self, data):
@@ -658,17 +744,26 @@ class Lee2000_dic(BaseAlgorithm):
                               (dataToUse["NO3"] < 0.5)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29
+        
         #Equation from table 3
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 1 equation 3 for SST > 29 C
     def _equation3b(self, data):
@@ -683,12 +778,16 @@ class Lee2000_dic(BaseAlgorithm):
         
         #Equation from table 3
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
         
         #Convert to non-normalised DIC
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
+
     
     #This is zone 1 equation 4 for SST between 20 and 29 C
     def _equation4a(self, data):
@@ -702,17 +801,29 @@ class Lee2000_dic(BaseAlgorithm):
                               (dataToUse["NO3"] < 0.5)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 3
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
+    
+    
+    
     
     #This is zone 1 equation 4 for SST > 29 C
     def _equation4b(self, data):
@@ -727,12 +838,15 @@ class Lee2000_dic(BaseAlgorithm):
         
         #Equation from table 3
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
         
         #Convert to non-normalised DIC
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 1 equation 5 for SST between 20 and 29 C
     def _equation5a(self, data):
@@ -746,17 +860,26 @@ class Lee2000_dic(BaseAlgorithm):
                               (dataToUse["NO3"] < 0.5)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 3
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 1 equation 5 for SST > 29 C
     def _equation5b(self, data):
@@ -771,12 +894,15 @@ class Lee2000_dic(BaseAlgorithm):
         
         #Equation from table 3
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
         
         #Convert to non-normalised DIC
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 2 equation 6 for SST between 20 and 29 C (summer)
     def _equation6s(self, data):
@@ -796,17 +922,26 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 2 equation 6 for SST between 20 and 29 C (winter)
     def _equation6w(self, data):
@@ -825,17 +960,26 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+                      
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 2 equation 6 for SST > 29 C (all seasons)
     def _equation6b(self, data):
@@ -849,12 +993,15 @@ class Lee2000_dic(BaseAlgorithm):
         
         #Equation from table 4
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 2 equation 7 for SST between 20 and 29 C (summer)
     def _equation7s(self, data):
@@ -873,17 +1020,26 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+                      
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 2 equation 7 for SST between 20 and 29 C (winter)
     def _equation7w(self, data):
@@ -902,17 +1058,26 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+                      
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 2 equation 7 for SST > 29 C (all seasons)
     def _equation7b(self, data):
@@ -926,12 +1091,15 @@ class Lee2000_dic(BaseAlgorithm):
         
         #Equation from table 4
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #This is zone 2 equation 8 for SST between 20 and 29 C
@@ -945,17 +1113,26 @@ class Lee2000_dic(BaseAlgorithm):
                               (dataToUse["SST"] < 29+273.15)
                               ];
         
+        SST = dataToUse["SST"]-273.15-29;
+        
         #Equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-29) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
+                      
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #This is zone 2 equation 7 for SST > 29 C
@@ -970,12 +1147,15 @@ class Lee2000_dic(BaseAlgorithm):
         
         #Equation from table 4
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 3 equation 9 for SST < 20 C (summer)
     def _equation9s(self, data):
@@ -993,18 +1173,28 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 3 equation 9 for SST < 20 C (winter)
     def _equation9w(self, data):
@@ -1023,18 +1213,28 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 3 equation 10 for SST < 20 C (summer)
     def _equation10s(self, data):
@@ -1053,18 +1253,28 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15 - 20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 3 equation 10 for SST < 20 C (winter)
     def _equation10w(self, data):
@@ -1083,18 +1293,28 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 4 equation 11 for SST < 20 C (summer)
     def _equation11s(self, data):
@@ -1113,18 +1333,28 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 4 equation 11 for SST < 20 C (winter)
     def _equation11w(self, data):
@@ -1143,18 +1373,28 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 4 equation 12 for SST < 20 C (summer)
     def _equation12s(self, data):
@@ -1173,18 +1413,28 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #This is zone 4 equation 12 for SST < 20 C (winter)
     def _equation12w(self, data):
@@ -1203,61 +1453,73 @@ class Lee2000_dic(BaseAlgorithm):
                               (seasonalIndices)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #Equation from table 5
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15-20) + \
-                      coefs[2]*((dataToUse["SST"]-273.15-20)**2) + \
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2) + \
                       coefs[3]*dataToUse["NO3"];
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["NO3_err"]; #B*NO3
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 );
         
         #Normalised DIC (N_DIC) is N_DIC = DIC*(35/SSS), so DIC = N_DIC/(35/SSS)
         #Convert to non-normalised DIC
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
         modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _kernal(self, dataToUse):
         #Innernal function used to run, check and assign values for each equation/zone
-        def run_single_zone(function, data, modelOutput, rmsds):
-            zoneData, zoneRmsd = function(data);
+        def run_single_zone(function, data, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds):
+            zoneData, zoneUncertainty, zoneRmsd = function(data);
             if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
                 raise RuntimeError("Overlapping zones in Lee00_dic. Something has done wrong!");
             modelOutput[zoneData.index] = zoneData;
+            outputUncertaintyDueToInputUncertainty[zoneUncertainty.index] = zoneUncertainty;
             rmsds[zoneData.index] = zoneRmsd;
         
         
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         #Perform calculations for each zone
-        run_single_zone(self._equation1, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation2, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation3a, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation3b, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation4a, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation4b, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation5a, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation5b, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation6s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation6w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation6b, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation7s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation7w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation7b, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation8a, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation8b, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation9s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation9w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation10s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation10w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation11s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation11w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation12s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._equation12w, dataToUse, modelOutput, rmsds);
+        run_single_zone(self._equation1, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation2, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation3a, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation3b, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation4a, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation4b, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation5a, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation5b, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation6s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation6w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation6b, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation7s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation7w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation7b, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation8a, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation8b, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation9s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation9w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation10s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation10w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation11s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation11w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation12s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._equation12w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 
@@ -1296,11 +1558,13 @@ class Lefevre2010_dic(BaseAlgorithm):
         #If the matchup dataset contains values outside of these ranges they will be flagged to the user
         self.flagRanges = {"SST": (25.0+273.15, 30.0+273.15), #See Lefevre2010 fig 4
                            };
-        
+    
+    
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #Lefevre2010 eq. 2
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Lefèvre, N., Flores Montes, M., Gaspar, F.L., Rocha, C., Jiang, S., De Araújo, M.C. and Ibánhez, J., 2017. Net heterotrophy in the Amazon Continental Shelf changes rapidly to a sink of CO2 in the Outer Amazon Plume. Frontiers in Marine Science, 4, p.278.
@@ -1336,11 +1600,13 @@ class Lefevre2017_dic(BaseAlgorithm):
         #If the matchup dataset contains values outside of these ranges they will be flagged to the user
         self.flagRanges = {"SST": (27.8+273.15, None), #All temperatures above 27.8, no upper bound specified but maybe around 30 based on figures?
                            };
-        
+    
+                           
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #Lefevre2017 eq. 3
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Ternon, J.F., Oudot, C., Dessier, A. and Diverres, D., 2000. A seasonal tropical sink for atmospheric CO2 in the Atlantic Ocean: the role of the Amazon River discharge. Marine Chemistry, 68(3), pp.183-201.
@@ -1379,10 +1645,15 @@ class Ternon2000_dic(BaseAlgorithm):
                            "SSS": (17, 37), #See Ternon2000 fig 2b, fig 3b, fig 5
                            };
 
+
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5c
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
+
+
+
 
 #Requires DO, SiO4, PO4
 #Sasse, T.P., McNeil, B.I. and Abramowitz, G., 2013. A novel method for diagnosing seasonal to inter-annual surface ocean carbon dynamics from bottle data using neural networks. Biogeosciences, 10(6), pp.4319-4340.
@@ -1437,7 +1708,14 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[1]*(dataToUse["SSS"]) + \
                       coefs[2]*(dataToUse["DO"]) + \
                       coefs[3]*(dataToUse["NO3"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[2]*dataToUse["DO_err"])**2 + \
+                                          (coefs[3]*dataToUse["NO3_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #north pacific winter
     def _zone1w(self, data):
@@ -1453,14 +1731,25 @@ class Sasse2013_dic(BaseAlgorithm):
         seasonalIndices = seasonalIndices | ( (dataToUse["lat"] < 0) & (dataToUse["date"].dt.month.isin(self.southernWinter)) );
         dataToUse = dataToUse[seasonalIndices];
         
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T1
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15) + \
+                      coefs[1]*SST + \
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["SiO4"]) + \
                       coefs[4]*(dataToUse["SiO4"]*dataToUse["DO"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        utermInteraction = ((dataToUse["SiO4_err"]/dataToUse["SiO4"]) + (dataToUse["DO_err"]/dataToUse["DO"])) * dataToUse["SiO4"]*dataToUse["DO"]; #Absolute uncertainty term for the SiO4*DO interaction
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["SiO4_err"])**2 + \
+                                          (utermInteraction)**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #southern ocean summer
     def _zone2s(self, data):
@@ -1483,7 +1772,15 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[2]*(dataToUse["DO"]) + \
                       coefs[3]*(dataToUse["SiO4"])+ \
                       coefs[4]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[2]*dataToUse["DO_err"])**2 + \
+                                          (coefs[3]*dataToUse["SiO4_err"])**2 + \
+                                          (coefs[4]*dataToUse["PO4_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #southern ocean winter
@@ -1500,16 +1797,29 @@ class Sasse2013_dic(BaseAlgorithm):
         seasonalIndices = seasonalIndices | ( (dataToUse["lat"] < 0) & (dataToUse["date"].dt.month.isin(self.southernWinter)) );
         dataToUse = dataToUse[seasonalIndices];
         
+        SST = dataToUse["SST"]-273.15; #Just simplifies the following equations
+        
         #See supplemental table T1
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15) + \
+                      coefs[1]*SST + \
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["DO"]) + \
                       coefs[4]*(dataToUse["SiO4"]) + \
-                      coefs[5]*((dataToUse["SST"]-273.15)*dataToUse["DO"]) + \
-                      coefs[6]*((dataToUse["SST"]-273.15)*dataToUse["SSS"]);
-        return modelOutput, rmsd;
+                      coefs[5]*(SST*dataToUse["DO"]) + \
+                      coefs[6]*(SST*dataToUse["SSS"]);
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = coefs[3]*dataToUse["DO_err"]; #B*DO
+        uterm4 = coefs[4]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm5 = coefs[5] * ((dataToUse["SST_err"]/SST) + (dataToUse["DO_err"]/dataToUse["DO"])) * (SST*dataToUse["DO"]); #B*SST*DO
+        uterm6 = coefs[6] * ((dataToUse["SST_err"]/SST) + (dataToUse["SSS_err"]/dataToUse["SSS"]))  * (SST*dataToUse["SSS"]); #B*SST*SSS
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #northwest atlantic summer
@@ -1531,7 +1841,13 @@ class Sasse2013_dic(BaseAlgorithm):
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]) + \
                       coefs[2]*(dataToUse["NO3"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[2]*dataToUse["NO3_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #northwest atlantic winter
     def _zone3w(self, data):
@@ -1554,7 +1870,16 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["NO3"]) + \
                       coefs[4]*(dataToUse["NO3"]*dataToUse["DO"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = coefs[3]*dataToUse["NO3_err"]; #B*NO3
+        uterm4 = coefs[4] * ((dataToUse["NO3_err"]/dataToUse["NO3"]) + (dataToUse["DO_err"]/dataToUse["DO"])) * (dataToUse["NO3"]*dataToUse["DO"]); #B*NO2*DO
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #northeast atlantic summer
@@ -1576,7 +1901,13 @@ class Sasse2013_dic(BaseAlgorithm):
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]) + \
                       coefs[2]*(dataToUse["NO3"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[2]*dataToUse["NO3_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #northeast atlantic winter
     def _zone4w(self, data):
@@ -1592,18 +1923,33 @@ class Sasse2013_dic(BaseAlgorithm):
         seasonalIndices = seasonalIndices | ( (dataToUse["lat"] < 0) & (dataToUse["date"].dt.month.isin(self.southernWinter)) );
         dataToUse = dataToUse[seasonalIndices];
         
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T1
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15) + \
+                      coefs[1]*SST + \
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["NO3"]) + \
                       coefs[4]*(dataToUse["SiO4"]) + \
                       coefs[5]*(dataToUse["PO4"]) + \
-                      coefs[6]*((dataToUse["SST"]-273.15)*dataToUse["DO"]) + \
-                      coefs[7]*((dataToUse["SST"]-273.15)*dataToUse["SSS"]) + \
+                      coefs[6]*(SST*dataToUse["DO"]) + \
+                      coefs[7]*(SST*dataToUse["SSS"]) + \
                       coefs[8]*(dataToUse["NO3"]*dataToUse["SSS"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = coefs[3]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm4 = coefs[4]*dataToUse["PO4_err"]; #B*PO4
+        uterm5 = coefs[5] * ((dataToUse["SST_err"]/SST) + (dataToUse["DO_err"]/dataToUse["DO"])) * (SST*dataToUse["DO"]); #B*SST*DO
+        uterm6 = coefs[6] * ((dataToUse["SST_err"]/SST) + (dataToUse["SSS_err"]/dataToUse["SSS"])) * (SST*dataToUse["SSS"]); #B*SST*SSS
+        uterm7 = coefs[7] * ((dataToUse["NO3_err"]/dataToUse["NO3"]) + (dataToUse["SSS_err"]/dataToUse["SSS"])) * (dataToUse["NO3"]*dataToUse["SSS"]); #B*NO3*SSS
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 + uterm7**2 );
+        
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #equatorial pacific
@@ -1623,7 +1969,16 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[3]*(dataToUse["NO3"]) + \
                       coefs[4]*(dataToUse["SiO4"]) + \
                       coefs[5]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+                      
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["NO3_err"])**2 + \
+                                          (coefs[4]*dataToUse["SiO4_err"])**2 + \
+                                          (coefs[5]*dataToUse["PO4_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #subtropical north pacific summer
@@ -1647,7 +2002,15 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["NO3"]) + \
                       coefs[4]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["NO3_err"])**2 + \
+                                          (coefs[4]*dataToUse["PO4_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #subtropical north pacific winter
     def _zone6w(self, data):
@@ -1671,7 +2034,16 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[3]*(dataToUse["DO"]) + \
                       coefs[4]*(dataToUse["NO3"]) + \
                       coefs[5]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["DO_err"])**2 + \
+                                          (coefs[4]*dataToUse["NO3_err"])**2 + \
+                                          (coefs[5]*dataToUse["PO4_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #subtropical south pacific summer
@@ -1697,7 +2069,17 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[4]*(dataToUse["NO3"]) + \
                       coefs[5]*(dataToUse["SiO4"]) + \
                       coefs[6]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["DO_err"])**2 + \
+                                          (coefs[4]*dataToUse["NO3_err"])**2 + \
+                                          (coefs[5]*dataToUse["SiO4_err"])**2 + \
+                                          (coefs[6]*dataToUse["PO4_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #subtropical south pacific winter
     def _zone7w(self, data):
@@ -1720,7 +2102,15 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["SiO4"]) + \
                       coefs[4]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["SiO4_err"])**2 + \
+                                          (coefs[4]*dataToUse["PO4_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     #indian ocean summer
@@ -1744,7 +2134,16 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["PO4"]) + \
                       coefs[4]*(dataToUse["SSS"]*dataToUse["NO3"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = coefs[3]*dataToUse["PO4_err"]; #B*PO4
+        uterm4 = coefs[4] * ((dataToUse["SSS_err"]/dataToUse["SSS"]) + (dataToUse["NO3_err"]/dataToUse["NO3"])) * (dataToUse["SSS"]*dataToUse["NO3"]); #B*SSS*NO3
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #indian ocean winter
     def _zone8w(self, data):
@@ -1769,7 +2168,18 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[4]*(dataToUse["SiO4"]) + \
                       coefs[5]*(dataToUse["PO4"]) + \
                       coefs[6]*(dataToUse["DO"]*dataToUse["SSS"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["DO_err"]; #B*DO
+        uterm3 = coefs[3]*dataToUse["NO3_err"]; #B*NO3
+        uterm4 = coefs[4]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm5 = coefs[5]*dataToUse["PO4_err"]; #B*PO4
+        uterm6 = coefs[6] * ((dataToUse["DO_err"]/dataToUse["DO"]) + (dataToUse["SSS_err"]/dataToUse["SSS"])) * (dataToUse["DO"]*dataToUse["SSS"]); #B*DO*SSS
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
     
     #subtropical north atlantic summer
@@ -1793,7 +2203,15 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["DO"]) + \
                       coefs[4]*(dataToUse["NO3"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["DO_err"])**2 + \
+                                          (coefs[4]*dataToUse["NO3_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #subtropical north atlantic winter
     def _zone9w(self, data):
@@ -1816,7 +2234,15 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["SiO4"]) + \
                       coefs[4]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["SiO4_err"])**2 + \
+                                          (coefs[4]*dataToUse["PO4_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #equatorial atlantic (summer and winter)
     def _zone10(self, data):
@@ -1834,7 +2260,14 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[1]*(dataToUse["SST"]-273.15) + \
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["DO"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (coefs[1]*dataToUse["SST_err"])**2 + \
+                                          (coefs[2]*dataToUse["SSS_err"])**2 + \
+                                          (coefs[3]*dataToUse["DO_err"])**2
+                                         );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #south subtropical atlantic (summer and winter)
     def _zone11(self, data):
@@ -1854,48 +2287,61 @@ class Sasse2013_dic(BaseAlgorithm):
                       coefs[3]*(dataToUse["NO3"]) + \
                       coefs[4]*(dataToUse["PO4"]) + \
                       coefs[5]*(dataToUse["DO"]*dataToUse["SSS"]);
-        return modelOutput, rmsd;
+        
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["DO_err"]; #B*DO
+        uterm3 = coefs[3]*dataToUse["NO3_err"]; #B*NO3
+        uterm4 = coefs[4]*dataToUse["PO4_err"]; #B*PO4
+        uterm5 = coefs[5] * ((dataToUse["DO_err"]/dataToUse["DO"]) + (dataToUse["SSS_err"]/dataToUse["SSS"])) * (dataToUse["DO"]*dataToUse["SSS"]); #B*DO*SSS
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
 
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #Innernal function used to run, check and assign values for each equation/zone
-        def run_single_zone(function, data, modelOutput, rmsds):
-            zoneData, zoneRmsd = function(data);
+        def run_single_zone(function, data, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds):
+            zoneData, zoneUncertainty, zoneRmsd = function(data);
             if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
                 raise RuntimeError("Overlapping zones in Sasse2013_dic. Something has done wrong!");
             modelOutput[zoneData.index] = zoneData;
+            outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
             rmsds[zoneData.index] = zoneRmsd;
         
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         #Perform calculations for each zone
-        run_single_zone(self._zone1s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone1w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone2s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone2w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone3s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone3w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone4s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone4w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone5, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone6s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone6w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone7s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone7w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone8s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone8w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone9s, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone9w, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone10, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone11, dataToUse, modelOutput, rmsds);
+        run_single_zone(self._zone1s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone1w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone2s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone2w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone3s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone3w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone4s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone4w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone5, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone6s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone6w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone7s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone7w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone8s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone8w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone9s, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone9w, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone10, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone11, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
         
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 #Sasse, T.P., McNeil, B.I. and Abramowitz, G., 2013. A novel method for diagnosing seasonal to inter-annual surface ocean carbon dynamics from bottle data using neural networks. Biogeosciences, 10(6), pp.4319-4340.
@@ -1935,17 +2381,32 @@ class Sasse2013_global_dic(BaseAlgorithm):
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T1
         modelOutput = self.coefs[0] + \
-                      self.coefs[1]*(dataToUse["SST"]-273.15) + \
+                      self.coefs[1]*SST + \
                       self.coefs[2]*(dataToUse["SSS"]) + \
                       self.coefs[3]*(dataToUse["DO"]) + \
                       self.coefs[4]*(dataToUse["NO3"]) + \
                       self.coefs[5]*(dataToUse["SiO4"]) + \
                       self.coefs[6]*(dataToUse["PO4"]) + \
-                      self.coefs[7]*(dataToUse["DO"]*(dataToUse["SST"]-273.15)) + \
-                      self.coefs[8]*(dataToUse["PO4"]*(dataToUse["SST"]-273.15));
-        return modelOutput;
+                      self.coefs[7]*(dataToUse["DO"]*SST) + \
+                      self.coefs[8]*(dataToUse["PO4"]*SST);
+        
+        #Propagate uncertainty
+        uterm1 = self.coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = self.coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = self.coefs[3]*dataToUse["DO_err"]; #B*DO
+        uterm4 = self.coefs[4]*dataToUse["NO3_err"]; #B*NO3
+        uterm5 = self.coefs[5]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm6 = self.coefs[6]*dataToUse["PO4_err"]; #B*PO4
+        uterm7 = self.coefs[7] * ((dataToUse["DO_err"]/dataToUse["DO"]) + (dataToUse["SST_err"]/SST)) * (dataToUse["DO"]*SST); #B*DO*SST
+        uterm8 = self.coefs[8] * ((dataToUse["PO4_err"]/dataToUse["PO4"]) + (dataToUse["SST_err"]/SST)) * (dataToUse["PO4"]*SST); #B*PO4*SST
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 + uterm7**2 + uterm8**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 
@@ -1988,7 +2449,8 @@ class Vangriesheim2009_open_ocean_dic(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #see second unlabelled equation at the end of section 3.1
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Vangriesheim, A., Pierre, C., Aminot, A., Metzl, N., Baurand, F. and Caprais, J.C., 2009. The influence of Congo River discharges in the surface and deep layers of the Gulf of Guinea. Deep Sea Research Part II: Topical Studies in Oceanography, 56(23), pp.2183-2196.
@@ -2030,7 +2492,8 @@ class Vangriesheim2009_all_dic(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #see fig 6
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 

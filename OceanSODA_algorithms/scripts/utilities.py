@@ -26,7 +26,7 @@ from rpy2.robjects.packages import importr;
 
 #Creates a list of dictionaries containing variable to database mappings for every unique combination of input variables
 #Also generates unique names for each combination and returns a list of these
-def get_dataset_variable_map_combinations(settings):
+def get_dataset_variable_map_combinations2(settings):
     datasetInfoMap = settings["datasetInfoMap"];
     commonVariableNames = datasetInfoMap.keys();
     
@@ -50,6 +50,48 @@ def get_dataset_variable_map_combinations(settings):
                 
                 #If this variable is one we're trying different combinations of (e.g. more than one dataset listed for it), then include it in the name of the combination
                 if len(datasetInfoMap[variableName]) > 1:
+                    newLabel = labels[i] + "_" + datasetInfo.datasetName; #New label/name is the previous label plus the current dataset name appended to it
+                else: #Not trying different combinations of this variable, so it doesn't need to be added to the combination name
+                    newLabel = labels[i];
+                newLabels.append(newLabel);
+        combinations = newCombinations;
+        labels = newLabels;
+    
+    #append "combination" to the start of each label to give the final combination name
+    labels = ["combination"+str(i)+labels[i] for i in range(len(labels))];
+    
+    #Return a list of specific variable to database mappings
+    return combinations, labels;
+
+
+#Creates a list of dictionaries containing variable to database mappings for every unique combination of input variables
+#Also generates unique names for each combination and returns a list of these
+def get_dataset_variable_map_combinations(settings):
+    alwaysIncludeInLabel = ["SSS", "SST"]; #Dataset names for these variables will always be included in the combination label, even if there is just one of them.
+    
+    datasetInfoMap = settings["datasetInfoMap"];
+    commonVariableNames = datasetInfoMap.keys();
+    
+    #Make sure all the mappings are lists, even if there is only one possibility.
+    for variableName in commonVariableNames:
+        if isinstance(datasetInfoMap[variableName], list) == False:
+            datasetInfoMap[variableName] = [datasetInfoMap[variableName]];
+    
+    #Build a new variable name to database name maps which is are specific to each possible combination
+    #Create a list combination names and a dictionary mapping common variable name to datasetInfo objects for each
+    combinations = [{}];
+    labels = ["_"];
+    for variableName in commonVariableNames:
+        newCombinations = [];
+        newLabels = [];
+        for j, datasetInfo in enumerate(datasetInfoMap[variableName]):
+            for i, combination in enumerate(combinations): #For each combination of the previous iteration (not yet including the current variable name), append a combination with also includes this dataset
+                newCombination = combination.copy();
+                newCombination[variableName] = datasetInfo;
+                newCombinations.append(newCombination);
+                
+                #If this variable is one we're trying different combinations of (e.g. more than one dataset listed for it), then include it in the name of the combination
+                if (len(datasetInfoMap[variableName]) > 1) or (variableName in alwaysIncludeInLabel):
                     newLabel = labels[i] + "_" + datasetInfo.datasetName; #New label/name is the previous label plus the current dataset name appended to it
                 else: #Not trying different combinations of this variable, so it doesn't need to be added to the combination name
                     newLabel = labels[i];
@@ -137,12 +179,16 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
                 df[commonName] = matchupNC[datasetInfoMap[commonName].matchupVariableName][:];
             except IndexError:
                 print("Missing data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupVariableName);
+            if datasetInfoMap[commonName].matchupDatabaseError is not None:
+                try:
+                    df[commonName+"_err"] = matchupNC[datasetInfoMap[commonName].matchupDatabaseError][:];
+                except IndexError:
+                    print("Missing uncertainty data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupErrorName);
         dfList.append(df);
     matchupData = pd.concat(dfList, ignore_index=True);
     
     #Convert date from time in seconds cince 1980-01-01 to a pd.datetime object
     matchupData["date"] = convert_time_to_date(matchupData["date"]);
-    
     return matchupData;
 
         

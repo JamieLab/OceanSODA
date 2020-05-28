@@ -1,0 +1,1 @@
+gdal_rasterize -burn 1 -tr 1 1 -l iho -of netCDF iho.shp med_east_basin.nc

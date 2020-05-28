@@ -20,6 +20,12 @@ import osoda_global_settings;
 import utilities;
 
 
+a = np.array([[1., 1.], [4., 4.]]);
+a.mean(1)
+a.sum(1)
+
+
+np.arange(-90, 90, 1)
 
 #Returns the file handle to an open netCDF file suitable for storing the gridded output predictions and associated inputs
 #   outputPath: specific file path to the .nc file that will be created
@@ -61,6 +67,18 @@ def create_gridded_timeseries_output_netCDF_file(outputPath, algoInfo, datasetIn
     var.units = "umol kg-1";
     var.long_name = outputVar+" predicted by "+algoName+" ("+var.units+")";
     var.RMSDe = algoInfo["RMSDe"];
+    
+    var = ncout.createVariable(outputVar+"_pred_uncertainty_due_to_algorithm", float, ("time", "lat", "lon"));
+    var.units = "umol kg-1";
+    var.long_name = "uncertainty in "+outputVar+" originating from the algorithm ('"+algoName+"') uncertainty";
+    
+    var = ncout.createVariable(outputVar+"_pred_uncertainty_due_to_input_uncertainty", float, ("time", "lat", "lon"));
+    var.units = "umol kg-1";
+    var.long_name = "uncertainty in "+outputVar+" originating from the combined input data uncertainty";
+    
+    var = ncout.createVariable(outputVar+"_pred_combined_uncertainty", float, ("time", "lat", "lon"));
+    var.units = "umol kg-1";
+    var.long_name = "combined uncertainty in "+outputVar+" (i.e. combining input data uncertainty with algorithm uncertainty for algorithm '"+algoName+"')";
     
     #always add salinity and sst because this will be used by seacarb
     var = ncout.createVariable("SSS", float, ("time", "lat", "lon"));
@@ -208,7 +226,7 @@ def load_input_data(datasetInfoMap, year, monthStr, verbose=False):
 
 
 #Given a dictionary of gridded data matrices, on a lon lat grid, apply an algorithm and return gridded predicted output
-def calculate_gridded_output_from_inputs(algorithm, inputVariables, lon, lat, curDate):
+def calculate_gridded_output_from_inputs(AlgorithmClass, inputVariables, lon, lat, curDate, settings):
     #Convert gridded SST data into a dataframe, and then just add more columns for the other inputs
     df = pd.DataFrame(inputVariables["SST"]).stack(dropna=False);
     df = df.rename_axis(["ilat", "ilon"]).reset_index(name='SST');
@@ -216,31 +234,50 @@ def calculate_gridded_output_from_inputs(algorithm, inputVariables, lon, lat, cu
     df["lat"] = lat[df["ilat"]];
     df["date"] = [curDate]*len(df);
     
+    algorithm = AlgorithmClass(settings);
+    
     #convert each of the other input matrices into a pandas dataframe which can be used with the algorithm.
     for variableName in inputVariables.keys():
-        if variableName in algorithm.input_names():
+        if variableName in algorithm.input_names()+[name+"_err" for name in algorithm.input_names()]:
             if variableName == "SST": #SST is always already added
                 continue;
             #Append as a column in the dataframe
             varDF = pd.DataFrame(inputVariables[variableName]).stack(dropna=False); #temporary dataframe to convert from gridded to table format
             varDF = varDF.rename_axis(["ilat", "ilon"]).reset_index(name=variableName); #Keep the same indices as the main dataframe
             df[variableName] = varDF[variableName]; #Add to the main dataframe (which will be used by the algorithm)
-    
     try:
-        modelOutput, dataUsed = algorithm(df, predict=True);
+        algorithmOutputTuple = algorithm(df, predict=True);
+        modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = algorithmOutputTuple;
         df[algorithm.output_name()+"_pred"] = modelOutput;
+        df[algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty"] = pd.Series(propagatedInputUncertainty, index=modelOutput.index);
+        df[algorithm.output_name()+"_pred_uncertainty_due_to_algorithm"] = pd.Series(rmsd, index=modelOutput.index);
+        df[algorithm.output_name()+"_pred_combined_uncertainty"] = pd.Series(combinedUncertainty, index=modelOutput.index);
     except ValueError:
-        print("No data within valid ranges for "+algorithm.__class__.__name__+". No predictions could be made.");
+        print("No data within valid ranges for "+algorithm.__class__.__name__+". No predictions could be made.\n");
+        #Fill with nans
         df[algorithm.output_name()+"_pred"] = [np.nan]*len(df);
+        df[algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty"] = [np.nan]*len(df);
+        df[algorithm.output_name()+"_pred_uncertainty_due_to_algorithm"] = [np.nan]*len(df);
+        df[algorithm.output_name()+"_pred_combined_uncertainty"] = [np.nan]*len(df);
     
     griddedOutput = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred"); #unstack into a grid again
     griddedOutput = np.array(griddedOutput);
     
-    return griddedOutput, df; #return the gridded output and the dataframe that was used by the algorithm to make the predictions
+    griddedRMSD = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_uncertainty_due_to_algorithm"); #unstack into a grid again
+    griddedRMSD = np.array(griddedRMSD);
+    griddedInputUncertainty = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty"); #unstack into a grid again
+    griddedInputUncertainty = np.array(griddedInputUncertainty);
+    griddedCombinedUncertainty = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_combined_uncertainty"); #unstack into a grid again
+    griddedCombinedUncertainty = np.array(griddedCombinedUncertainty);
+    
+    return griddedOutput, griddedRMSD, griddedInputUncertainty, griddedCombinedUncertainty, df; #return the gridded output and the dataframe that was used by the algorithm to make the predictions
 
 #Writes predicted algorithm output and input data used to make predictions for a single year and month to an already open netCDF file
-def write_yearmonth_to_netCDF(ncFileHandle, iyear, imonth, outputVar, griddedModelOutput, loadedInputData, carbonateParameters):
+def write_yearmonth_to_netCDF(ncFileHandle, iyear, imonth, outputVar, griddedModelOutput, griddedRMSD, griddedInputUncertainty, griddedCombinedUncertainty, loadedInputData, carbonateParameters):
     if griddedModelOutput is not None: ncFileHandle.variables[outputVar+"_pred"][(iyear*12)+imonth, :, :] = griddedModelOutput;
+    if griddedRMSD is not None: ncFileHandle.variables[outputVar+"_pred_uncertainty_due_to_algorithm"][(iyear*12)+imonth, :, :] = griddedRMSD;
+    if griddedInputUncertainty is not None: ncFileHandle.variables[outputVar+"_pred_uncertainty_due_to_input_uncertainty"][(iyear*12)+imonth, :, :] = griddedInputUncertainty;
+    if griddedCombinedUncertainty is not None: ncFileHandle.variables[outputVar+"_pred_combined_uncertainty"][(iyear*12)+imonth, :, :] = griddedCombinedUncertainty;
     
     for variableName in loadedInputData.keys():
         #loadedInputData[variableName][np.where(np.isfinite(griddedOutput)==False)] = np.nan; #Where there is no predicted output variable, set the input to nan for consistency.
@@ -253,14 +290,14 @@ def write_yearmonth_to_netCDF(ncFileHandle, iyear, imonth, outputVar, griddedMod
                 ncFileHandle.variables[variableName][(iyear*12)+imonth, :, :] = carbonateParameters[variableName];
     
     return;
-    
+
+
 #Return a dictionary mapping common variable names to DatasetInfo objects, for a given algorithm and input combination
 def get_combination_dataset_info(settings, algoObj, inputCombinationName, alwaysRequired=["SSS", "SST"]):
     datasetInfoMapAll = settings["datasetInfoMap"];
     datasetInfoMapAlgo = {}
     
     requiredInputs = np.unique(alwaysRequired + algoObj.input_names());
-    
     for commonName in requiredInputs:
         if isinstance(datasetInfoMapAll[commonName], list):
             for algoInfo in datasetInfoMapAll[commonName]:
@@ -276,12 +313,14 @@ def calculate_gridded_timeseries_driver(outputPathAT, outputPathDIC, atAlgo, atA
     if (atAlgo is None) and (dicAlgo is None):
         return;
     
-    datasetInfoMapAT = get_combination_dataset_info(settings, atAlgo, atAlgoInfo["input_combination"]);
-    datasetInfoMapDIC = get_combination_dataset_info(settings, dicAlgo, dicAlgoInfo["input_combination"]);
-    
-    #Create a netCDF file to store the output
-    ncoutAT = create_gridded_timeseries_output_netCDF_file(outputPathAT, atAlgoInfo, datasetInfoMapAT, latRes, lonRes, years);
-    ncoutDIC = create_gridded_timeseries_output_netCDF_file(outputPathDIC, dicAlgoInfo, datasetInfoMapDIC, latRes, lonRes, years);
+    if atAlgo is not None:
+        datasetInfoMapAT = get_combination_dataset_info(settings, atAlgo, atAlgoInfo["input_combination"]);
+        #Create a netCDF file to store the output
+        ncoutAT = create_gridded_timeseries_output_netCDF_file(outputPathAT, atAlgoInfo, datasetInfoMapAT, latRes, lonRes, years);
+    if dicAlgo is not None:
+        datasetInfoMapDIC = get_combination_dataset_info(settings, dicAlgo, dicAlgoInfo["input_combination"]);
+        #Create a netCDF file to store the output
+        ncoutDIC = create_gridded_timeseries_output_netCDF_file(outputPathDIC, dicAlgoInfo, datasetInfoMapDIC, latRes, lonRes, years);
     
     #For each month, run the prediction algorithms and append outputs (and inputs) to the output netCDF file
     for iyear, year in enumerate(years):
@@ -291,22 +330,26 @@ def calculate_gridded_timeseries_driver(outputPathAT, outputPathDIC, atAlgo, atA
                 print("Beginning year month:", year, monthStr);
             
             #read input netCDF files and create a DataFrame which can be used by the algorithms
-            loadedInputDataAT, inputLats, inputLons = load_input_data(datasetInfoMapAT, year, monthStr);
-            loadedInputDataDIC, inputLats, inputLons = load_input_data(datasetInfoMapDIC, year, monthStr);
-            if (loadedInputDataAT is None) & (loadedInputDataDIC is None): #Noe input data for this year/month so move to the next
-                continue;
-            
+            if atAlgo is not None:
+                loadedInputDataAT, inputLats, inputLons = load_input_data(datasetInfoMapAT, year, monthStr);
+            if dicAlgo is not None:
+                loadedInputDataDIC, inputLats, inputLons = load_input_data(datasetInfoMapDIC, year, monthStr);
+            if (atAlgo is not None) and (dicAlgo is not None):
+                if (loadedInputDataAT is None) & (loadedInputDataDIC is None): #Noe input data for this year/month so move to the next
+                    continue;
             curDate = pd.to_datetime(datetime(year, imonth+1, 1));
             griddedOutputAT = griddedOutputDIC = None;
-            if loadedInputDataAT != None: #If there was missing input data, move to the next month
-                #run algorithm to get the predicted gridded outputs
-                if atAlgo is not None:
-                    griddedOutputAT, dfUsedByAlgorithmAT = calculate_gridded_output_from_inputs(atAlgo, loadedInputDataAT, inputLons, inputLats, curDate);
-            if loadedInputDataDIC != None: #If there was missing input data, move to the next month
-                #run algorithm to get the predicted gridded outputs
-                if dicAlgo is not None:
-                    griddedOutputDIC, dfUsedByAlgorithmDIC = calculate_gridded_output_from_inputs(dicAlgo, loadedInputDataDIC, inputLons, inputLats, curDate);
-            
+            if atAlgo is not None:
+                if loadedInputDataAT != None: #If there was missing input data, move to the next month
+                    #run algorithm to get the predicted gridded outputs
+                    if atAlgo is not None:
+                        griddedOutputAT, griddedRMSDAT, griddedInputUncertaintyAT, griddedCombinedUncertaintyAT, dfUsedByAlgorithmAT = calculate_gridded_output_from_inputs(atAlgo, loadedInputDataAT, inputLons, inputLats, curDate, settings);
+            if dicAlgo is not None:
+                if loadedInputDataDIC != None: #If there was missing input data, move to the next month
+                    #run algorithm to get the predicted gridded outputs
+                    if dicAlgo is not None:
+                        griddedOutputDIC, griddedRMSDDIC, griddedInputUncertaintyDIC, griddedCombinedUncertaintyDIC, dfUsedByAlgorithmDIC = calculate_gridded_output_from_inputs(dicAlgo, loadedInputDataDIC, inputLons, inputLats, curDate, settings);
+            #TODO: Worst coding ever.
             
             #########################################
             ### calculate other carbonate parameters
@@ -328,14 +371,21 @@ def calculate_gridded_timeseries_driver(outputPathAT, outputPathDIC, atAlgo, atA
             
             #write predicted output for this year/month to the netCDF file
             if griddedOutputAT is not None:
-                write_yearmonth_to_netCDF(ncoutAT, iyear, imonth, "AT", griddedOutputAT, loadedInputDataAT, carbonateParameters);
+                write_yearmonth_to_netCDF(ncoutAT, iyear, imonth, "AT", griddedOutputAT, griddedRMSDAT, griddedInputUncertaintyAT, griddedCombinedUncertaintyAT, loadedInputDataAT, carbonateParameters);
             if griddedOutputDIC is not None:
-                write_yearmonth_to_netCDF(ncoutDIC, iyear, imonth, "DIC", griddedOutputDIC, loadedInputDataDIC, carbonateParameters);
+                write_yearmonth_to_netCDF(ncoutDIC, iyear, imonth, "DIC", griddedOutputDIC, griddedRMSDDIC, griddedInputUncertaintyDIC, griddedCombinedUncertaintyDIC, loadedInputDataDIC, carbonateParameters);
         
     #All months and years have been computed so close the netCDF file.
-    ncoutAT.close();
-    ncoutDIC.close();
-
+    if atAlgo is not None:
+        ncoutAT.close();
+    if dicAlgo is not None:
+        ncoutDIC.close();
+    
+if False:
+    import matplotlib.pyplot as plt;
+    nc = Dataset("/home/verwirrt/Projects/Work/20190816_OceanSODA/OceanSODA_algorithms/output/gridded_predictions/gridded_oceansoda_amazon_plume_1.0x1.0_AT.nc", 'r');
+    plt.figure(); plt.plot(np.nanmean(nc.variables["AT_pred"][:], axis=(1,2)));
+    #plt.figure(); plt.plot(np.nanmean(nc.variables["SSS"][:], axis=(1,2)));
 
 
 if __name__ == "__main__":
@@ -353,24 +403,24 @@ if __name__ == "__main__":
         if len(atAlgoInfo) != 1:
             raise ValueError("Error: 0 or more than 1 entries returned for the best AT algorithm in "+region);
         else:
-            atAlgoInfo = atAlgoInfo.iloc[0];
+            atAlgoInfo = atAlgoInfo.iloc[0]; #get row from dataframe with only one row
         
         dicAlgoInfo = bestAlgoTable[(bestAlgoTable["region"]==region) & (bestAlgoTable["output_var"]=="DIC")];
         if len(dicAlgoInfo) != 1:
             raise ValueError("Error: 0 or more than 1 entries returned for the best DIC algorithm in "+region);
         else:
-            dicAlgoInfo = dicAlgoInfo.iloc[0];
+            dicAlgoInfo = dicAlgoInfo.iloc[0]; #get row from dataframe with only one row
         
         #create instances of the algorithm functors by searching the available algorithms using the algorithm name
-        atAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == atAlgoInfo["algo_name"]][0](settings);
-        dicAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == dicAlgoInfo["algo_name"]][0](settings);
+        if type(atAlgoInfo.algo_name) == str:
+            atAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == atAlgoInfo["algo_name"]][0];
+        else:
+            atAlgo = None;
+        if type(dicAlgoInfo.algo_name) == str:
+            dicAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == dicAlgoInfo["algo_name"]][0];
+        else:
+            dicAlgo = None;
         
-#        requiredInputs = ["SST", "SSS"]; #Always include SSS and SST
-#        if atAlgo is not None:
-#            requiredInputs += atAlgo.input_names();
-#        if dicAlgo is not None:
-#            requiredInputs += dicAlgo.input_names();
-#        requiredInputs = np.unique(requiredInputs);
         
         #Create output file path
         griddedPredictionOutputPathAT = settings["griddedPredictionOutputTemplate"].safe_substitute(REGION=region, LATRES=latRes, LONRES=lonRes, OUTPUTVAR="AT");
@@ -379,54 +429,6 @@ if __name__ == "__main__":
             os.makedirs(path.dirname(griddedPredictionOutputPathAT));
         #calculate the gridded time series and write to file for this input / region combination
         calculate_gridded_timeseries_driver(griddedPredictionOutputPathAT, griddedPredictionOutputPathDIC, atAlgo, atAlgoInfo, dicAlgo, dicAlgoInfo, settings, years, latRes, lonRes, verbose=True);
-
-    
-#    #For each input data combination, extract the best DIC and AT algorithm for each region
-#    for inputCombination in utilities.get_dataset_variable_map_combinations(settings)[1]: #just the combination names
-#        currentMetricsRootDirectory = path.join(settings["outputPathMetrics"], inputCombination);
-#        for region in settings["regions"]:
-#            print("Starting", inputCombination, region);
-#            #Get an instance of the 'best' AT and DIC algorithms for this region/input combo.
-#            #This is done by comparing the best algorithm name to each name of the algorithms used in the current region
-#            bestAlgorithms = utilities.find_best_algorithm(currentMetricsRootDirectory, region, useWeightedRMSDe=settings["assessUsingWeightedRMSDe"], verbose=False)
-#            if bestAlgorithms["AT"] is not None:
-#                AlgorithmFunctorAT = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == bestAlgorithms["AT"][0]][0];
-#                bestAlgorithmAT = AlgorithmFunctorAT(settings);
-#                RMSDeAT = bestAlgorithms["AT"][1];
-#                sampleSizeAT = bestAlgorithms["AT"][2];
-#            else:
-#                bestAlgorithmAT = None;
-#                RMSDeAT = None;
-#                sampleSizeAT = None;
-#            if bestAlgorithms["DIC"] is not None:
-#                AlgorithmFunctorDIC = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == bestAlgorithms["DIC"][0]][0];
-#                bestAlgorithmDIC = AlgorithmFunctorDIC(settings);
-#                RMSDeDIC = bestAlgorithms["DIC"][1];
-#                sampleSizeDIC = bestAlgorithms["DIC"][2];
-#            else:
-#                bestAlgorithmDIC = None;
-#                RMSDeDIC = None;
-#                sampleSizeDIC = None;
-#            
-#            #Create output file path
-#            griddedPredictionOutputPath = settings["griddedPredictionOutputTemplate"].safe_substitute(INPUTCOMBINATION=inputCombination, REGION=region, LATRES=latRes, LONRES=lonRes);
-#            if path.exists(path.dirname(griddedPredictionOutputPath)) == False:
-#                os.makedirs(path.dirname(griddedPredictionOutputPath));
-#
-#            #find the union of the inputs required for these algorithms
-#            inputsRequired = ["SST", "SSS", "SSS_err"]; #Always include SSS and SST
-#            if bestAlgorithmAT is not None:
-#                inputsRequired += bestAlgorithmAT.input_names();
-#            if bestAlgorithmDIC is not None:
-#                inputsRequired += bestAlgorithmDIC.input_names();
-#            inputsRequired = np.unique(inputsRequired);
-#            inputDataPathInfo = {inputName:settings["predictionDataPaths"][inputName] for inputName in inputsRequired};
-#            
-#            #calculate the gridded time series and write to file for this input / region combination
-#            calculate_gridded_timeseries_driver(griddedPredictionOutputPath, bestAlgorithmAT, RMSDeAT, sampleSizeAT, bestAlgorithmDIC, RMSDeDIC, sampleSizeDIC, years, inputDataPathInfo, latRes, lonRes, verbose=True);
-#
-#
-
 
 
 

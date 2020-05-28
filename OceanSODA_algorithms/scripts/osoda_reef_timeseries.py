@@ -33,6 +33,11 @@ griddedPredictionResolution = 1.0; #resolution of the gridded predictions
 reefIndividualOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "individual_${REGION}/reef_${REEFID}.csv"));
 reefSummaryOutputPathTemplate = Template(path.join(settings["outputPathRoot"], "reef_outputs", "all_reef_${SUMMARYVAR}_summary_metrics.csv"));
 
+df = pd.DataFrame(columns=["col1", "col2"])
+for i in range(10):
+    newRow = pd.Series({"col1":i, "col2":i*2})
+    df.loc[len(df)] = newRow
+
 
 #Sort reef locations by region. Returns a dictionary of region:reefsInLocationDF
 def sort_reefs_by_region(settings, reefLocationsPath):
@@ -56,8 +61,9 @@ def get_grid_indices_from_latlon(lon, lat, resolution):
     
 #Returns a dictionary containing summary metrics for a particular variable in a reef time series
 #colToSummarise: string column name in the reefTimeseriesDF dataframe
-def calculate_reef_summary_metrics(reefTimeseriesDF, colToSummarise):
+def calculate_reef_summary_metrics(reefTimeseriesDF, colToSummarise, uncertaintyCol):
     reefData = reefTimeseriesDF[colToSummarise];
+    reefDataUncertainty = reefTimeseriesDF[uncertaintyCol];
     
     #Check it isn't an all nan reef
     if np.all(np.isfinite(reefData)==False): #If all the values are nan fill the rest with nans and return
@@ -67,6 +73,7 @@ def calculate_reef_summary_metrics(reefTimeseriesDF, colToSummarise):
     
     #mean, standard deviation, #number of time points (nt)
     row["mean"] = np.nanmean(reefData);
+    row["mean_uncertainty"] = np.sqrt(np.sum(reefDataUncertainty**2)) / np.sum(np.isfinite(reefDataUncertainty)); #uncertainty in the mean
     row["median"] = np.nanmedian(reefData);
     row["sd"] = np.nanstd(reefData);
     row["nt"] = np.sum(np.isfinite(reefData)); #number of time points (nt)
@@ -100,7 +107,7 @@ reefsByRegion = sort_reefs_by_region(settings, reefLocationsPath);
 #Extract ocean carbonate predictions for each reef
 if extractReefData:
     #Create a dataframe to store the summary metrics for each reef
-    summaryColNames = ["region", "algorithm", "reef_id", "mean", "median", "sd", "nt", "max", "min", "annual_max_mean", "annual_min_mean",
+    summaryColNames = ["region", "algorithm", "reef_id", "mean", "mean_uncertainty", "median", "sd", "nt", "max", "min", "annual_max_mean", "annual_min_mean",
                        "annual_max_sd", "annual_min_sd", "annual_range_mean", "annual_range_sd"]; #Defines order of columns. The specific names must match those used in calculate_reef_summary_metrics
     reefSummaryMetricsDF_AT = pd.DataFrame(columns=summaryColNames);
     reefSummaryMetricsDF_DIC = pd.DataFrame(columns=summaryColNames);
@@ -128,18 +135,24 @@ if extractReefData:
             #Copy time series for the single grid point into a data frame
             reefDF = pd.DataFrame();
             reefDF["time_s_since_1980"] = griddedPredictionNC.variables["time"][:];
-            for varName in list(griddedPredictionNC.variables.keys()) + ["AT_pred"]:
+            #Extract data from DIC gridded output
+            for varName in list(griddedPredictionNC.variables.keys()):
                 if varName in ["time", "lat", "lon"]: #Depending on the algorithm, some inputs may not be present
                     continue;
-                
-                if varName == "AT_pred": #Special case, AT comes from a differentfile. This is awkward but avoids duplicate input layers
-                    var = griddedPredictionNC_at.variables[varName][:, ilat, ilon]
-                    var[var.mask] = np.nan;
-                    reefDF[varName] = var;
                 else: #All other variables come from DIC netCDF file
                     var = griddedPredictionNC.variables[varName][:, ilat, ilon];
                     var[var.mask] = np.nan; #Replace default missing value with nan
-                    reefDF[varName] = var;
+                    dfVarName = varName if "DIC_" in varName else "DIC_"+varName
+                    reefDF[dfVarName] = var;
+            #Extract data from AT gridded output
+            for varName in list(griddedPredictionNC_at.variables.keys()):
+                if varName in ["time", "lat", "lon"]: #Depending on the algorithm, some inputs may not be present
+                    continue;
+                else: #All other variables come from DIC netCDF file
+                    var = griddedPredictionNC_at.variables[varName][:, ilat, ilon];
+                    var[var.mask] = np.nan; #Replace default missing value with nan
+                    dfVarName = varName if "AT_" in varName else "AT_"+varName
+                    reefDF[dfVarName] = var;
             
             #Write reef time series to csv file
             reefOutputPath = reefIndividualOutputPathTemplate.safe_substitute(REGION=region, REEFID=reefRow["id"]);
@@ -149,7 +162,7 @@ if extractReefData:
             
             ### Summary metrics for each reef
             #Construct summary data for AT
-            summaryMetricsAT = calculate_reef_summary_metrics(reefDF, "AT_pred");
+            summaryMetricsAT = calculate_reef_summary_metrics(reefDF, "AT_pred", "AT_pred_combined_uncertainty");
             if summaryMetricsAT is not None:
                 summaryMetricsAT["reef_id"] = reefRow["id"];
                 summaryMetricsAT["region"] = region;
@@ -161,7 +174,7 @@ if extractReefData:
                 reefSummaryMetricsDF_AT.loc[len(reefSummaryMetricsDF_AT)] = [np.nan for key in summaryColNames];
             
             #Construct summary data for DIC
-            summaryMetricsDIC = calculate_reef_summary_metrics(reefDF, "DIC_pred");
+            summaryMetricsDIC = calculate_reef_summary_metrics(reefDF, "DIC_pred", "DIC_pred_combined_uncertainty");
             if summaryMetricsDIC is not None:
                 summaryMetricsDIC["reef_id"] = reefRow["id"];
                 summaryMetricsDIC["region"] = region;
@@ -181,7 +194,9 @@ if extractReefData:
         reefSummaryOutputPathDIC = reefSummaryOutputPathTemplate.safe_substitute(SUMMARYVAR="DIC");
         reefSummaryMetricsDF_DIC.to_csv(reefSummaryOutputPathDIC);
 
-            
+       
+for key in reefsByRegion:
+    print(key, len(reefsByRegion[key]));
 
 
 #if calculateMetaMetrics:

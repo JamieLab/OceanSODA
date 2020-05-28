@@ -54,8 +54,8 @@ class Astor2017c_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5d
-        
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
 #2008 data, Carribean sea, Easten sub-basin of the Cariaco basin
@@ -100,7 +100,9 @@ class Astor2017a_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7b
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
+
 
 #Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
 #2008 data, Carribean sea, Western sub-basin of the Cariaco basin
@@ -144,7 +146,8 @@ class Astor2017d_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7a
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
 #2009 data, Carribean sea, Easten sub-basin of the Cariaco basin
@@ -188,8 +191,8 @@ class Astor2017b_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7b
-        return modelOutput;
-    
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
   
 #Astor, Y.M., Lorenzoni, L., Guzman, L., Fuentes, G., Muller-Karger, F., Varela, R., Scranton, M., Taylor, G.T. and Thunell, R., 2017. Distribution and variability of the dissolved inorganic carbon system in the Cariaco Basin, Venezuela. Marine Chemistry, 195, pp.15-26.
 #2008 data, Carribean sea, Western sub-basin of the Cariaco basin
@@ -233,7 +236,8 @@ class Astor2017e_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 7a
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 
@@ -281,7 +285,8 @@ class Brewer1995_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 11
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Cai, W.J., Hu, X., Huang, W.J., Jiang, L.Q., Wang, Y., Peng, T.H. and Zhang, X., 2010. Alkalinity distribution in the western North Atlantic Ocean margins. Journal of Geophysical Research: Oceans, 115(C8).
@@ -322,7 +327,8 @@ class Cai2010a_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 11
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Cai, W.J., Hu, X., Huang, W.J., Jiang, L.Q., Wang, Y., Peng, T.H. and Zhang, X., 2010. Alkalinity distribution in the western North Atlantic Ocean margins. Journal of Geophysical Research: Oceans, 115(C8).
@@ -363,7 +369,8 @@ class Cai2010b_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 9
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Cai, W.J., Hu, X., Huang, W.J., Jiang, L.Q., Wang, Y., Peng, T.H. and Zhang, X., 2010. Alkalinity distribution in the western North Atlantic Ocean margins. Journal of Geophysical Research: Oceans, 115(C8).
@@ -404,7 +411,8 @@ class Cai2010c_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 3
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Cai, W.J., Hu, X., Huang, W.J., Jiang, L.Q., Wang, Y., Peng, T.H. and Zhang, X., 2010. Alkalinity distribution in the western North Atlantic Ocean margins. Journal of Geophysical Research: Oceans, 115(C8).
@@ -445,14 +453,15 @@ class Cai2010d_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 3
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Cai, W.J., Hu, X., Huang, W.J., Jiang, L.Q., Wang, Y., Peng, T.H. and Zhang, X., 2010. Alkalinity distribution in the western North Atlantic Ocean margins. Journal of Geophysical Research: Oceans, 115(C8).
 #"Gulf of Main: offshore waters (higher salinity)" - fig 4 (shown spatially in fig 1)
 class Cai2010e_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cai2010d_at (Gulf of Main: offshore waters): Ca10e(at)";
+        return "Cai2010e_at (Gulf of Main: offshore waters): Ca10e(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -485,7 +494,8 @@ class Cai2010e_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 3
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Cooley, S.R. and Yager, P.L., 2006. Physical and biological contributions to the western tropical North Atlantic Ocean carbon sink formed by the Amazon River plume. Journal of Geophysical Research: Oceans, 111(C8).
@@ -525,7 +535,8 @@ class Cooley2006a_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5c
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Copin‐Montégut, C., 1993. Alkalinity and carbon budgets in the Mediterranean Sea. Global Biogeochemical Cycles, 7(4), pp.915-925.
 class CopinMontegut1993_at(BaseAlgorithm):
@@ -564,7 +575,8 @@ class CopinMontegut1993_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See first equation in Results
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Copin-Montégut, C. and Bégovic, M., 2002. Distributions of carbonate properties and oxygen along the water column (0–2000 m) in the central part of the NW Mediterranean Sea (Dyfamed site): influence of winter vertical mixing on air–sea CO2 and O2 exchanges. Deep Sea Research Part II: Topical Studies in Oceanography, 49(11), pp.2049-2066.
 class CopinMontegut2002_at(BaseAlgorithm):
@@ -603,7 +615,8 @@ class CopinMontegut2002_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 3
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Corbière, A., Metzl, N., Reverdin, G., Brunet, C. and Takahashi, T., 2007. Interannual and decadal variability of the oceanic carbon sink in the North Atlantic subpolar gyre. Tellus B: Chemical and Physical Meteorology, 59(2), pp.168-178.
@@ -643,7 +656,8 @@ class Corbiere2007_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 3
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 
@@ -692,13 +706,25 @@ class Gemayel2015_at(BaseAlgorithm):
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
+        SSS = dataToUse["SSS"]-38.2;
+        SST = dataToUse["SST"]-18-273.15;
+        
         #From equation 1
         modelOutput = self.coefs[0] + \
-            self.coefs[1]*(dataToUse["SSS"]-38.2) + \
-            self.coefs[2]*((dataToUse["SSS"]-38.2)**2) + \
-            self.coefs[3]*(dataToUse["SST"]-(18+273.15)) + \
-            self.coefs[4]*(((dataToUse["SST"]-273.15)-18)**2);
-        return modelOutput;
+                      self.coefs[1]*SSS + \
+                      self.coefs[2]*(SSS**2) + \
+                      self.coefs[3]*SST + \
+                      self.coefs[4]*(SST**2);
+        
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = self.coefs[1] * dataToUse["SSS_err"]; #B*SSS
+        uterm2 = self.coefs[2] * 2.0*dataToUse["SSS_err"]*SSS; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = self.coefs[3] * dataToUse["SST_err"]; #B*SST
+        uterm4 = self.coefs[4] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 );
+
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 
@@ -739,7 +765,8 @@ class Goyet1998_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 11
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Hassoun, A.E.R., Gemayel, E., Krasakopoulou, E., Goyet, C., Saab, M.A.A., Ziveri, P., Touratier, F., Guglielmi, V. and Falco, C., 2015. Modeling of the total alkalinity and the total inorganic carbon in the Mediterranean Sea.
@@ -785,7 +812,8 @@ class Hassoun2015_full_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See fig 11
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 #Hassoun, A.E.R., Gemayel, E., Krasakopoulou, E., Goyet, C., Saab, M.A.A., Ziveri, P., Touratier, F., Guglielmi, V. and Falco, C., 2015. Modeling of the total alkalinity and the total inorganic carbon in the Mediterranean Sea.
 #Mediterranean split into East and West basins (surface 0-25m) - see table 1 eq 6 and 9
@@ -830,8 +858,10 @@ class Hassoun2015_basins_at(BaseAlgorithm):
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
+                      
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #east Mediterranean basin, iho definition
     def _west_basin(self, data):
@@ -852,29 +882,34 @@ class Hassoun2015_basins_at(BaseAlgorithm):
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
         
-        return modelOutput, rmsd;
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         #Perform calculations for each basin
-        zoneData, zoneRmsd = self._east_basin(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._east_basin(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Hassoun2015_basins_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._west_basin(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._west_basin(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Hassoun2015_basins_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 #Huang, W.J., Cai, W.J., Powell, R.T., Lohrenz, S.E., Wang, Y., Jiang, L.Q. and Hopkinson, C.S., 2012. The stoichiometry of inorganic carbon and nutrient removal in the Mississippi River plume and adjacent continental shelf. Biogeosciences, 9(7), pp.2781-2792.
@@ -913,7 +948,8 @@ class Huang2012_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5d
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Lee, K., Tong, L.T., Millero, F.J., Sabine, C.L., Dickson, A.G., Goyet, C., Park, G.H., Wanninkhof, R., Feely, R.A. and Key, R.M., 2006. Global relationships of total alkalinity with salinity and temperature in surface waters of the world's oceans. Geophysical research letters, 33(19).
@@ -953,15 +989,26 @@ class Lee2006_at(BaseAlgorithm):
                               (dataToUse["SSS"] < 38)
                               ];
         
+        SSS = dataToUse["SSS"]-35;
+        SST = dataToUse["SST"]-20-273.15;
+        
         #Equation from table 1 (zone 1)
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-35) + \
-                      coefs[2]*((dataToUse["SSS"]-35)**2) + \
-                      coefs[3]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[4]*(((dataToUse["SST"]-273.15)-20)**2);
+                      coefs[1]*SSS + \
+                      coefs[2]*(SSS**2) + \
+                      coefs[3]*SST + \
+                      coefs[4]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SSS_err"]; #B*SSS
+        uterm2 = coefs[2] * 2.0*dataToUse["SSS_err"]*SSS; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["SST_err"]; #B*SST
+        uterm4 = coefs[4] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #Equatorial upwelling Pacific
     def _zone2(self, data):
@@ -977,15 +1024,26 @@ class Lee2006_at(BaseAlgorithm):
         
         #TODO: also allow data points from zone 1 if their SST is (18, 20])
         
+        SSS = dataToUse["SSS"]-35;
+        SST = dataToUse["SST"]-29-273.15;
+        
         #Equation from table 1 (zone 2)
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-35) + \
-                      coefs[2]*((dataToUse["SSS"]-35)**2) + \
-                      coefs[3]*(dataToUse["SST"]-(29+273.15)) + \
-                      coefs[4]*(((dataToUse["SST"]-273.15)-29)**2);
+                      coefs[1]*SSS + \
+                      coefs[2]*(SSS**2) + \
+                      coefs[3]*SST + \
+                      coefs[4]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SSS_err"]; #B*SSS
+        uterm2 = coefs[2] * 2.0*dataToUse["SSS_err"]*SSS; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["SST_err"]; #B*SST
+        uterm4 = coefs[4] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #North Atlantic
     def _zone3(self, data):
@@ -1000,15 +1058,26 @@ class Lee2006_at(BaseAlgorithm):
                               (dataToUse["SSS"] < 37)
                               ];
         
+        SSS = dataToUse["SSS"]-35;
+        SST = dataToUse["SST"]-20-273.15;
+        
         #Equation from table 1 (zone 3)
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-35) + \
-                      coefs[2]*((dataToUse["SSS"]-35)**2) + \
-                      coefs[3]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[4]*(((dataToUse["SST"]-273.15)-20)**2);
+                      coefs[1]*SSS + \
+                      coefs[2]*(SSS**2) + \
+                      coefs[3]*SST + \
+                      coefs[4]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SSS_err"]; #B*SSS
+        uterm2 = coefs[2] * 2.0*dataToUse["SSS_err"]*SSS; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["SST_err"]; #B*SST
+        uterm4 = coefs[4] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #North Pacific
     def _zone4(self, data):
@@ -1022,16 +1091,29 @@ class Lee2006_at(BaseAlgorithm):
                               (dataToUse["SSS"] < 35)
                               ];
         
+        SSS = dataToUse["SSS"]-35;
+        SST = dataToUse["SST"]-20-273.15;
+        lon = dataToUse["lon"]+180; #Should longitude be (-180, 180) or (0 360)?
+        
         #Equation from table 1 (zone 4)
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-35) + \
-                      coefs[2]*((dataToUse["SSS"]-35)**2) + \
-                      coefs[3]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[4]*((dataToUse["SST"]-(20+273.15))**2) + \
-                      coefs[5]*(dataToUse["SST"]-(20+273.15))*(dataToUse["lon"]+180); #Should longitude be (-180, 180) or (0 360)?
+                      coefs[1]*SSS + \
+                      coefs[2]*(SSS**2) + \
+                      coefs[3]*SST + \
+                      coefs[4]*(SST**2) + \
+                      coefs[5]*SST*lon; #Should longitude be (-180, 180) or (0 360)?
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SSS_err"]; #B*SSS
+        uterm2 = coefs[2] * 2.0*dataToUse["SSS_err"]*SSS; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["SST_err"]; #B*SST
+        uterm4 = coefs[4] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm5 = coefs[5] * dataToUse["SST_err"]*lon; #B*SST*longitude. Assume 0 uncertainty in longitude.
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #Southern Ocean
     def _zone5(self, data):
@@ -1045,55 +1127,72 @@ class Lee2006_at(BaseAlgorithm):
                               (dataToUse["SSS"] < 36)
                               ];
         
+        SSS = dataToUse["SSS"]-35;
+        SST = dataToUse["SST"]-20-273.15;
+        
         #Equation from table 1 (zone 5)
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SSS"]-35) + \
-                      coefs[2]*((dataToUse["SSS"]-35)**2) + \
-                      coefs[3]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[4]*(((dataToUse["SST"]-273.15)-20)**2);
+                      coefs[1]*SSS + \
+                      coefs[2]*(SSS**2) + \
+                      coefs[3]*SST + \
+                      coefs[4]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SSS_err"]; #B*SSS
+        uterm2 = coefs[2] * 2.0*dataToUse["SSS_err"]*SSS; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3] * dataToUse["SST_err"]; #B*SST
+        uterm4 = coefs[4] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     
     def _kernal(self, dataToUse):
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         #Perform calculations for each zone
-        zoneData, zoneRmsd = self._zone1(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone1(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone2(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone2(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone3(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone3(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone4(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone4(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone5(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone5(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 #Lefèvre, N., Diverrès, D. and Gallois, F., 2010. Origin of CO2 undersaturation in the western tropical Atlantic. Tellus B: Chemical and Physical Meteorology, 62(5), pp.595-607.
@@ -1133,8 +1232,9 @@ class Lefevre2010_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #See eq 1
-        return modelOutput;
-
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
+    
 
 #Millero, F.J., Lee, K. and Roche, M., 1998. Distribution of alkalinity in the surface waters of the major oceans. Marine Chemistry, 60(1-2), pp.111-130.
 class Millero1998_at(BaseAlgorithm):
@@ -1173,7 +1273,9 @@ class Millero1998_at(BaseAlgorithm):
         
         #equation from table 4
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
-        return modelOutput, rmsd;
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _zone2(self, data):
         coefs = [2291.0, -2.69, -0.046]; #intersept, SST, SST^2 see table 4
@@ -1185,13 +1287,21 @@ class Millero1998_at(BaseAlgorithm):
                               (dataToUse["SST"] < 20+273.15)
                               ];
         
+        SST = dataToUse["SST"]-(20+273.15);
+        
         #equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[2]*(((dataToUse["SST"]-273.15)-20)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _zone3(self, data):
         coefs = [2300, -2.94, -0.058]; #intersept, SST, SST^2 see table 4
@@ -1203,13 +1313,21 @@ class Millero1998_at(BaseAlgorithm):
                               (dataToUse["SST"] < 29+273.15)
                               ];
         
+        SST = dataToUse["SST"]-29-273.15;
+        
         #equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-(29+273.15)) + \
-                      coefs[2]*(((dataToUse["SST"]-273.15)-29)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _zone4(self, data):
         coefs = [2300.0]; #intersept, SST, SST^2 see table 4
@@ -1221,8 +1339,9 @@ class Millero1998_at(BaseAlgorithm):
         
         #equation from table 4
         modelOutput = pd.Series([coefs[0]]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([0.0]*len(dataToUse), index=dataToUse.index);
         
-        return modelOutput, rmsd;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _zone5(self, data):
         coefs = [2300, -7.0, -0.158]; #intersept, SST, SST^2 see table 4
@@ -1234,13 +1353,21 @@ class Millero1998_at(BaseAlgorithm):
                               (dataToUse["SST"] < 20+273.15)
                               ];
         
+        SST = dataToUse["SST"]-20-273.15;
+        
         #equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[2]*(((dataToUse["SST"]-273.15)-20)**2);
+                      coefs[1]* + \
+                      coefs[2]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _zone6a(self, data):
         coefs = [2291, -2.52, 0.056]; #intersept, SST, SST^2 see table 4
@@ -1252,13 +1379,21 @@ class Millero1998_at(BaseAlgorithm):
                               (dataToUse["SST"] < 20+273.15)
                               ];
         
+        SST = dataToUse["SST"]-20-273.15;
+        
         #equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[2]*(((dataToUse["SST"]-273.15)-20)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     def _zone6p(self, data):
         coefs = [2300, -2.52, 0.056]; #intersept, SST, SST^2 see table 4
@@ -1270,70 +1405,89 @@ class Millero1998_at(BaseAlgorithm):
                               (dataToUse["SST"] < 20+273.15)
                               ];
         
+        SST = dataToUse["SST"]-273.15-20;
+        
         #equation from table 4
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-(20+273.15)) + \
-                      coefs[2]*(((dataToUse["SST"]-273.15)-20)**2);
+                      coefs[1]*SST + \
+                      coefs[2]*(SST**2);
         
-        return modelOutput, rmsd;
+        #Calculate each uncertainty term serparately, for simplicity
+        uterm1 = coefs[1] * dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SST_err"]*SST; #B*SST^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput[:] = rmsds[:] = np.nan;
         
         #Perform calculations for each zone
-        zoneData, zoneRmsd = self._zone1(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone1(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone2(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone2(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone3(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone3(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone4(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone4(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone5(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone5(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone6a(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone6a(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zoneRmsd = self._zone6p(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._zone6p(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Lee06_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
         #This algorithm gives AT normalised to 35 PSU salinity. Reverse normalisation:
-        modelOutput = modelOutput/(35.0/dataToUse["SSS"]);
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertaintyRatio = (outputUncertaintyDueToInputUncertainty/modelOutput) + (dataToUse["SSS_err"]/dataToUse["SSS"]); #Propagate uncertainty through normalisation
+        modelOutput = modelOutput / (35.0/dataToUse["SSS"]);
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertaintyRatio*modelOutput; #two steps to avoid duplicate calculation
+        
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 
@@ -1381,7 +1535,8 @@ class Schneider2007_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5d
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Tait, V.K., Gershey, R.M. and Jones, E.P., 2000. Inorganic carbon in the Labrador Sea: Estimation of the anthropogenic component. Deep Sea Research Part I: Oceanographic Research Papers, 47(2), pp.295-308.
@@ -1424,8 +1579,10 @@ class Tait2000_at(BaseAlgorithm):
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
-        modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5d
-        return modelOutput;
+        SST = dataToUse["SST"]-273.15;
+        modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"] + self.coefs[2]*SST; #From Tait2000 eq. 6
+        outputUncertaintyDueToInputUncertainty = np.sqrt( (self.coefs[1]*dataToUse["SSS_err"])**2 + (self.coefs[2]*dataToUse["SST_err"])**2 );
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 
@@ -1470,7 +1627,9 @@ class Rivaro2010_at(BaseAlgorithm):
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
         
-        return modelOutput, rmsd;
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #east Mediterranean basin, iho definition
     def _west_basin(self, data):
@@ -1488,30 +1647,35 @@ class Rivaro2010_at(BaseAlgorithm):
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
         
-        return modelOutput, rmsd;
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         print("*** NOTE: Rivaro2010_at missing east basin RMSD so cannot perform calculation in the Eastern basin...");
-#        #Perform calculations for each basin
-#        zoneData, zoneRmsd = self._east_basin(dataToUse);
-#        if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
-#            raise RuntimeError("Overlapping zones in Rivaro2010_at. Something has done wrong!");
-#        modelOutput[zoneData.index] = zoneData;
-#        rmsds[zoneData.index] = zoneRmsd;
-        
-        zoneData, zoneRmsd = self._west_basin(dataToUse);
+        #Perform calculations for each basin
+        zoneData, zoneUncertainty, zoneRmsd = self._east_basin(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Rivaro2010_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
         rmsds[zoneData.index] = zoneRmsd;
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        zoneData, zoneUncertainty, zoneRmsd = self._west_basin(dataToUse);
+        if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
+            raise RuntimeError("Overlapping zones in Rivaro2010_at. Something has done wrong!");
+        modelOutput[zoneData.index] = zoneData;
+        outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
+        rmsds[zoneData.index] = zoneRmsd;
+        
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 #Requires DO
@@ -1552,16 +1716,29 @@ class Sasse2013_at(BaseAlgorithm):
         dataToUse = subset_from_mask(data, self.regionMasks, "AT_zone1_subtropical");
         #dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15)];
         
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T2
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15) + \
+                      coefs[1]*SST + \
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["SSS"]**2) + \
                       coefs[4]*(dataToUse["DO"]) + \
                       coefs[5]*(dataToUse["SiO4"]) + \
                       coefs[6]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = coefs[3] * 2.0*dataToUse["SSS_err"]*dataToUse["SSS"]; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm4 = coefs[4]*dataToUse["DO_err"]; #B*DO
+        uterm5 = coefs[5]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm6 = coefs[6]*dataToUse["PO4_err"]; #B*PO4
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #Equatorial Pacific
     def _zone2(self, data):
@@ -1573,14 +1750,25 @@ class Sasse2013_at(BaseAlgorithm):
         dataToUse = subset_from_mask(data, self.regionMasks, "AT_zone2_equatorial_pacific");
         #dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15)];
         
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T2
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15) + \
+                      coefs[1]*SST + \
                       coefs[2]*(dataToUse["SSS"]**2) + \
                       coefs[3]*(dataToUse["DO"]) + \
                       coefs[4]*(dataToUse["PO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SSS_err"]*dataToUse["SSS"]; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3]*dataToUse["DO_err"]; #B*DO
+        uterm4 = coefs[4]*dataToUse["PO4_err"]; #B*PO4
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2);
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #North Atlantic
     def _zone3(self, data):
@@ -1592,16 +1780,30 @@ class Sasse2013_at(BaseAlgorithm):
         dataToUse = subset_from_mask(data, self.regionMasks, "AT_zone3_north_atlantic");
         #dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15)];
         
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T2
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15) + \
+                      coefs[1]*SST + \
                       coefs[2]*(dataToUse["SSS"]**2) + \
                       coefs[3]*(dataToUse["DO"]) + \
                       coefs[4]*(dataToUse["SiO4"]) + \
                       coefs[5]*(dataToUse["PO4"]) + \
-                      coefs[6]*(dataToUse["SSS"]*(dataToUse["SST"]-273.15));
-        return modelOutput, rmsd;
+                      coefs[6]*(dataToUse["SSS"]*SST);
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2] * 2.0*dataToUse["SSS_err"]*dataToUse["SSS"]; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm3 = coefs[3]*dataToUse["DO_err"]; #B*DO
+        uterm4 = coefs[4]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm5 = coefs[5]*dataToUse["PO4_err"]; #B*PO4
+        uterm6 = coefs[6] * ((dataToUse["SSS_err"]/dataToUse["SSS"]) + (dataToUse["SST_err"]/SST))  * (dataToUse["SSS"]*SST); #B*SSS*SST
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
+        
     
     #North Pacific
     def _zone4(self, data):
@@ -1612,6 +1814,7 @@ class Sasse2013_at(BaseAlgorithm):
         #Subset data to only rows valid for this zone. See fig 3 and supplemental fig F2
         dataToUse = subset_from_mask(data, self.regionMasks, "AT_zone4_north_pacific");
         #dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15)];
+    
         
         #See supplemental table T2
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
@@ -1621,7 +1824,18 @@ class Sasse2013_at(BaseAlgorithm):
                       coefs[3]*(dataToUse["SiO4"]) + \
                       coefs[4]*(dataToUse["PO4"]) + \
                       coefs[5]*(dataToUse["DO"]*dataToUse["SiO4"]);
-        return modelOutput, rmsd;
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SSS_err"]; #B*SSS
+        uterm2 = coefs[2]*dataToUse["DO_err"]; #B*DO
+        uterm3 = coefs[3]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm4 = coefs[4]*dataToUse["PO4_err"]; #B*PO4
+        uterm5 = coefs[5] * ((dataToUse["DO_err"]/dataToUse["DO"]) + (dataToUse["SiO4_err"]/dataToUse["SiO4"]))  * (dataToUse["DO"]*dataToUse["SiO4"]); #B*DO*SiO4
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
+    
     
     #Southern Ocean
     def _zone5(self, data):
@@ -1633,44 +1847,63 @@ class Sasse2013_at(BaseAlgorithm):
         dataToUse = subset_from_mask(data, self.regionMasks, "AT_zone5_southern_ocean");
         #dataToUse = dataToUse[(dataToUse["SST"] > 20+273.15)];
         
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T2
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
-                      coefs[1]*(dataToUse["SST"]-273.15) + \
+                      coefs[1]*SST + \
                       coefs[2]*(dataToUse["SSS"]) + \
                       coefs[3]*(dataToUse["SSS"]**2) + \
                       coefs[4]*(dataToUse["DO"]) + \
                       coefs[5]*(dataToUse["SiO4"]) + \
                       coefs[6]*(dataToUse["PO4"]) + \
-                      coefs[7]*(dataToUse["SSS"]*(dataToUse["SST"]-273.15)) + \
+                      coefs[7]*(dataToUse["SSS"]*SST) + \
                       coefs[8]*(dataToUse["SSS"]*dataToUse["SiO4"]) + \
                       coefs[9]*(dataToUse["DO"]*dataToUse["SiO4"]);
-        return modelOutput, rmsd;
+        
+        
+        #Propagate uncertainty
+        uterm1 = coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = coefs[3] * 2.0*dataToUse["SSS_err"]*dataToUse["SSS"]; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm4 = coefs[4]*dataToUse["DO_err"]; #B*DO
+        uterm5 = coefs[5]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm6 = coefs[6]*dataToUse["PO4_err"]; #B*PO4
+        uterm7 = coefs[7] * ((dataToUse["SSS_err"]/dataToUse["SSS"]) + (dataToUse["SST_err"]/SST))  * (dataToUse["SSS"]*SST); #B*SSS*SST
+        uterm8 = coefs[8] * ((dataToUse["SSS_err"]/dataToUse["SSS"]) + (dataToUse["SiO4_err"]/dataToUse["SiO4"]))  * (dataToUse["SSS"]*dataToUse["SiO4"]); #B*SSS*SiO4
+        uterm9 = coefs[9] * ((dataToUse["DO_err"]/dataToUse["DO"]) + (dataToUse["SiO4_err"]/dataToUse["SiO4"]))  * (dataToUse["DO"]*dataToUse["SiO4"]); #B*DO*SiO4
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 + uterm7**2 + uterm8**2 + uterm9**2 );
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #Innernal function used to run, check and assign values for each equation/zone
-        def run_single_zone(function, data, modelOutput, rmsds):
-            zoneData, zoneRmsd = function(data);
+        def run_single_zone(function, data, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds):
+            zoneData, zoneUncertainty, zoneRmsd = function(data);
             if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
                 raise RuntimeError("Overlapping zones in Sasse2013_at. Something has done wrong!");
             modelOutput[zoneData.index] = zoneData;
+            outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
             rmsds[zoneData.index] = zoneRmsd;
         
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         #Perform calculations for each zone
-        run_single_zone(self._zone1, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone2, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone3, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone4, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone5, dataToUse, modelOutput, rmsds);
+        run_single_zone(self._zone1, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone2, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone3, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone4, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone5, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 #Requires DO, SiO4, PO4
@@ -1678,7 +1911,7 @@ class Sasse2013_at(BaseAlgorithm):
 class Sasse2013_global_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Sasse2013_glogal_at: S13g(at)";
+        return "Sasse2013_global_at: S13g(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -1711,16 +1944,31 @@ class Sasse2013_global_at(BaseAlgorithm):
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
+        SST = dataToUse["SST"]-273.15;
+        
         #See supplemental table T2
         modelOutput = self.coefs[0] + \
-                      self.coefs[1]*(dataToUse["SST"]-273.15) + \
+                      self.coefs[1]*SST + \
                       self.coefs[2]*(dataToUse["SSS"]) + \
                       self.coefs[3]*(dataToUse["SSS"]**2) + \
                       self.coefs[4]*(dataToUse["DO"]) + \
                       self.coefs[5]*(dataToUse["SiO4"]) + \
                       self.coefs[6]*(dataToUse["PO4"]) + \
-                      self.coefs[7]*(dataToUse["SSS"]*(dataToUse["SST"]-273.15));
-        return modelOutput;
+                      self.coefs[7]*(dataToUse["SSS"]*SST);
+        
+        
+        #Propagate uncertainty
+        uterm1 = self.coefs[1]*dataToUse["SST_err"]; #B*SST
+        uterm2 = self.coefs[2]*dataToUse["SSS_err"]; #B*SSS
+        uterm3 = self.coefs[3] * 2.0*dataToUse["SSS_err"]*dataToUse["SSS"]; #B*SSS^2. Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm4 = self.coefs[4]*dataToUse["DO_err"]; #B*DO
+        uterm5 = self.coefs[5]*dataToUse["SiO4_err"]; #B*SiO4
+        uterm6 = self.coefs[6]*dataToUse["PO4_err"]; #B*PO4
+        uterm7 = self.coefs[7] * ((dataToUse["SSS_err"]/dataToUse["SSS"]) + (dataToUse["SST_err"]/SST))  * (dataToUse["SSS"]*SST); #B*SSS*SST
+
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 + uterm3**2 + uterm4**2 + uterm5**2 + uterm6**2 + uterm7**2 );
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 
@@ -1767,7 +2015,10 @@ class Takahashi2013_at(BaseAlgorithm):
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
-        return modelOutput, rmsd;
+        
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
     
     #Central Atlantic
     def _zone8(self, data):
@@ -1783,33 +2034,39 @@ class Takahashi2013_at(BaseAlgorithm):
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         modelOutput = coefs[0] + \
                       coefs[1]*(dataToUse["SSS"]);
-        return modelOutput, rmsd;
+        
+        outputUncertaintyDueToInputUncertainty = coefs[1]*dataToUse["SSS_err"];
+        
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsd;
 
 
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #Innernal function used to run, check and assign values for each equation/zone
-        def run_single_zone(function, data, modelOutput, rmsds):
-            zoneData, zoneRmsd = function(data);
+        def run_single_zone(function, data, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds):
+            zoneData, zoneUncertainty, zoneRmsd = function(data);
             if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
                 raise RuntimeError("Overlapping zones in Takahashi2013. Something has done wrong!");
             modelOutput[zoneData.index] = zoneData;
+            outputUncertaintyDueToInputUncertainty[zoneData.index] = zoneUncertainty;
             rmsds[zoneData.index] = zoneRmsd;
         
         #Create empty output array
         modelOutput = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
+        outputUncertaintyDueToInputUncertainty = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         rmsds = pd.Series([np.nan]*len(dataToUse), index=dataToUse.index);
         
         #Perform calculations for each zone
-        run_single_zone(self._zone7, dataToUse, modelOutput, rmsds);
-        run_single_zone(self._zone8, dataToUse, modelOutput, rmsds);
+        run_single_zone(self._zone7, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
+        run_single_zone(self._zone8, dataToUse, modelOutput, outputUncertaintyDueToInputUncertainty, rmsds);
         
         #Convert from potential alkalinity to TA
         #PALK = TA + NO3-, so calculate TA using:
         modelOutput = modelOutput - dataToUse["NO3"];
+        outputUncertaintyDueToInputUncertainty = np.sqrt( outputUncertaintyDueToInputUncertainty**2 + dataToUse["NO3_err"]**2);
         
-        self.rmsd = rmsds; #Update the instance's rmsd to reflect the computation just carried out.
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = outputUncertaintyDueToInputUncertainty;
+        return modelOutput, outputUncertaintyDueToInputUncertainty, rmsds;
 
 
 
@@ -1851,7 +2108,8 @@ class Ternon2000_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From Ternon2000 fig 5d
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 
 
 #Touratier, F. and Goyet, C., 2009. Decadal evolution of anthropogenic CO2 in the northwestern Mediterranean Sea from the mid-1990s to the mid-2000s. Deep Sea Research Part I: Oceanographic Research Papers, 56(10), pp.1708-1716.
@@ -1871,7 +2129,7 @@ class Touratier2009_at(BaseAlgorithm):
     #Set algorithm specific variables
     def __init__(self, settings):
         self.settings = settings;
-        self.coefs = [-1238.4, 99.26]; #intersept, SSS, SST (as potential temperature), equation 4
+        self.coefs = [-1238.4, 99.26]; #intersept, SSS equation 4
         self.coefsUncertainty = [4.5, 0.0]; #Uncertainty reported for the coefficients, equation 4
         self.rmsd = None;
         self.r = None;
@@ -1891,7 +2149,9 @@ class Touratier2009_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         modelOutput = self.coefs[0] + self.coefs[1]*dataToUse["SSS"]; #From equation 4
-        return modelOutput;
+        outputUncertaintyDueToInputUncertainty = self.coefs[1]*dataToUse["SSS_err"];
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
+
 
 
 #Touratier, F. and Goyet, C., 2011. Impact of the Eastern Mediterranean Transient on the distribution of anthropogenic CO2 and first estimate of acidification for the Mediterranean Sea. Deep Sea Research Part I: Oceanographic Research Papers, 58(1), pp.1-15.
@@ -1938,6 +2198,18 @@ class Touratier2011_at(BaseAlgorithm):
     #The main calculation is performed here, returns the model output
     def _kernal(self, dataToUse):
         #equation 4
-        modelOutput = 1.0 / (self.coefs[0] + (self.coefs[1])/dataToUse["SSS"] - (self.coefs[2]*np.log(dataToUse["SST"]))/dataToUse["SST"]**2 );
-        return modelOutput;
+        modelOutput = 1.0 / (self.coefs[0] + (self.coefs[1])/dataToUse["SSS"] - (self.coefs[2]*np.log(dataToUse["SST"]))/(dataToUse["SST"]**2) );
+        
+        
+        #Propagate uncertainty
+        uterm1 = self.coefs[1] / dataToUse["SST_err"]; #B/SST
+        
+        #Split term2 into numerator and denominator
+        ulogSst = dataToUse["SST_err"] / dataToUse["SST"]; #Numerator. d/dx of ln(x) = 1/x
+        usstSquared = 2.0*dataToUse["SST_err"]*dataToUse["SST"]; #Denominator. SSS^2: Rearranged form of Taylor eq. 3.10: if x=q^n, then dx = n*u*q^(n-1), where u is uncertainty on q
+        uterm2 = self.coefs[2] * ((ulogSst/np.log(dataToUse["SST"])) + (usstSquared/dataToUse["SST"])) * (np.log(dataToUse["SST"]/(dataToUse["SST"]**2))); #B*ln(SST)/SST^2
+        
+        #Add in quadrature
+        outputUncertaintyDueToInputUncertainty = np.sqrt( uterm1**2 + uterm2**2 );
+        return modelOutput, outputUncertaintyDueToInputUncertainty, self.rmsd;
 

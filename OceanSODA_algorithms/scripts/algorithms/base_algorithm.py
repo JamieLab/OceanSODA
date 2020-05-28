@@ -16,6 +16,7 @@ Created on Mon Jan  6 08:57:49 2020
 
 import pandas as pd;
 import utilities;
+import numpy as np;
 
 
 #Ternon, J.F., Oudot, C., Dessier, A. and Diverres, D., 2000. A seasonal tropical sink for atmospheric CO2 in the Atlantic Ocean: the role of the Amazon River discharge. Marine Chemistry, 68(3), pp.183-201.
@@ -24,6 +25,7 @@ class BaseAlgorithm:
     #These should be overwritten with values specific to the implemented algorithm
     def __init__(self, settings):
         self.settings = settings;
+        self.used = False;
         self.coefs = (); #Tuple containing the algorithm coefficients, index 0 should be the intercept.
         self.coefsUncertainty = (); #Tuple containing uncertainties associated with each coefficient. Must be specified in the same order as self.coeffs
         self.rmsd = None; #Output uncertainty from the algorithm's original fit (root mean squared difference)
@@ -83,13 +85,18 @@ class BaseAlgorithm:
     def _kernal(self, dataToUse):
         raise NotImplementedError("BaseAlgorithm._kernal() is not implemented but should be implemented in all derived classes.");
     
+    
     #when predict is set to True, only the input data columns will be required
+    #Returns the best prediction of modelled output and the propagated model output uncertainty (modelOutputUncertainty) of input data uncertainty
+    #   Note: modelOutputUncertainty does not take into account the model uncertainty. This is accessible as the self.rmsd, and must be combined with modelOutputUncertainty for the combined uncertainty
     def __call__(self, fullColumnData, predict=False):
+        columnErrorNames = [name+"_err" for name in self.input_names()];
+        
         #Basic filtering to select only usable rows and columns with required data in
         if predict:
-            data = fullColumnData[["lon", "lat", "date"]+self.input_names()]; #Subset to select only the columns used
+            data = fullColumnData[["lon", "lat", "date"]+self.input_names()+columnErrorNames]; #Subset to select only the columns used
         else: #using output variable, date etc.
-            data = fullColumnData[["date", "lon", "lat"]+self.input_names()+[self.output_name()]]; #Subset to select only the columns used
+            data = fullColumnData[["date", "lon", "lat"]+self.input_names()+columnErrorNames+[self.output_name()]]; #Subset to select only the columns used
         data = utilities.subset_complete_rows(data); #Select only rows that are complete (no NaNs)
         
         #Filter out any data points outside the regions supported by the algorithm
@@ -107,13 +114,55 @@ class BaseAlgorithm:
         self._report_flagged_values(fullColumnData, data.index);
         
         #Compute output estimate
-        modelOutput = self._kernal(data);
+        modelOutput, propagatedInputUncertainty, rmsd = self._kernal(data);
+        modelOutput = modelOutput.dropna(); #remove any rows which couldn't be estimated for any reason
+        propagatedInputUncertainty = propagatedInputUncertainty.dropna(); #remove any rows which couldn't be estimated for any reason
         
-        #remove any rows which couldn't be estimated for any reason
-        modelOutput = modelOutput.dropna();
+        #calculate combined uncertainty for model output
+        if type(rmsd) is float:
+            #If a single algorithm uncertainty is used, turn it into an array (one copied value for each model output)
+            rmsd = np.array([rmsd]*len(modelOutput));
+        if ((rmsd is not None) and (propagatedInputUncertainty is not None)):
+            combinedUncertainty = np.sqrt(rmsd**2 + propagatedInputUncertainty**2); #Combined input and model uncertainty to give overall uncertainty in the predicted (model) output
+        else:
+            combinedUncertainty = None;
+        
+        #sanity check - rows with model output uncertainty must be the same rows for which uncertainty was calculated
+        if (len(modelOutput.index)!=len(propagatedInputUncertainty.index)) or (np.all(modelOutput.index == propagatedInputUncertainty.index)) == False:
+            raise ValueError("Error: model output and model output uncertainty row indices do not match. Do all valid matchup database rows have associated uncertainty values? If not, consider substitutING Type B uncertainty estimates for rows missing them.");
+        
         data = data.loc[modelOutput.index];
+        dataUsedIndices = data.index;
         
-        return modelOutput, data; #Return estimates and the data used to calculate them (as this data has been further subsetted)
+        return modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, data; #Return estimates and the data used to calculate them (as this data has been further subsetted)
     
     def __str__(self):
         return "BaseAlgorithm: Serves as the parent of all other algorithm implementations";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
