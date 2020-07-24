@@ -2348,7 +2348,7 @@ class Sasse2013_dic(BaseAlgorithm):
 class Sasse2013_global_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Sasse2013_glogal_dic: S13g(dic)";
+        return "Sasse2013_global_dic: S13g(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -2369,7 +2369,7 @@ class Sasse2013_global_dic(BaseAlgorithm):
         
         #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
         self.includedRegionsLons = [(-180, 180)]; #Global
-        self.includedRegionsLats = [(-90, 60)]; #Not higher than 60N, see grey region in Fig 3
+        self.includedRegionsLats = [(-90, 70)]; #Not higher than 70N, see grey region in Fig 3
         
         #Algorithm will only be applied to values inside these ranges
         self.restrictRanges = {

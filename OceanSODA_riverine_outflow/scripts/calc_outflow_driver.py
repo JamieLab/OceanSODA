@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 12 14:42:11 2020
-
-@author: verwirrt
-"""
 
 from netCDF4 import Dataset;
 import numpy as np;
@@ -12,6 +7,7 @@ import pandas as pd;
 from string import Template;
 from os import path, makedirs;
 from datetime import datetime, timedelta;
+from preprocess_data_sources import load_discharge_data;
 
 import analysis_tools;
 
@@ -24,56 +20,75 @@ import osoda_global_settings;
 
 
 ##### Global settings
+useMinRangeCarbonateParameters = True; #Use gridded prediction data derived from algorithms and input data sets which meet a minimum temporal range requirement (e.g. 8 year range)
+if useMinRangeCarbonateParameters == True:
+    CARBONATE_VERSION_STR = "_min_range"
+else:
+    CARBONATE_VERSION_STR = "";
 writeNetCDFOutput = True;
 writeCSVOutput = True;
-baseOutputPath = "../output/";
+baseOutputTemplate = Template("../output/${REGION}"+CARBONATE_VERSION_STR+"/");
+baseDataPath = "../data/";
 makePlots = True;
 closePlots = True; #Close plots automatically?
-basePlotPath = "../tmp_plots/";
+basePlotTemplate = Template("../plots/${REGION}"+CARBONATE_VERSION_STR+"/");
 lonRes = latRes = 1.0;
 plumeSalinityThreshold = 35.0; #Below this salinity is considered plume
 numSamples = 100; #How many SSS and DIC samples to use
 verbose = True;
-#regions = ["oceansoda_amazon_plume", "oceansoda_congo", "oceansoda_mississippi", "oceansoda_st_lawrence", "oceansoda_mediterranean"];
-regions = ["oceansoda_amazon_plume"];
-region = "oceansoda_amazon_plume";
+regions = ["oceansoda_amazon_plume", "oceansoda_congo", "oceansoda_mississippi", "oceansoda_st_lawrence"];
 
 carbonateParametersTemplate = Template("../../OceanSODA_algorithms/output/gridded_predictions/gridded_${REGION}_1.0x1.0_${OUTPUTVAR}.nc");
+carbonateParametersMinRangeTemplate = Template("../../OceanSODA_algorithms/output/gridded_predictions_min_year_range/gridded_${REGION}_1.0x1.0_${OUTPUTVAR}.nc"); #Gridded predictions using the algorithm/input data sets which have a minimum range
 regionMaskPath = "../../OceanSODA_algorithms/region_masks/osoda_region_masks_v2.nc";
-riverDischargePaths = {"oceansoda_amazon_plume": "../data/obidos/17050001_debits.csv",
-                       };
 
 settings = osoda_global_settings.get_default_settings();
-gridAreas = analysis_tools.calculate_grid_areas(latRes, lonRes);
+gridAreas = np.genfromtxt(path.join(baseDataPath, "grid_areas_"+str(lonRes)+"x"+str(latRes)+".csv"), delimiter=","); #manually read as newer pyproj isn't compatible with qt5 dependencies
 
 
-#Read data sets
-carbonateParameters = Dataset(carbonateParametersTemplate.safe_substitute(REGION=region, OUTPUTVAR="DIC"));
-regionMaskNC = Dataset(regionMaskPath, 'r');
+zeroPlumes=[];
 
-
-#extract mask data
-regionMask = regionMaskNC.variables["oceansoda_amazon_plume"][:];
-#regionMask3D = np.broadcast_to(amazonRegionMask, (len(carbonateParameters.variables["time"]), len(carbonateParameters.variables["lat"]), len(carbonateParameters.variables["lon"])));
-
-#Time data
-numTimePoints = len(carbonateParameters.variables["time"]);
-carbonateParamsTimeRange = (datetime(1980, 1, 1) + timedelta(seconds=float(carbonateParameters.variables["time"][0])), datetime(1980, 1, 1) + timedelta(seconds=float(carbonateParameters.variables["time"][-1])));
-carbonateDates = analysis_tools.create_date_month_array(carbonateParamsTimeRange[0], carbonateParamsTimeRange[1]);
+skipped = [];
+for region in regions:
+    #Setup region specific output directories
+    baseOutputPath = baseOutputTemplate.safe_substitute(REGION=region);
+    if path.exists(baseOutputPath) == False:
+            makedirs(baseOutputPath);
+    basePlotPath = basePlotTemplate.safe_substitute(REGION=region);
+    if path.exists(basePlotPath) == False:
+            makedirs(basePlotPath);
+    
+    #Read input data sets
+    #Carbonate parameters
+    if useMinRangeCarbonateParameters == True: #Use the predictions that cover a minimum temporal range, even if it isn't the absolute best
+        carbonatePath = carbonateParametersMinRangeTemplate.safe_substitute(REGION=region, OUTPUTVAR="DIC")
+    else: #useMinRangeCarbonateParameters is False, so use overall best performing algorithm / input combination
+        carbonatePath = carbonateParametersTemplate.safe_substitute(REGION=region, OUTPUTVAR="DIC");
+    try:
+        carbonateParameters = Dataset(carbonatePath);
+        regionMaskNC = Dataset(regionMaskPath, 'r');
+    except FileNotFoundError:
+        print("Skipping", region, "because no gridded carbonate parameter file found for it.");
+        skipped.append(region, carbonatePath);
+        continue;
+    
+    #mask data
+    regionMask = regionMaskNC.variables[region][:];
+    #regionMask3D = np.broadcast_to(amazonRegionMask, (len(carbonateParameters.variables["time"]), len(carbonateParameters.variables["lat"]), len(carbonateParameters.variables["lon"])));
+    
+    #Time data
+    numTimePoints = len(carbonateParameters.variables["time"]);
+    carbonateParamsTimeRange = (datetime(1980, 1, 1) + timedelta(seconds=float(carbonateParameters.variables["time"][0])), datetime(1980, 1, 1) + timedelta(seconds=float(carbonateParameters.variables["time"][-1])));
+    carbonateDates = analysis_tools.create_date_month_array(carbonateParamsTimeRange[0], carbonateParamsTimeRange[1]);
+    
+    #River discharge data
+    monthlyDischarge = load_discharge_data(carbonateDates, region);
 
     
-
-
-for region in regions:
     ### Create netCDF file to store results - this will be updated with each iteration
     if writeNetCDFOutput == True:
         outputPathNetCDF = path.join(baseOutputPath, "dic_outflow_"+region+".nc");
         ncout = analysis_tools.create_netCDF_file(outputPathNetCDF, carbonateParameters, numSamples, regionMask, gridAreas);
-        
-        
-    #Read and pre-process amazon discharge data
-    riverDischarge = pd.read_csv(riverDischargePaths[region], parse_dates=["date"], dayfirst=True);
-    monthlyDischarge = analysis_tools.resample_discharge_monthly(riverDischarge, carbonateDates, scaleFactor=60*60*24); #Scale factor to scale per second discharge to per day
     
     
     #Create a data frame to contain all the values used in the calculation
@@ -95,14 +110,13 @@ for region in regions:
     monthlyDF["river_discharge_sd"] = monthlyDischarge["monthly_discharge_sd"];
     
 
-    
     #Split calculations by time point because memory usage is too large to store many samples for all time points at once
     for t in range(0, numTimePoints):
         currentDatetime = carbonateDates[t];
         if verbose:
             print(region, t+1, "of", numTimePoints, "("+str(currentDatetime)+")");
         
-        #extract data for this time point
+        #extract data for this time point #SSS in PSU, DIC in umol kg-1
         dic, dic_err, sss, sss_err = analysis_tools.extract_data(carbonateParameters, regionMask, t=t);
         
         #Don't perform computations if everything is nan
@@ -113,27 +127,32 @@ for region in regions:
         sssSamples = np.random.normal(sss, sss_err, size=(numSamples,)+sss.shape);
         dicSamples = np.random.normal(dic, dic_err, size=(numSamples,)+dic.shape);
         
+        #dicV = dic[np.where(np.isnan(dic)==False)]
+        #dic_errV = dic_err[np.where(np.isnan(dic_err)==False)]
+        
         #Calculate plume masks (1==inside plume)
         plumeMask = analysis_tools.calculate_plume_mask(sss, plumeSalinityThreshold=plumeSalinityThreshold);
         plumeMaskSamples = analysis_tools.calculate_plume_mask(sssSamples, plumeSalinityThreshold=plumeSalinityThreshold);
         
+        if np.sum(plumeMask) == 0:
+            zeroPlumes.append(carbonateDates[t]);
         
         #Calculate plume surface area (m^2)
-        surfaceArea, griddedSurfaceArea = analysis_tools.calculate_plume_surface_area(plumeMask, gridAreas);
+        surfaceArea, griddedSurfaceArea = analysis_tools.calculate_plume_surface_area(plumeMask, gridAreas); #surfaceArea in m^2
         surfaceAreaSamples, griddedSurfaceAreaSamples = analysis_tools.calculate_plume_surface_area(plumeMaskSamples, gridAreas, calculateForSamples=True);
         monthlyDF.loc[currentDatetime, "plume_surface_area"] = surfaceArea;
         monthlyDF.loc[currentDatetime, "plume_surface_area_sd"] = np.std(surfaceAreaSamples);
         
         
         #Calculate plume thickness(m)
-        meanPlumeThickness, griddedPlumeThickness = analysis_tools.plume_thickness_coles2013(sss, plumeMask, useModelled=False, sampleUncertainty=False);
+        meanPlumeThickness, griddedPlumeThickness = analysis_tools.plume_thickness_coles2013(sss, plumeMask, useModelled=False, sampleUncertainty=False); #thickness in metres (m)
         meanPlumeThicknessSamples, griddedPlumeThicknessSamples = analysis_tools.plume_thickness_coles2013(sssSamples, plumeMaskSamples, useModelled=False, sampleUncertainty=True);
         monthlyDF.loc[currentDatetime, "plume_mean_thickness"] = meanPlumeThickness;
         monthlyDF.loc[currentDatetime, "plume_mean_thickness_sd"] = np.std(meanPlumeThicknessSamples);
         
         
         #Calculate plume volume (m^3)
-        plumeVolume, griddedPlumeVolume = analysis_tools.calculate_plume_volume(griddedSurfaceArea, griddedPlumeThickness, calculateForSamples=False);
+        plumeVolume, griddedPlumeVolume = analysis_tools.calculate_plume_volume(griddedSurfaceArea, griddedPlumeThickness, calculateForSamples=False); #volumes in m^3
         plumeVolumeSamples, griddedPlumeVolumeSamples = analysis_tools.calculate_plume_volume(griddedSurfaceAreaSamples, griddedPlumeThicknessSamples, calculateForSamples=True);
         monthlyDF.loc[currentDatetime, "plume_volume"] = plumeVolume;
         monthlyDF.loc[currentDatetime, "plume_volume_sd"] = np.std(plumeVolumeSamples);
@@ -144,19 +163,20 @@ for region in regions:
         #and assumes DIC is perfectly conservative with salinity
         #I.e. the proportion mean plume salinity to surface salinity is assumed to equal mean plume DIC / surface DIC, thus rearranging gives:
         #   meanPlumeDIC = surfaceDIC * (meanPlumeSalinity / surfaceSalinity)
-        griddedMeanDICConc, griddedMeanSSS = analysis_tools.calculate_mean_dic_sss(sss, dic, plumeMask, interceptUncertaintyRatio=0.0, slopeUncertaintyRatio=0.0, calculateForSamples=False);
+        #mean plume DIC given in umol kg-1, mean plume SSS given in PSU
+        griddedMeanDICConc, griddedMeanSSS = analysis_tools.calculate_mean_dic_sss(sss, dic, plumeMask, interceptUncertaintyRatio=0.0, slopeUncertaintyRatio=0.0, calculateForSamples=False); #DIC in umol kg-1, salinity in PSU
         griddedMeanDICConcSamples, griddedMeanSSSSamples = analysis_tools.calculate_mean_dic_sss(sssSamples, dicSamples, plumeMaskSamples, interceptUncertaintyRatio=0.1, slopeUncertaintyRatio=0.1, calculateForSamples=True);
         
         
         #calculate total plume DIC (mols C)
-        totalDIC, griddedTotalDIC = analysis_tools.calculate_total_plume_dic(griddedMeanDICConc, griddedPlumeVolume, calculateForSamples=False);
+        totalDIC, griddedTotalDIC = analysis_tools.calculate_total_plume_dic(griddedMeanDICConc, griddedPlumeVolume, calculateForSamples=False); #DIC in mol
         totalDICSamples, griddedTotalDICSamples = analysis_tools.calculate_total_plume_dic(griddedMeanDICConcSamples, griddedPlumeVolumeSamples, calculateForSamples=True);
         monthlyDF.loc[currentDatetime, "plume_total_dic"] = totalDIC;
         monthlyDF.loc[currentDatetime, "plume_total_dic_sd"] = np.std(totalDICSamples);
         
         
         #Calculate DIC outflow (moles, then converted to TgC)
-        dicOutflow = analysis_tools.calculate_dic_outflow(monthlyDischarge.loc[currentDatetime]["monthly_discharge"], plumeVolume, totalDIC, outflowMonthlyTotalDischargeUncertainty=None);
+        dicOutflow = analysis_tools.calculate_dic_outflow(monthlyDischarge.loc[currentDatetime]["monthly_discharge"], plumeVolume, totalDIC, outflowMonthlyTotalDischargeUncertainty=None); #monthly DIC in mols
         dicOutflow = analysis_tools.mol_to_TgC(dicOutflow); #convert from mols to TgC
         dicOutflowSamples = analysis_tools.calculate_dic_outflow(monthlyDischarge.loc[currentDatetime]["monthly_discharge"], plumeVolumeSamples, totalDICSamples, outflowMonthlyTotalDischargeUncertainty=monthlyDischarge.loc[currentDatetime]["monthly_discharge_sd"]);
         dicOutflowSamples = analysis_tools.mol_to_TgC(dicOutflowSamples); #convert from mols to TgC
@@ -169,7 +189,7 @@ for region in regions:
             griddedPlumeVolumeSD = np.nanstd(griddedPlumeVolumeSamples, axis=0);
             griddedTotalDICSD = np.nanstd(griddedTotalDICSamples, axis=0);
             analysis_tools.update_gridded_time_point_netCDF(ncout, t, griddedPlumeVolume, griddedPlumeVolumeSD, griddedTotalDIC, griddedTotalDICSD, plumeMask);
-        
+
     
 
     #Calculate inter-annual values for each month        
@@ -202,6 +222,7 @@ for region in regions:
         interyearDF.to_csv(interyearPath, sep=",");
         
         annualPath = path.join(baseOutputPath, "annual_means_"+region+".csv");
+        annualDF.insert(0, "region", region);
         annualDF.to_csv(annualPath, sep=",");
         
         print("Written csv file output to:" + baseOutputPath);
@@ -234,12 +255,26 @@ for region in regions:
         outputPath = path.join(basePlotPath, "interyear_dic_discharge.pdf");
         analysis_tools.plot_with_uncertainty(interyearDF, "dic_outflow", "", r"mean riverine DIC discharge ($TgC$)", x=interyearDF["month_name"], outputPath=outputPath, closeAfter=closePlots);
         
-    
+
+if len(skipped) != 0:
+    print("Some regions were skipped due to missing gridded carbonate parameter files:");
+    for tup in skipped:
+        print("\t"+tup[0]+":", tup[1]);
 
 
-
-
-
+#from netCDF4 import Dataset;
+#import matplotlib.pyplot as plt;
+#import numpy as np;
+#nc = Dataset("/home/verwirrt/Projects/Work/20190816_OceanSODA/OceanSODA_algorithms/output/gridded_predictions/gridded_oceansoda_amazon_plume_1.0x1.0_DIC.nc", 'r');
+#
+#
+#dic = nc.variables["DIC_pred"][:];
+#dic.shape
+#means = np.nanmean(dic, axis=(1,2));
+#means.shape
+#
+#plt.figure(); plt.plot(means);
+#
 
 
 

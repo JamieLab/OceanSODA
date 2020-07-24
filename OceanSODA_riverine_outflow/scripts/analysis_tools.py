@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Apr  7 13:37:27 2020
 
-@author: verwirrt
-"""
 
 import pyproj;
 import numpy as np;
@@ -21,12 +17,12 @@ import matplotlib.pyplot as plt;
 ######################
 
 #Convert from concentration (umol kg-1) to quantity (mol).
-def concentration_to_moles(data):
-    return data * 1029 * 1000000.0; #1m^3 seawater weights approx. 1029 kg.
+#def concentration_to_moles(data):
+#    return data * 1029 * 1000000.0; #1m^3 seawater weights approx. 1029 kg.
 
 #moles C to TgC conversion
 def mol_to_TgC(valueInMols):
-    return valueInMols * 12.0107 / 1000000000000.0; #convert from mols to TgC
+    return valueInMols * 12.0107 / (10.0**12); #convert from mols to TgC. 12.0107 is the mean molecular mass of carbon
 
 #return an array of datatime objects for the start of each month for an inclusive date range
 def create_date_month_array(startDate, endDateInclusive):
@@ -58,6 +54,10 @@ def calculate_grid_areas(latRes, lonRes):
             gridAreas[y, x] = area;
     return gridAreas;
 
+# mannually create this as newer version of pyproj isn't compatible with gt5 dependencies
+# areas = calculate_grid_areas(1.0, 1.0);
+# np.savetxt("grid_areas_1.0x1.0.csv", areas, delimiter=",");
+
 
 #Extracts DIC and SSS data for a specific region and time point
 def extract_data(carbonateParameters, regionMask, t):
@@ -75,29 +75,6 @@ def extract_data(carbonateParameters, regionMask, t):
     sss_err[sss_err.mask] = np.nan;
     
     return dic, dic_err, sss, sss_err;
-
-
-#resample river discharge input to monthly totals. Removes non-overlapping time points
-#scaleFactor allows conversion e.g. from discharge per second to discharge per day (must be set correctly to ensure each original discharge amount of correct when scaled to the full original time period)
-def resample_discharge_monthly(riverOutflow, carbonateDates, scaleFactor=60*60*24):
-    monthlyDF = pd.DataFrame();
-    monthlyDF["date"] = carbonateDates;
-    monthlyDF.index = carbonateDates;
-    
-    #Calculate monthly discharge
-    monthlyOutflow = riverOutflow.resample("M", label="left", loffset="1D", on="date").sum();
-    monthlyOutflow["discharge"] = monthlyOutflow["discharge"] * scaleFactor; #convert from per second to per day (daily values already summed)
-    inDateRange = (monthlyOutflow.index >= carbonateDates[0]) & (monthlyOutflow.index <= carbonateDates[-1]); #remove dates that have no carbonate data for
-    monthlyDF["monthly_discharge"] = monthlyOutflow["discharge"][inDateRange];
-    
-    
-    #Calculate monthly discharge uncertainty
-    monthlyOutflowSD = riverOutflow.resample("M", label="left", loffset="1D", on="date").std();
-    monthlyOutflowSD["discharge"] = monthlyOutflowSD["discharge"] * scaleFactor; #convert from per second to per day (daily values already summed)
-    monthlyDF["monthly_discharge_sd"] = monthlyOutflowSD["discharge"][inDateRange];
-    
-    return monthlyDF;
-
 
 
 ###############################################
@@ -195,7 +172,7 @@ def calculate_mean_dic_sss(surfaceSalinity, surfaceDIC, plumeMask, interceptUnce
     slope = np.random.normal(0.881, slopeUncertaintyRatio, size=samplingSize);
     meanPlumeSalinity = intercept + slope*surfaceSalinity;
     meanPlumeSalinity[plumeMask!=1] = np.nan;
-        
+    
     meanPlumeProportion = meanPlumeSalinity/surfaceSalinity;
     meanPlumeDIC = surfaceDIC * meanPlumeProportion;
     return meanPlumeDIC, meanPlumeSalinity;
@@ -204,21 +181,32 @@ def calculate_mean_dic_sss(surfaceSalinity, surfaceDIC, plumeMask, interceptUnce
 #Calculate the total amount of DIC in the plume, and in each plume grid cell.
 #This takes griddedMeanDICConc (mean concentration of DIC, umol kg-1) and grdded plume volumes (m^3)
 #calculateForSamples: When true, interprets inputs as 3D arrays for multiple samples with sample index in the first dimension
+#griddedVolume in m^3
+#griddedMeanDIC in umol kg-1
+#outputs are in mols
 def calculate_total_plume_dic(griddedMeanDIC, griddedVolume, calculateForSamples=False):
-    griddedTotalDIC = griddedMeanDIC*griddedVolume;
+    griddedMass = griddedVolume*1020.0; #1020kg in 1 m^3 sea water. Results is in kg
+    griddedTotalDIC_umols = griddedMass*griddedMeanDIC; #umol kg-1 / kg: Result is umol
+    griddedTotalDIC_mols = griddedTotalDIC_umols / (10**6); #scale umol to mol
     
-    griddedTotalDIC = concentration_to_moles(griddedTotalDIC);
+#    griddedTotalDIC = griddedMeanDIC*griddedVolume;
+#    #import pdb; pdb.set_trace()
+#    griddedTotalDIC = concentration_to_moles(griddedTotalDIC);
     
     if calculateForSamples==True:
-        totalDIC = np.nansum(griddedTotalDIC, axis=(1,2));
+        totalDIC = np.nansum(griddedTotalDIC_mols, axis=(1,2));
     else:
-        totalDIC = np.nansum(griddedTotalDIC);
+        totalDIC = np.nansum(griddedTotalDIC_mols);
     
-    return totalDIC, griddedTotalDIC;
+    return totalDIC, griddedTotalDIC_mols;
 
 
 #Calculates an estimate of the monthly DIC outflow from a river, given DIC plume content, river discharge, and plume volume.
 #If outflowMonthlyTotalDischargeUncertainty is not None, samples are assumed with number of samples equal to the length of the first dimension
+#dicharge in m^3 month-1
+#volume in m^3
+#DIC in mols
+#output in mols
 def calculate_dic_outflow(outflowMonthlyTotalDischarge, plumeVolume, totalPlumeDIC, outflowMonthlyTotalDischargeUncertainty=None):
     #discharge volume as a fraction of plume volume
     if outflowMonthlyTotalDischargeUncertainty is not None:
@@ -276,7 +264,7 @@ def format_annual_dataframe(dataDict):
     unitsDict = {"plume_volume": "m^3",
                  "plume_surface_area": "m^2",
                  "plume_mean_thickness": "m",
-                 "plume_total_dic": "mols C",
+                 "plume_total_dic": "g C",
                  "dic_outflow": "Tg C",
                  "river_discharge": "m^3 year-1",
                  };

@@ -116,16 +116,24 @@ class BaseAlgorithm:
         #Compute output estimate
         modelOutput, propagatedInputUncertainty, rmsd = self._kernal(data);
         modelOutput = modelOutput.dropna(); #remove any rows which couldn't be estimated for any reason
-        propagatedInputUncertainty = propagatedInputUncertainty.dropna(); #remove any rows which couldn't be estimated for any reason
+        propagatedInputUncertainty = propagatedInputUncertainty.loc[modelOutput.index]; #don't include rows that aren't in the model output
+        #propagatedInputUncertainty = propagatedInputUncertainty.dropna(); #remove any rows which couldn't be estimated for any reason
         
         #calculate combined uncertainty for model output
-        if type(rmsd) is float:
-            #If a single algorithm uncertainty is used, turn it into an array (one copied value for each model output)
-            rmsd = np.array([rmsd]*len(modelOutput));
-        if ((rmsd is not None) and (propagatedInputUncertainty is not None)):
-            combinedUncertainty = np.sqrt(rmsd**2 + propagatedInputUncertainty**2); #Combined input and model uncertainty to give overall uncertainty in the predicted (model) output
-        else:
+        if rmsd is None:
             combinedUncertainty = None;
+        else:
+            #Convert RMSD to a list and subset tojust contain data for which there is also input data uncertainty
+            if (type(rmsd) is float) or (type(rmsd) is int):
+                #If a single algorithm uncertainty is used, turn it into an array (one copied value for each model output)
+                rmsd = np.array([float(rmsd)]*len(modelOutput));
+            else:
+                rmsd = rmsd.loc[modelOutput.index]; #don't include rows that aren't in the model output
+            
+            if propagatedInputUncertainty is not None:
+                combinedUncertainty = np.sqrt(rmsd**2 + propagatedInputUncertainty**2); #Combined input and model uncertainty to give overall uncertainty in the predicted (model) output
+            else:
+                combinedUncertainty = None;
         
         #sanity check - rows with model output uncertainty must be the same rows for which uncertainty was calculated
         if (len(modelOutput.index)!=len(propagatedInputUncertainty.index)) or (np.all(modelOutput.index == propagatedInputUncertainty.index)) == False:

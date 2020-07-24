@@ -294,25 +294,51 @@ if __name__ == "__main__":
     summaryTable.to_csv(summaryTableOutputPath, sep=",", index=False);     
     print("Full summary table written to:", path.abspath(summaryTableOutputPath));
     
-#    print("Combination name variable key as follows:");
-#    utilities.print_combination_name_keys(settings);
+    
+    
+    #Returns a data frame comtaining key metrics for the best algorithm and input data combination for each region.
+    #   summaryTable: the metric summary data for all algorithms and input combinations. If a string this is assumed to be a path to the table and read into a dataframe
+    #   regions: ocean soda region strings
+    #   minTimeSpanYears: minimum number of years for which the input data combination covers. Combinations below this number will be excluded from consideration
+    def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0):
+        if isinstance(_summaryTable, str):
+            summaryTable = pd.read_csv(_summaryTable, sep=",");
+        else:
+            summaryTable = _summaryTable;
+        
+        overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared", "n_years", "min_year", "max_year"]);
+        for region in regions:
+            #find best AT algorithm info by sorting a subset of the summary table for just this region, and only include entries where the time range meets the criteria
+            regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
+            if len(regionTable) > 0: #if there are any entries left, sort and select the best
+                regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared", "DIC_RMSDe"], ascending=[True, False, False, True]);
+                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"], regionTable.iloc[0]["AT_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            else: #no entries, so inserts nans
+                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
+            
+            #find best DIC algorithm info by sorting a subset of the summary table for just this region
+            regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
+            if len(regionTable) > 0: #if there are any entries left, sort and select the best
+                regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared", "AT_RMSDe"], ascending=[True, False, False, True]);
+                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            else: #no entries, so insert nans
+                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
+            
+        return overallBestAlgos;
+    
     
     ### Calculate overall best algorithms / input combinations for each egion
-    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared"]);
-    for region in settings["regions"]:
-        #find best AT algorithm info by sorting a subset of the summary table for just this region
-        regionTable = summaryTable[summaryTable["region"] == region];
-        regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared", "DIC_RMSDe"], ascending=[True, False, False, True]);
-        overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"], regionTable.iloc[0]["AT_algos_compared"]];
-        
-        #find best DIC algorithm info by sorting a subset of the summary table for just this region
-        regionTable = summaryTable[summaryTable["region"] == region];
-        regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared", "AT_RMSDe"], ascending=[True, False, False, True]);
-        overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"]];
-    
+    overallBestAlgos = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=0);
     overallBestAlgosOutputPath = path.join(settings["outputPathMetrics"], "overall_best_algos.csv");
     overallBestAlgos.to_csv(overallBestAlgosOutputPath, sep=",", index=False);     
     print("Overall best algorithm table written to:", path.abspath(overallBestAlgosOutputPath));
+    
+    ### Calculate overall best algorithms / input combinations for each egion again, but this time ensuring a minimum time series range
+    minYearRange = 8;
+    overallBestAlgosMinRange = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=minYearRange);
+    overallBestAlgosOutputPath = path.join(settings["outputPathMetrics"], "overall_best_algos_min_years="+str(minYearRange)+".csv");
+    overallBestAlgosMinRange.to_csv(overallBestAlgosOutputPath, sep=",", index=False);     
+    print("Overall best algorithm (with min year range="+str(minYearRange)+") table written to:", path.abspath(overallBestAlgosOutputPath));
     
     #Shutdown logger
     loggerFileHandle.close();

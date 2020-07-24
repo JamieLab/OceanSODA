@@ -112,7 +112,7 @@ if extractReefData:
     reefSummaryMetricsDF_AT = pd.DataFrame(columns=summaryColNames);
     reefSummaryMetricsDF_DIC = pd.DataFrame(columns=summaryColNames);
     
-    for region in settings["regions"]:
+    for region in ["oceansoda_amazon_plume"]:#settings["regions"]:
         if len(reefsByRegion[region]) == 0: #No reefs in this region, so move onto the next region
             continue;
         

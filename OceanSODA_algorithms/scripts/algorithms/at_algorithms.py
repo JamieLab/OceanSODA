@@ -502,7 +502,7 @@ class Cai2010e_at(BaseAlgorithm):
 class Cooley2006a_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cooley2006a_dic (Amazon plume): C06a(dic)";
+        return "Cooley2006a_dic (Amazon plume): C06(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -789,7 +789,7 @@ class Hassoun2015_full_at(BaseAlgorithm):
         self.settings = settings;
         self.coefs = [-845.0, 89.0]; #intersept, salinity slope, see table 1 eq2
         self.coefsUncertainty = [None, None]; #Uncertainty reported for the coefficients
-        self.rmsd = 18; #See table 1 eq2
+        self.rmsd = 18.0; #See table 1 eq2
         self.r = 0.96; #See table 1 eq2
         
         #Specify rectangular regions which the algorithm is valid for. Defaults to global when empty.
