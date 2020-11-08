@@ -7,34 +7,12 @@
 ehthumbs.db
 Thumbs.db
 
-
 ### Compiled source: ###
 *.pyc
+### Log files: ###
+*.log
 
-###### OceanSODA_algorithms sub-repo
-### Ignore matchup dataset ###
-OceanSODA_algorithms/data/**
-
-OceanSODA_algorithms/tmp_plots
-
-### ... ###
-OceanSODA_algorithms/scripts/_old/**
-OceanSODA_algorithms/scripts/output/**
-
-### Ignore output directory ###
-OceanSODA_algorithms/output/**
-
-
-###### OceanSODA_riverine_DIC sub-repo
-OceanSODA_riverine_DIC/tmp_plots
-
-### Ignore matchup dataset ###
-#OceanSODA_riverine_DIC/data/**
-
-### ... ###
-OceanSODA_riverine_DIC/scripts/_old/**
-
-### Ignore output directory ###
-OceanSODA_riverine_DIC/output/**
-
-
+### ignore data and output
+data
+output
+#data/**
