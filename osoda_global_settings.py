@@ -75,8 +75,7 @@ def get_default_settings():
     settings["longGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'long' version of the optimal algorithms
     #other output directories here
     
-    settings["logDirectoryRoot"] = path.join(settings["outputPathRoot"], "logs");
-    
+    settings["logDirectoryRoot"] = path.join(settings["outputPathRoot"], "logs"); #Log files written here
     
     
     #Some algorithms use additional data sets (e.g. gridded masks). These can be specified here as key : value pairs,
@@ -144,27 +143,8 @@ def get_default_settings():
                                    };
     
     
-    ##########Refactoring ended here.
-    
-    
-    
-    ### Settings for prediction
-    #Output location of gridded predicted timeseries
-    settings["griddedPredictionOutputTemplate"] = Template(path.join(projectRoot, "output/gridded_predictions/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc"));
-    settings["griddedPredictionMinYearsOutputTemplate"] = Template(path.join(projectRoot, "output/gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc"));
-    
-    #Input dataset locations for making predictions from. Dictionary containing inputParameterName:(netCDFVariableName, netCDFFileTemplate) where YYYY and MM are substituted for string representations of year and month
-    #TODO: Can this be removed now??
-#    settings["predictionDataPaths"] = {"SSS": ("salinity_mean", Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc")),
-#                                       "SSS_err": ("salinity_err", Template("../../prediction_datasets/smos_ifremer_salinity/processed/${YYYY}${MM}_smos_sss.nc")),
-#                                       "SST": ("sst_mean", Template("../../prediction_datasets/OISST_reynolds_SST/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc")),
-#                                       "DO": ("o_an", Template("../../prediction_datasets/WOA_dissolved_oxygen/woa18_all_o${MM}_processed.nc")),
-#                                       "NO3": ("n_an", Template("../../prediction_datasets/WOA_nitrate/woa18_all_n${MM}_processed.nc")),
-#                                       "PO4": ("p_an", Template("../../prediction_datasets/WOA_phosphate/woa18_all_p${MM}_processed.nc")),
-#                                       "SiO4": ("i_an", Template("../../prediction_datasets/WOA_silicate/woa18_all_i${MM}_processed.nc")),
-#                                       };
-    
-    #This defines both the region names and algorithms to use
+    #######################
+    # Defines both the region names and algorithms to use
     import os_algorithms.at_algorithms as at_algorithms;
     import os_algorithms.dic_algorithms as dic_algorithms;
     settings["algorithmRegionMapping"] = {"oceansoda_amazon_plume": [at_algorithms.Astor2017a_at,
@@ -264,6 +244,12 @@ def get_default_settings():
     ### Derived settings (do not change - these are lists/values derived from the settings above for convenience)
     settings["regions"] = settings["algorithmRegionMapping"].keys();
     
+    
+    ##########Refactoring ended here.
+    ### Settings for prediction ###TODO: are these not needed now?
+    #Output location of gridded predicted timeseries
+    settings["griddedPredictionOutputTemplate"] = Template(path.join(projectRoot, "output/gridded_predictions/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc"));
+    settings["griddedPredictionMinYearsOutputTemplate"] = Template(path.join(projectRoot, "output/gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc"));
     
     return settings;
 
