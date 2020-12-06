@@ -131,10 +131,12 @@ def peak_align_diagnostic_plot(region, dischargeDataMonths, radiiData, numRadii_
 
 #inputDataRootTemplate: Template (REGION) defining the directory containing the monthly and interyear time series for each radii
 def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirectory):
-    #Some convenience plots parameters
-    fontSize = 16;
-    legendSize = 16;
-    figureSize = (12,6);
+    fontSize = 10;
+    legendSize = 10;
+    figsizex = 6.5;
+    figsizey = 3.0;
+    figureSize = (figsizex, figsizey);
+    
     if path.exists(outputDirectory) == False:
         makedirs(outputDirectory);
     plotOutputPath = outputDirectory;

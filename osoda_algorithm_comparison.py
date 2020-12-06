@@ -3,6 +3,28 @@
 """
 Created on Mon Dec  9 14:36:57 2019
 
+This utility performs the algorithm comparison step, and computes weighted and unweighted metrics for each region/input data combination.
+It uses the methodology of Land et al 2019 ( https://www.sciencedirect.com/science/article/pii/S0034425719304882 ).
+It's output directory and settings are controlled by the global settings file (osoda_global_settings.py:get_default_settings)
+
+By default, the following output files are created:
+    overall_best_algos.csv, overall_best_algos_min_years=8.csv   These give a summary of the best performing algorithm and input data combination for each region
+                                                                     with and without the minimum 8 year temporal range constraint
+    summary_best_algos.csv, summary_best_algos_unweighted.csv    These give the best algorithms for each input data combination (to assess difference between input data combinations)
+                                                                     for weighted and unweighted metrics.
+    combination<N>_<input_datasets> directories                  These are separate directories for each input data combination, where N is the combination enumeration and <input_datasets> is
+                                                                     the named SST and SSS data sets used. Inside are separate files for each region and output variable (AT/DIC), which contain
+                                                                     all the detailed info for the runs for that region/input combination. This includes:
+                                                                            * a list of the algorithms assessed (algorithms_used.csv)
+                                                                            * the basic (non-paired) metrics for each algorithm (basic_metrics.json) - note you can read this using pickle in python
+                                                                            * subset matchup data set used for each algorithm, including the predicted DIC/AT from the algorithm (matchup_appended_<algorithm>.csv)
+                                                                            * data files for the paired metrics. These are .csv files containing a matrix, where the rows/columns correspond to each algorithm
+                                                                                 and the order of algorithms is as defined by algorithms_used.csv. Included are:
+                                                                                     * number of intersecting matchup database rows (n_intersect_matrix.csv)
+                                                                                     * paired_wrmsd_matrix.csv, paired_rmsd_matrix.csv (the RMSDe for weighted and unweighted calculations)
+                                                                                     * paired_wscore_matrix.csv, paired_score_matrix.csv (the final scores for each algorithm pair, weighted and unweighted respectively)
+    (development, use with care)
+
 @author: tom holding
 """
 
@@ -28,7 +50,7 @@ diagnosticPlots = False; #Diagnostic plots to help see if algorithms are making 
 #matchupData is a pandas DataFrame containing the complete matchup data set
 #regionMaskPath, depthMaskPath, distToCoastMaskpath:    file paths to spatial mask netCDF files
 #region, depthMaskVar, distToCoastMaskVar:    string variable names for accessing the variable containing gridded mask (0=filter, 1=keep) for each of the mask netCDFs
-def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=None, depthMaskPath=None, depthMaskVar=None, distToCoastMaskPath=None, distToCoastMaskVar=None):
+def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=None, useDepthMask=False, depthMaskPath=None, depthMaskVar=None, useDistToCoastMask=False, distToCoastMaskPath=None, distToCoastMaskVar=None):
     
     subsetData = matchupData; #new view of the matchup data
     
@@ -38,12 +60,12 @@ def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=No
         subsetData = utilities.subset_from_mask(matchupData, regionMaskNC, region);
         
     #Subset based on depth
-    if depthMaskPath != None:
+    if useDepthMask == True:
         depthMaskNC = Dataset(depthMaskPath, 'r');
         subsetData = utilities.subset_from_mask(subsetData, depthMaskNC, depthMaskVar);
     
     #Subset based on distance to coast
-    if distToCoastMaskPath != None:
+    if useDistToCoastMask == True:
         distToCoastMaskNC = Dataset(distToCoastMaskPath, 'r');
         subsetData = utilities.subset_from_mask(subsetData, distToCoastMaskNC, distToCoastMaskVar);
     
@@ -58,7 +80,7 @@ def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=No
 
 
 #Writes basic metrics objects, paired metrics matrices, final score dataframe, appended matchup dataset subsets (with predicted values), and algorithm name ordered list to file
-def write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs):
+def write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs):
     if path.exists(outputDirectory) == False:
         makedirs(outputDirectory);
     
@@ -117,7 +139,7 @@ def main(settings):
             depthMaskPath=settings["depthMaskPath"];
         else:
             depthMaskPath=None;
-        if settings["subsetWithDistToCoast"] = True:
+        if settings["subsetWithDistToCoast"] == True:
             distToCoastMaskPath=settings["distToCoastMaskVar"]
         else:
             distToCoastMaskPath=None;
@@ -156,7 +178,9 @@ def main(settings):
                         modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = \
                                   run_algorithm(algorithm, matchupData,
                                   regionMaskPath=settings["regionMasksPath"], region=region,
+                                  useDepthMask=settings["subsetWithDepthMask"],
                                   depthMaskPath=settings["depthMaskPath"], depthMaskVar=settings["depthMaskVar"],
+                                  useDistToCoastMask=settings["subsetWithDistToCoast"],
                                   distToCoastMaskPath=settings["distToCoastMaskPath"], distToCoastMaskVar=settings["distToCoastMaskVar"]);
                         algorithmOutput = {};
                         algorithmOutput["instance"] = algorithm;
@@ -205,7 +229,7 @@ def main(settings):
                     ### Write outputs to file #
                     outputDirectory = path.join(currentCombinationOutputDirectory, currentOutputVar, region);
                     print("Writing metrics to: ", outputDirectory);
-                    write_metrics_to_file(outputDirectory, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs);
+                    write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs);
         
         
     ##############################

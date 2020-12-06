@@ -621,7 +621,7 @@ class Hassoun2015_basins_dic(BaseAlgorithm):
         outputUncertaintyDueToInputUncertainty[zoneUncertainty.index] = zoneUncertainty;
         modelRmsds[zoneData.index] = zoneRmsd;
         
-        zoneData, zomeUncertainty, zoneRmsd = self._west_basin(dataToUse);
+        zoneData, zoneUncertainty, zoneRmsd = self._west_basin(dataToUse);
         if np.any(np.isfinite(modelOutput[zoneData.index])==True): #Sanity check for overlaps
             raise RuntimeError("Overlapping zones in Hassoun2015_basins_at. Something has done wrong!");
         modelOutput[zoneData.index] = zoneData;
