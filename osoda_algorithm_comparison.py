@@ -28,6 +28,8 @@ By default, the following output files are created:
 @author: tom holding
 """
 
+#TODO: This whole script needs refactoring. Lots of duplicate code, different patterns to do the same thing, confusing layout...
+
 from os import path, makedirs;
 import numpy as np;
 from netCDF4 import Dataset;
@@ -39,6 +41,7 @@ import pandas as pd;
 import os_algorithms.metrics as metrics;
 import os_algorithms.utilities as utilities;
 import osoda_global_settings;
+from os_algorithms.diagnostic_plotting import prediction_accuracy_plot;
 
 #control flags (turn parts of the script on/off)
 runAlgorithmsAndCalculateMetrics = True;
@@ -84,19 +87,37 @@ def write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersect
     if path.exists(outputDirectory) == False:
         makedirs(outputDirectory);
     
-    #Write basicMetrics object and paired metric matrices
+    #write algorithm list/order to file
+    algoNameOrder = np.array([algorithmOutput["name"] for algorithmOutput in currentAlgorithmOutputs]);
+    with open(path.join(outputDirectory, "algorithms_used.csv"), 'w') as file:
+        for algoName in algoNameOrder:
+            file.write(algoName+",");
+    
+    
+    #Write basicMetrics object
     pickle.dump(basicMetrics, open(path.join(outputDirectory, "basic_metrics.json"), 'wb'));
-    np.savetxt(path.join(outputDirectory, "n_intersect_matrix.csv"), nIntersectMatrix, delimiter=",", fmt='%i');
-    np.savetxt(path.join(outputDirectory, "paired_score_matrix.csv"), pairedScoreMatrix, delimiter=",");
-    np.savetxt(path.join(outputDirectory, "paired_wscore_matrix.csv"), pairedWScoreMatrix, delimiter=",");
-    np.savetxt(path.join(outputDirectory, "paired_rmsd_matrix.csv"), pairedRmsdMatrix, delimiter=",");
-    np.savetxt(path.join(outputDirectory, "paired_wrmsd_matrix.csv"), pairedWRmsdMatrix, delimiter=",");
+
+    #Write paired metrics
+    nIntersectMatrixDF = pd.DataFrame(nIntersectMatrix, dtype=int, columns=algoNameOrder, index=algoNameOrder);
+    nIntersectMatrixDF.to_csv(path.join(outputDirectory, "n_intersect_matrix.csv"));
+    pairedScoreMatrixDF = pd.DataFrame(pairedScoreMatrix, dtype=float, columns=algoNameOrder, index=algoNameOrder);
+    pairedScoreMatrixDF.to_csv(path.join(outputDirectory, "paired_score_matrix.csv"), na_rep="nan");
+    
+    pairedWScoreMatrixDF = pd.DataFrame(pairedWScoreMatrix, dtype=float, columns=algoNameOrder, index=algoNameOrder);
+    pairedWScoreMatrixDF.to_csv(path.join(outputDirectory, "paired_wscore_matrix.csv"), na_rep="nan");
+    
+    pairedRmsdMatrixDF = pd.DataFrame(pairedRmsdMatrix, dtype=float, columns=algoNameOrder, index=algoNameOrder);
+    pairedRmsdMatrixDF.to_csv(path.join(outputDirectory, "paired_rmsd_matrix.csv"), na_rep="nan");
+    
+    pairedWRmsdMatrixDF = pd.DataFrame(pairedWRmsdMatrix, dtype=float, columns=algoNameOrder, index=algoNameOrder);
+    pairedWRmsdMatrixDF.to_csv(path.join(outputDirectory, "paired_wrmsd_matrix.csv"), na_rep="nan");
+    
     finalScores.to_csv(path.join(outputDirectory, "final_scores.csv"), sep=",", na_rep="nan", index=False);
     
     #Construct new matchup datasets with additional predicted column and output this to file
     for i in range(len(currentAlgorithmOutputs)):
         algorithmName = type(currentAlgorithmOutputs[i]["instance"]).__name__;
-        outputVariable = currentAlgorithmOutputs[i]["instance"].output_name(); #The common name of the output variable (i.e. 'AT' or 'DIC')
+        outputVariable = currentAlgorithmOutputs[i]["outputVar"]; #The common name of the output variable (i.e. 'AT' or 'DIC')
         reconstructedData = matchupData.loc[currentAlgorithmOutputs[i]["dataUsedIndices"]];
         reconstructedData[outputVariable.upper()+"_pred"] = basicMetrics[i]["model_output"];
         reconstructedData[outputVariable.upper()+"_pred_model_uncertainty"] = basicMetrics[i]["model_uncertainty"]; #RMSD of the model
@@ -108,14 +129,134 @@ def write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersect
         #reconstructedData[outputVariable.upper()+"_pred_err"] = basicMetrics[i]["model_output_err"];
         reconstructedData.to_csv(path.join(outputDirectory, "matchup_appended_"+algorithmName+".csv"), sep=",");
 
-    #write algorithm list/order to file
-    algoNameOrder = np.array([type(algorithmOutput["instance"]).__name__ for algorithmOutput in currentAlgorithmOutputs]);
-    with open(path.join(outputDirectory, "algorithms_used.csv"), 'w') as file:
-        for algoName in algoNameOrder:
-            file.write(algoName+",");
+
+#Extracts the best algorithm for each region and input data combination.
+#Compiles information into a dataframe and returns
+def create_summary_table(settings, inputCombinationNames, inputCombinationVariableMaps, useWeighted):
+    #FIXME: appending columns to dataframe in two different ways, this is confusing and annoying...
+    bestAlgosAT = [];
+    bestAlgosDIC = [];
+    bestRMSDesAT = [];
+    bestRMSDesDIC = [];
+    regionNamesList = [];
+    combinationNamesList = [];
+    numAlgosComparedAT = [];
+    numAlgosComparedDIC = [];
+    for region in settings["regions"]:
+        for inputCombinationName in inputCombinationNames:
+            metricsRootDirectory = path.join(settings["outputPathMetrics"], inputCombinationName);
+            bestAlgorithmInfo = utilities.find_best_algorithm(metricsRootDirectory, region, useWeightedRMSDe=useWeighted, verbose=False);
+            
+            #Append to columns
+            regionNamesList.append(region);
+            combinationNamesList.append(inputCombinationName);
+            if bestAlgorithmInfo["AT"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
+                bestAlgosAT.append(bestAlgorithmInfo["AT"][0]);
+                bestRMSDesAT.append(bestAlgorithmInfo["AT"][1]);
+                numAlgosComparedAT.append(bestAlgorithmInfo["AT"][2]);
+            else: #No best algorithm, fill with default data
+                bestAlgosAT.append(np.nan);
+                bestRMSDesAT.append(np.nan);
+                numAlgosComparedAT.append(np.nan);
+            
+            if bestAlgorithmInfo["DIC"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
+                bestAlgosDIC.append(bestAlgorithmInfo["DIC"][0]);
+                bestRMSDesDIC.append(bestAlgorithmInfo["DIC"][1]);
+                numAlgosComparedDIC.append(bestAlgorithmInfo["DIC"][2]);
+            else: #No best algorithm, fill with default data
+                bestAlgosDIC.append(np.nan);
+                bestRMSDesDIC.append(np.nan);
+                numAlgosComparedDIC.append(np.nan);
+    
+    #Concatinate to a dataframe
+    summaryTable = pd.DataFrame();
+    summaryTable["region"] = regionNamesList;
+    summaryTable["input_combination"] = combinationNamesList;
+    summaryTable["AT_best_in_region"] = [False]*len(summaryTable);
+    summaryTable["DIC_best_in_region"] = [False]*len(summaryTable);
+    summaryTable["AT_best_algorithm"] = bestAlgosAT;
+    summaryTable["AT_RMSDe"] = bestRMSDesAT;
+    summaryTable["AT_n"] = [np.nan]*len(summaryTable);
+    summaryTable["AT_algos_compared"] = numAlgosComparedAT;
+    summaryTable["DIC_best_algorithm"] = bestAlgosDIC;
+    summaryTable["DIC_RMSDe"] = bestRMSDesDIC;
+    summaryTable["DIC_n"] = [np.nan]*len(summaryTable);
+    summaryTable["DIC_algos_compared"] = numAlgosComparedDIC;
+    summaryTable["n_years"] = [0]*len(summaryTable);
+    summaryTable["min_year"] = [0]*len(summaryTable);
+    summaryTable["max_year"] = [0]*len(summaryTable);
+    
+    #Some meta metrics
+    #Which input combination is the best for AT, DIC and both, for each region?
+    for region in settings["regions"]:
+        #Mark the input combination with the RMSDe in each region (first for AT)
+        rmsdesInRegionAT = summaryTable[summaryTable["region"]==region]["AT_RMSDe"];
+        if rmsdesInRegionAT.isnull().all() == False: #If any are real numbers
+            bestRmsdAT = rmsdesInRegionAT[rmsdesInRegionAT==np.nanmin(rmsdesInRegionAT)];
+            summaryTable.loc[bestRmsdAT.index, "AT_best_in_region"] = True;
+            #summaryTable["AT_best_in_region"][(summaryTable["region"]==region) & (summaryTable["AT_RMSDe"]==np.nanmin(rmsdesInRegionAT))] = True;
+        
+        #Now again with DIC
+        rmsdesInRegionDIC = summaryTable[summaryTable["region"]==region]["DIC_RMSDe"];
+        if rmsdesInRegionDIC.isnull().all() == False: #If any are real numbers
+            bestRmsdDIC = rmsdesInRegionDIC[rmsdesInRegionDIC==np.nanmin(rmsdesInRegionDIC)];
+            summaryTable.loc[bestRmsdDIC.index, "DIC_best_in_region"] = True;
+            #summaryTable["DIC_best_in_region"][(summaryTable["region"]==region) & (summaryTable["DIC_RMSDe"]==np.nanmin(rmsdesInRegionDIC))] = True;
+    
+    #How many years, and what was the min and max time range, for each combination?
+    for (inputCombinationName, inputCombination) in zip(inputCombinationNames, inputCombinationVariableMaps):
+        yearsUsed = utilities.calculate_years_for_input_combination(settings, inputCombination);
+        currentCombinationRows = summaryTable[summaryTable["input_combination"]==inputCombinationName].index;
+        summaryTable.loc[currentCombinationRows, "n_years"] = len(yearsUsed);
+        summaryTable.loc[currentCombinationRows, "min_year"] = min(yearsUsed);
+        summaryTable.loc[currentCombinationRows, "max_year"] = max(yearsUsed);
+        
+    
+    #number of data points ran for
+    for r, row in summaryTable.iterrows():
+        if isinstance(row["AT_best_algorithm"], str):
+            predictedDataPathAT = path.join(settings["outputPathMetrics"], row["input_combination"], "AT", row["region"], "matchup_appended_"+row["AT_best_algorithm"]+".csv");
+            summaryTable.loc[r, "AT_n"] = len(pd.read_csv(predictedDataPathAT));
+        
+        if isinstance(row["DIC_best_algorithm"], str):
+            predictedDataPathDIC = path.join(settings["outputPathMetrics"], row["input_combination"], "DIC", row["region"], "matchup_appended_"+row["DIC_best_algorithm"]+".csv");
+            summaryTable.loc[r, "DIC_n"] = len(pd.read_csv(predictedDataPathDIC));
+    
+    #Return summary table
+    return summaryTable;
 
 
-def main(settings):
+#Returns a data frame comtaining key metrics for the best algorithm and input data combination for each region.
+#   summaryTable: the metric summary data for all algorithms and input combinations. If a string this is assumed to be a path to the table and read into a dataframe
+#   regions: ocean soda region strings
+#   minTimeSpanYears: minimum number of years for which the input data combination covers. Combinations below this number will be excluded from consideration
+def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0):
+    if isinstance(_summaryTable, str):
+        summaryTable = pd.read_csv(_summaryTable, sep=",");
+    else:
+        summaryTable = _summaryTable;
+    
+    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared", "n_years", "min_year", "max_year"]);
+    for region in regions:
+        #find best AT algorithm info by sorting a subset of the summary table for just this region, and only include entries where the time range meets the criteria
+        regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
+        if len(regionTable) > 0: #if there are any entries left, sort and select the best
+            regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared", "DIC_RMSDe"], ascending=[True, False, False, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"], regionTable.iloc[0]["AT_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+        else: #no entries, so inserts nans
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
+        
+        #find best DIC algorithm info by sorting a subset of the summary table for just this region
+        regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
+        if len(regionTable) > 0: #if there are any entries left, sort and select the best
+            regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared", "AT_RMSDe"], ascending=[True, False, False, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+        else: #no entries, so insert nans
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
+        
+    return overallBestAlgos;
+
+def main(settings, extraAlgosToTest=[]):
     #Setup logger
     logPath = path.join(settings["logDirectoryRoot"], "osoda_algorithm_comparison.log");
     if path.exists(path.dirname(logPath)) == False:
@@ -159,9 +300,9 @@ def main(settings):
             
             ### Read matchup database using the current set of input data
             years = utilities.calculate_years_for_input_combination(settings, inputCombination);
-            matchupData = utilities.load_matchup_to_dataframe(settings, inputCombination, years=years); #each year concatinated is concatinated to create a single dataframe
-    
-    
+            matchupData = utilities.load_matchup_to_dataframe(settings, inputCombination, years=years); #each year is concatinated to create a single dataframe
+            
+            
             ### For each region, run all the algorithms that are relevant for that region
             for region in settings["regions"]:
                 print("Running for region:", region);
@@ -184,6 +325,8 @@ def main(settings):
                                   distToCoastMaskPath=settings["distToCoastMaskPath"], distToCoastMaskVar=settings["distToCoastMaskVar"]);
                         algorithmOutput = {};
                         algorithmOutput["instance"] = algorithm;
+                        algorithmOutput["name"] = algorithm.__str__();
+                        algorithmOutput["outputVar"] = algorithm.output_name();
                         algorithmOutput["modelOutput"] = modelOutput;
                         algorithmOutput["propagatedInputUncertainty"] = propagatedInputUncertainty;
                         algorithmOutput["rmsd"] = rmsd;
@@ -203,7 +346,6 @@ def main(settings):
                     ### Diagnostic plots #
                     #Diagnostic plot to compare model and reference output
                     if diagnosticPlots == True:
-                        from osoda_analysis_tools import prediction_accuracy_plot;
                         outputVariable = algorithm.output_name();
                         prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable);
                     
@@ -230,149 +372,21 @@ def main(settings):
                     outputDirectory = path.join(currentCombinationOutputDirectory, currentOutputVar, region);
                     print("Writing metrics to: ", outputDirectory);
                     write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs);
-        
-        
-    ##############################
-    ### Calculating best metrics #
-    #Extracts the best algorithm for each region and input data combination.
-    #Compiles information into a dataframe and returns
-    def create_summary_table(settings, inputCombinationNames, inputCombinationVariableMaps, useWeighted):
-        #FIXME: appending columns to dataframe in two different ways, this is confusing and annoying...
-        bestAlgosAT = [];
-        bestAlgosDIC = [];
-        bestRMSDesAT = [];
-        bestRMSDesDIC = [];
-        regionNamesList = [];
-        combinationNamesList = [];
-        numAlgosComparedAT = [];
-        numAlgosComparedDIC = [];
-        for region in settings["regions"]:
-            for inputCombinationName in inputCombinationNames:
-                metricsRootDirectory = path.join(settings["outputPathMetrics"], inputCombinationName);
-                bestAlgorithmInfo = utilities.find_best_algorithm(metricsRootDirectory, region, useWeightedRMSDe=useWeighted, verbose=False);
-                
-                #Append to columns
-                regionNamesList.append(region);
-                combinationNamesList.append(inputCombinationName);
-                if bestAlgorithmInfo["AT"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
-                    bestAlgosAT.append(bestAlgorithmInfo["AT"][0]);
-                    bestRMSDesAT.append(bestAlgorithmInfo["AT"][1]);
-                    numAlgosComparedAT.append(bestAlgorithmInfo["AT"][2]);
-                else: #No best algorithm, fill with default data
-                    bestAlgosAT.append(np.nan);
-                    bestRMSDesAT.append(np.nan);
-                    numAlgosComparedAT.append(np.nan);
-                
-                if bestAlgorithmInfo["DIC"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
-                    bestAlgosDIC.append(bestAlgorithmInfo["DIC"][0]);
-                    bestRMSDesDIC.append(bestAlgorithmInfo["DIC"][1]);
-                    numAlgosComparedDIC.append(bestAlgorithmInfo["DIC"][2]);
-                else: #No best algorithm, fill with default data
-                    bestAlgosDIC.append(np.nan);
-                    bestRMSDesDIC.append(np.nan);
-                    numAlgosComparedDIC.append(np.nan);
-        
-        #Concatinate to a dataframe
-        summaryTable = pd.DataFrame();
-        summaryTable["region"] = regionNamesList;
-        summaryTable["input_combination"] = combinationNamesList;
-        summaryTable["AT_best_in_region"] = [False]*len(summaryTable);
-        summaryTable["DIC_best_in_region"] = [False]*len(summaryTable);
-        summaryTable["AT_best_algorithm"] = bestAlgosAT;
-        summaryTable["AT_RMSDe"] = bestRMSDesAT;
-        summaryTable["AT_n"] = [np.nan]*len(summaryTable);
-        summaryTable["AT_algos_compared"] = numAlgosComparedAT;
-        summaryTable["DIC_best_algorithm"] = bestAlgosDIC;
-        summaryTable["DIC_RMSDe"] = bestRMSDesDIC;
-        summaryTable["DIC_n"] = [np.nan]*len(summaryTable);
-        summaryTable["DIC_algos_compared"] = numAlgosComparedDIC;
-        summaryTable["n_years"] = [0]*len(summaryTable);
-        summaryTable["min_year"] = [0]*len(summaryTable);
-        summaryTable["max_year"] = [0]*len(summaryTable);
-        
-        #Some meta metrics
-        #Which input combination is the best for AT, DIC and both, for each region?
-        for region in settings["regions"]:
-            #Mark the input combination with the RMSDe in each region (first for AT)
-            rmsdesInRegionAT = summaryTable[summaryTable["region"]==region]["AT_RMSDe"];
-            if rmsdesInRegionAT.isnull().all() == False: #If any are real numbers
-                bestRmsdAT = rmsdesInRegionAT[rmsdesInRegionAT==np.nanmin(rmsdesInRegionAT)];
-                summaryTable.loc[bestRmsdAT.index, "AT_best_in_region"] = True;
-                #summaryTable["AT_best_in_region"][(summaryTable["region"]==region) & (summaryTable["AT_RMSDe"]==np.nanmin(rmsdesInRegionAT))] = True;
-            
-            #Now again with DIC
-            rmsdesInRegionDIC = summaryTable[summaryTable["region"]==region]["DIC_RMSDe"];
-            if rmsdesInRegionDIC.isnull().all() == False: #If any are real numbers
-                bestRmsdDIC = rmsdesInRegionDIC[rmsdesInRegionDIC==np.nanmin(rmsdesInRegionDIC)];
-                summaryTable.loc[bestRmsdDIC.index, "DIC_best_in_region"] = True;
-                #summaryTable["DIC_best_in_region"][(summaryTable["region"]==region) & (summaryTable["DIC_RMSDe"]==np.nanmin(rmsdesInRegionDIC))] = True;
-        
-        #How many years, and what was the min and max time range, for each combination?
-        for (inputCombinationName, inputCombination) in zip(inputCombinationNames, inputCombinationVariableMaps):
-            yearsUsed = utilities.calculate_years_for_input_combination(settings, inputCombination);
-            currentCombinationRows = summaryTable[summaryTable["input_combination"]==inputCombinationName].index;
-            summaryTable.loc[currentCombinationRows, "n_years"] = len(yearsUsed);
-            summaryTable.loc[currentCombinationRows, "min_year"] = min(yearsUsed);
-            summaryTable.loc[currentCombinationRows, "max_year"] = max(yearsUsed);
-            
-        
-        #number of data points ran for
-        for r, row in summaryTable.iterrows():
-            if isinstance(row["AT_best_algorithm"], str):
-                predictedDataPathAT = path.join(settings["outputPathMetrics"], row["input_combination"], "AT", row["region"], "matchup_appended_"+row["AT_best_algorithm"]+".csv");
-                summaryTable.loc[r, "AT_n"] = len(pd.read_csv(predictedDataPathAT));
-            
-            if isinstance(row["DIC_best_algorithm"], str):
-                predictedDataPathDIC = path.join(settings["outputPathMetrics"], row["input_combination"], "DIC", row["region"], "matchup_appended_"+row["DIC_best_algorithm"]+".csv");
-                summaryTable.loc[r, "DIC_n"] = len(pd.read_csv(predictedDataPathDIC));
-        
-        #Return summary table
-        return summaryTable;
-        
-        
+
+    
     #Calculate summary table for weighted metrics and output to file
     summaryTable_weighted = create_summary_table(settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=True);
     summaryTableOutputPath = path.join(settings["outputPathMetrics"], "summary_best_algos.csv");
     summaryTable_weighted.to_csv(summaryTableOutputPath, sep=",", index=False);     
     print("Full weighted summary table written to:", path.abspath(summaryTableOutputPath));
    
+    
     #Calculate summary table for unweighted metrics and output to file
-
     summaryTable_unweighted = create_summary_table(settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=False);
     summaryTableOutputPathUnweighted = path.join(settings["outputPathMetrics"], "summary_best_algos_unweighted.csv");
     summaryTable_unweighted.to_csv(summaryTableOutputPathUnweighted, sep=",", index=False);     
     print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted));
     
-    
-    #Returns a data frame comtaining key metrics for the best algorithm and input data combination for each region.
-    #   summaryTable: the metric summary data for all algorithms and input combinations. If a string this is assumed to be a path to the table and read into a dataframe
-    #   regions: ocean soda region strings
-    #   minTimeSpanYears: minimum number of years for which the input data combination covers. Combinations below this number will be excluded from consideration
-    def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0):
-        if isinstance(_summaryTable, str):
-            summaryTable = pd.read_csv(_summaryTable, sep=",");
-        else:
-            summaryTable = _summaryTable;
-        
-        overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared", "n_years", "min_year", "max_year"]);
-        for region in regions:
-            #find best AT algorithm info by sorting a subset of the summary table for just this region, and only include entries where the time range meets the criteria
-            regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
-            if len(regionTable) > 0: #if there are any entries left, sort and select the best
-                regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared", "DIC_RMSDe"], ascending=[True, False, False, True]);
-                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"], regionTable.iloc[0]["AT_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
-            else: #no entries, so inserts nans
-                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
-            
-            #find best DIC algorithm info by sorting a subset of the summary table for just this region
-            regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
-            if len(regionTable) > 0: #if there are any entries left, sort and select the best
-                regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared", "AT_RMSDe"], ascending=[True, False, False, True]);
-                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
-            else: #no entries, so insert nans
-                overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
-            
-        return overallBestAlgos;
     
     ##### For weighted metrics
     ### Calculate overall best algorithms / input combinations for each egion
@@ -404,6 +418,141 @@ def main(settings):
     
     #Shutdown logger
     loggerFileHandle.close();
+
+
+
+#Calculates metrics between algorithms which can include custom algorithsm
+#   algorithmsToCompare: A list of 'non-custom' algorithm classes. These include those defined in the global settings/algorithms files used in the main analysis (i.e. implemented algorithms which can calculate their own model output given appropriate inputs)
+#   customAlgorithmInfo: A list of dictionaries containing information about the custom algorithms. These are algorithms for which python implementation of the algorithm isn't given, only the algorithm output (and RMSD and combined uncertainty). The data for these must be included in the matchup database
+#   region: region name to use (must match an entry in settings["regions"])
+#   sstDatasetName, sssDatasetName: The names of the SST and SSS datasets to be used for the comparison. These correspond to SSS and SST datasets in the matchup database, and their names must match the 'datasetName' field of the settings["datasetInfoMap"] entry corresponding to the dataset you want to select.
+#   outputRoot: The root directory to write output to.
+def custom_algorithm_metrics(settings, algorithmsToCompare, customAlgorithmInfo, region, sstDatasetName, sssDatasetName, outputRoot, diagnosticPlots=True):
+    #make diagnostic plot directory
+    if diagnosticPlots==True:
+        if path.exists(path.join(outputRoot, "diagnostic_plots"))==False:
+            makedirs(path.join(outputRoot, "diagnostic_plots"));
+    
+    #### Find the input data set information corresponding to the sst and sss dataset names selected
+    specificVariableToDatabaseMaps, specificVariableToDatabaseMapNames = utilities.get_dataset_variable_map_combinations(settings);
+    combinationDict = combinationName = None;
+    for i, combiName in enumerate(specificVariableToDatabaseMapNames):
+        if (sstDatasetName in combiName) and (sssDatasetName in combiName):
+            combinationDict = specificVariableToDatabaseMaps[i];
+            combinationName = combiName;
+            break;
+    if combinationDict is None:
+        raise ValueError("Couldn't find input data combination for the specified SST ({0}) and SSS({1}) data sets.".format(sstDatasetName, sssDatasetName));
+    
+    
+    #### Create the directory to contain outputs. This is structured to be analogous to the main() output, even though it only contains a single input combination run
+    currentCombinationOutputDirectory = path.join(outputRoot, combinationName);
+    if path.exists(currentCombinationOutputDirectory) == False:
+        makedirs(currentCombinationOutputDirectory);
+    #### Write information about the combination of input datasets used:
+    utilities.write_specific_variable_to_database_mapping(combinationDict, path.join(currentCombinationOutputDirectory, "inputs_used.txt"), combinationName);
+    
+    
+    #### The non-custom algorithms need to be ran on the matchup database's input data for the selected input combination
+    #### So this data must be extracted
+    years = utilities.calculate_years_for_input_combination(settings, combinationDict); #Find the years where there is overlap in the selected input data combinations
+    matchupData = utilities.load_matchup_to_dataframe(settings, combinationDict, years=years); #each year is concatinated to create a single dataframe
+    
+    
+    #### Run each non-custom algorithm and store the model output, rmsd and uncertainty.
+    implementedAlgoOutputList = [];
+    for ialgorithm, AlgorithmFunctor in enumerate(algorithmsToCompare):
+        print("Calculating model outputs for implemented algorithms ({0}/{1})".format(ialgorithm+1, len(algorithmsToCompare)));
+        algorithm = AlgorithmFunctor(settings);
+        
+        try:
+            modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = \
+                      run_algorithm(algorithm, matchupData,
+                                    regionMaskPath=settings["regionMasksPath"], region=region,
+                                    useDepthMask=settings["subsetWithDepthMask"],
+                                    depthMaskPath=settings["depthMaskPath"],
+                                    depthMaskVar=settings["depthMaskVar"],
+                                    useDistToCoastMask=settings["subsetWithDistToCoast"],
+                                    distToCoastMaskPath=settings["distToCoastMaskPath"],
+                                    distToCoastMaskVar=settings["distToCoastMaskVar"]
+                                    );
+            
+            algorithmOutput = {};
+            algorithmOutput["instance"] = algorithm;
+            algorithmOutput["name"] = algorithm.__str__();
+            algorithmOutput["outputVar"] = algorithm.output_name();
+            algorithmOutput["modelOutput"] = modelOutput;
+            algorithmOutput["propagatedInputUncertainty"] = propagatedInputUncertainty;
+            algorithmOutput["rmsd"] = rmsd;
+            algorithmOutput["combinedUncertainty"] = combinedUncertainty;
+            algorithmOutput["dataUsedIndices"] = dataUsedIndices;
+            implementedAlgoOutputList.append(algorithmOutput);
+            
+            if diagnosticPlots == True:
+                outputVariable = algorithm.output_name();
+                savePath = path.join(outputRoot, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
+                prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable, savePath=savePath);
+            
+            print("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
+        except ValueError as e: #Raised if there are no matchup data rows left after spatial mask and algorithm internal subsetting has taken place
+            print(algorithm, e.args[0]);
+            print("No matchup data left after subsettings (region:"+region+", algo: "+algorithm.__class__.__name__+")");
+            continue;
+    
+    #### Combine implemented and custom algorithm output data.
+    allAlgorithmOutputs = [implementedAlgoOutput for implementedAlgoOutput in implementedAlgoOutputList];
+    for customAlgo in customAlgorithmInfo:
+        #get model output, uncertainty, rmsd and indices from the matchup database
+        colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"], customAlgo["matchupRMSDName"], customAlgo["inputUncertaintyName"], customAlgo["matchupCombinedUncertaintyName"]];
+        customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
+        
+        #subset to only include rows where there is model output
+        customAlgoData = customAlgoData[np.isfinite(customAlgoData[customAlgo["matchupVariableName"]])];
+        
+        #Construct compatible dictionary
+        customAlgoDict = {};
+        customAlgoDict["instance"] = None;
+        customAlgoDict["name"] = customAlgo["name"];
+        customAlgoDict["outputVar"] = customAlgo["outputVar"];
+        customAlgoDict["modelOutput"] = customAlgoData[customAlgo["matchupVariableName"]];
+        customAlgoDict["rmsd"] = customAlgoData[customAlgo["matchupRMSDName"]];
+        customAlgoDict["propagatedInputUncertainty"] = customAlgoData[customAlgo["inputUncertaintyName"]];
+        customAlgoDict["combinedUncertainty"] = customAlgoData[customAlgo["matchupCombinedUncertaintyName"]];
+        customAlgoDict["dataUsedIndices"] = customAlgoData.index;
+        allAlgorithmOutputs.append(customAlgoDict);
+        
+        if diagnosticPlots == True:
+            savePath = path.join(outputRoot, "diagnostic_plots", customAlgo["name"]+".png");
+            prediction_accuracy_plot(customAlgoData[customAlgo["outputVar"]], customAlgoData[customAlgo["matchupVariableName"]], customAlgo["name"], customAlgo["outputVar"], savePath=savePath);
+        
+    
+    #### Calculate metrics
+    #First split algorithms into groups depending on which output variable (AT or DIC) they use
+    for currentOutputVar in np.unique([v["outputVar"] for v in allAlgorithmOutputs]):
+        algorithmOutputGroup = [v for v in allAlgorithmOutputs if v["outputVar"]==currentOutputVar];
+        
+        basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
+                        metrics.calc_all_metrics(algorithmOutputGroup, matchupData, settings);
+        
+        ###########################
+        ### Write outputs to file #
+        outputDirectory = path.join(currentCombinationOutputDirectory, currentOutputVar, region);
+        print("Writing metrics to: ", outputDirectory);
+        write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, algorithmOutputGroup);
+    
+    
+    #Calculate summary table for weighted metrics and output to file
+    summaryTable_weighted = create_summary_table(settings, [combinationName], [combinationDict], useWeighted=True);
+    summaryTableOutputPath = path.join(outputRoot, combinationName, "summary_best_algos.csv");
+    summaryTable_weighted.to_csv(summaryTableOutputPath, sep=",", index=False);     
+    print("Full weighted summary table written to:", path.abspath(summaryTableOutputPath));
+   
+    #Calculate summary table for unweighted metrics and output to fill
+    summaryTable_unweighted = create_summary_table(settings, [combinationName], [combinationDict], useWeighted=False);
+    summaryTableOutputPathUnweighted = path.join(outputRoot, combinationName, "summary_best_algos_unweighted.csv");
+    summaryTable_unweighted.to_csv(summaryTableOutputPathUnweighted, sep=",", index=False);     
+    print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted));
+
 
 
 if __name__ == "__main__":

@@ -75,7 +75,7 @@ def calc_weights(algorithmUncertainty, matchupOutputVarUncertainty):
 #   settings: the global settings dictionary
 def calc_basic_metrics(algorithmOutput, dataUsed, settings):
     ####Calculate basic statistics
-    outputVariable = algorithmOutput["instance"].output_name();
+    outputVariable = algorithmOutput["outputVar"];
     
     #Uncertainty combined for in situ output variable and model output variable #Note: Called "squaredErrors" in Peter's 'printFit' function.
     #This is used to calculate weights based on normalised inverse size of combined insitu and algorithm uncertainty
@@ -96,7 +96,7 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
         weights = np.nan;
         matchupOutputVarUncertainty = np.nan;
         hasWeights = False;
-        print("*** No RMSD for", algorithmOutput["instance"].__class__.__name__, "Weighted metrics will not be calculated.");
+        print("*** No RMSD for", algorithmOutput["name"], "Weighted metrics will not be calculated.");
     
     #Calculate prediction errors: the difference between reference measurement and model output
     predictionErrors = algorithmOutput["modelOutput"] - dataUsed[outputVariable];
@@ -215,7 +215,7 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings):
     #### Calculate pairwise metrics as described in section 2.3.2 of Land, P.E., Findlay, H.S., Shutler, J.D., Ashton, I.G., Holding, T., Grouazel, A., Girard-Ardhuin, F., Reul, N., Piolle, J.F., Chapron, B. and Quilfen, Y., 2019. Optimum satellite remote sensing of the marine carbonate system using empirical algorithms in the global ocean, the Greater Caribbean, the Amazon Plume and the Bay of Bengal. Remote Sensing of Environment, 235, p.111469.
     for i in range(len(algorithmOutputList)):
         algorithmOutput = algorithmOutputList[i];
-        outputVariable = algorithmOutput["instance"].output_name();
+        outputVariable = algorithmOutput["outputVar"];
         matchupDataUsed = matchupData.loc[algorithmOutput["dataUsedIndices"]];
 
         #Calculate means, standard deviations, rmse, mad, r
@@ -224,7 +224,7 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings):
         #Calculate pairwise metrics
         for j in range(i): #for each pair of algorithms ((self, self) pair excluded)
             #Sanity check - can only compare algorithms which are predicting the same variable
-            if algorithmOutput["instance"].output_name() != algorithmOutputList[j]["instance"].output_name():
+            if algorithmOutput["outputVar"] != algorithmOutputList[j]["outputVar"]:
                 raise ValueError("Cannot compare algorithms which estimate different output variables.");
             
             #Only use data points from the matchup dataset that have been predicted by both algorithms
@@ -291,7 +291,7 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings):
     
     #Calculate final scores and final RMSD (RMSDs)
     finalScores = pd.DataFrame();
-    finalScores["algorithm"] = [algorithmOutput["instance"].__class__.__name__ for algorithmOutput in algorithmOutputList];
+    finalScores["algorithm"] = [algorithmOutput["name"] for algorithmOutput in algorithmOutputList];
     finalScoreArray = np.nanmean(pairedScoreMatrix, axis=1);
     finalScores["final_score"] = finalScoreArray;
     finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmOutputList))];

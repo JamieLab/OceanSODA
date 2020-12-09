@@ -182,10 +182,38 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
         dfList.append(df);
     matchupData = pd.concat(dfList, ignore_index=True);
     
-    #Convert date from time in seconds cince 1980-01-01 to a pd.datetime object
+    #Convert date from time in seconds since 1980-01-01 to a pd.datetime object
     matchupData["date"] = convert_time_to_date(matchupData["date"]);
     return matchupData;
 
+
+#returns data frame containing data from the matchup database for each variable in 'cols'
+#Differs from load_matchup_to_dataframe in that it doesn't require DatasetInfo objects, and therefore doesn't try to load uncertainty variables automatically
+def read_matchup_cols(matchupTemplate, cols, years):
+    
+    dfList = [];
+    for year in years:
+        matchupNC = Dataset(matchupTemplate.safe_substitute(YYYY=year), 'r');
+        df = pd.DataFrame();
+        for col in cols:
+            try:
+                if col == "date": #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
+                    df[col] = matchupNC.variables["time"][:];
+                elif col in ["AT", "DIC"]: #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
+                    df[col] = matchupNC.variables[col+"_mean"][:];
+                else:
+                    df[col] = matchupNC.variables[col][:];
+            except IndexError:
+                print("Couldn't find {0} in the matchup database for year {1}. Continuing without this variable.".format(col, year));
+            
+        dfList.append(df);
+    
+    #merge dataframes from each year
+    data = pd.concat(dfList, ignore_index=True);
+    
+    #Convert date from time in seconds since 1980-01-01 to a pd.datetime object
+    data["date"] = convert_time_to_date(data["date"]);
+    return data;
         
 
 #Converts time in seconds to data

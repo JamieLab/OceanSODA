@@ -79,6 +79,14 @@ osoda_reef_vulnerability(settings)
 is equivailent to running `python osoda_reef_vulnerability.py` in your terminal / command prompt.
 
 
+# Calculating metrics for custom algorithms
+It is possible to add new algorithms which do not conform to the standard 'implemented' algorithm format used in the `os_algorithms` module. The easiest way to do this is to pre-compute model output, RMSD, propagated input data uncertainty and combined (input and model) uncertainty, and add these to the matchup database. Algorithms added to the analysis in this way are referred to as 'custom' algorithms, while algorithms inside the `os_algorithms` module (i.e. with simple Python implementations) are described as 'implemented' algorithms within the code.
+
+The `osoda_algorithm_comparison.py` file contains a function ('custom_algorithm_metrics') for calculating the metrics using a combination of custom and implemented algorithms. The `example_metrics_from_algo_output.py` script (in the root directory) provides a full example of how to use this function and is fully commented. This script first generates four synthesised test data sets and adds them to the matchup database. For each custom algorithm you must provide the model output (calculated from matchup database inputs), model RMSD, propagated input uncertainty and combined (model and input) uncertainty. The script then defines which matchup database variables correspond to each of these fields for each custom algorithm, and runs the `custom_algorith_metrics` function to perform the full algorithm comparison.
+
+`custom_algorith_metrics` requires a list of algorithm info about each custom algorithm (locations of the fields described above in the matchup database), a list of any 'implemented' algorithms you want to also include in the analysis, a region name (which must correspond to one of the regions in the mask file), an SST and SSS input dataset name (which must correspond to one of the data sets defined in the global settings 'datasetInfoMap' dictionary), and an output path. Optionally, the script can generate simple diagnostic plots which plot in situ derrived matchup database output (DIC/AT) against the model output as a quick visual aid. Note that, since a given set of custom algorithm output data must have been generated using a single input data combination, the function can only be ran using one input combination at a time (hence, the SST and SSS data set names are required inputs to the function).
+
+
 ### References
 
 Land PE, Findlay H, Shutler J, Ashton I, Holding T, Grouazel A, GIrard-Ardhuin F, Reul N, Piolle J-F, Chapron B, et al (2019). Optimum satellite remote sensing of the marine carbonate system using empirical algorithms in the Global Ocean, the Greater Caribbean, the Amazon Plume and the Bay of Bengal. Remote Sensing of Environment, doi: 10.1016/j.rse.2019.111469
