@@ -179,6 +179,9 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
                     df[commonName+"_err"] = matchupNC[datasetInfoMap[commonName].matchupDatabaseError][:];
                 except IndexError:
                     print("Missing uncertainty data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupErrorName);
+        #Convert any C temperature units to K
+        if np.nanmean(df["SST"]) < 200.0: #Convert SST from C to K, if required
+            df["SST"][np.isfinite(df["SST"])] += 273.15;
         dfList.append(df);
     matchupData = pd.concat(dfList, ignore_index=True);
     
