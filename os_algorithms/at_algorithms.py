@@ -502,7 +502,7 @@ class Cai2010e_at(BaseAlgorithm):
 class Cooley2006a_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cooley2006a_dic: C06(dic)";
+        return "Cooley2006a_at: C06(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod

@@ -603,11 +603,11 @@ def calculate_gridded_timeseries_all_regions(tablePath, outputPathTemplate, year
         
         #create instances of the algorithm functors by searching the available algorithms using the algorithm name
         if type(atAlgoInfo.algo_name) == str:
-            atAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == atAlgoInfo["algo_name"]][0];
+            atAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == atAlgoInfo["algo_name"].split(":")[0]][0];
         else:
             atAlgo = None;
         if type(dicAlgoInfo.algo_name) == str:
-            dicAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == dicAlgoInfo["algo_name"]][0];
+            dicAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == dicAlgoInfo["algo_name"].split(":")[0]][0];
         else:
             dicAlgo = None;
         
