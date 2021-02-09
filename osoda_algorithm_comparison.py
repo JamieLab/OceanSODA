@@ -215,11 +215,11 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
     #number of data points ran for
     for r, row in summaryTable.iterrows():
         if isinstance(row["AT_best_algorithm"], str):
-            predictedDataPathAT = path.join(settings["outputPathMetrics"], row["input_combination"], "AT", row["region"], "matchup_appended_"+row["AT_best_algorithm"]+".csv");
+            predictedDataPathAT = path.join(settings["outputPathMetrics"], row["input_combination"], "AT", row["region"], "matchup_appended_"+row["AT_best_algorithm"].split(":")[0]+".csv");
             summaryTable.loc[r, "AT_n"] = len(pd.read_csv(predictedDataPathAT));
         
         if isinstance(row["DIC_best_algorithm"], str):
-            predictedDataPathDIC = path.join(settings["outputPathMetrics"], row["input_combination"], "DIC", row["region"], "matchup_appended_"+row["DIC_best_algorithm"]+".csv");
+            predictedDataPathDIC = path.join(settings["outputPathMetrics"], row["input_combination"], "DIC", row["region"], "matchup_appended_"+row["DIC_best_algorithm"].split(":")[0]+".csv");
             summaryTable.loc[r, "DIC_n"] = len(pd.read_csv(predictedDataPathDIC));
     
     #Return summary table

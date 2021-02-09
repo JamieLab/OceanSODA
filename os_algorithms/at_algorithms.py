@@ -378,7 +378,7 @@ class Cai2010b_at(BaseAlgorithm):
 class Cai2010c_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cai2010a_at: Ca10c(at)";
+        return "Cai2010c_at: Ca10c(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -774,7 +774,7 @@ class Goyet1998_at(BaseAlgorithm):
 class Hassoun2015_full_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005_full_at: Ha15_full(at)";
+        return "Hassoun2015_full_at: Ha15_full(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -820,7 +820,7 @@ class Hassoun2015_full_at(BaseAlgorithm):
 class Hassoun2015_basins_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005b_at: Ha15b(at)";
+        return "Hassoun2015_basins_at: Ha15b(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -2074,7 +2074,7 @@ class Takahashi2013_at(BaseAlgorithm):
 class Ternon2000_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Ternon00_at: Te00(at)";
+        return "Ternon2000_at: Te00(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod

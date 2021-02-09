@@ -550,7 +550,7 @@ class Hassoun2015_full_dic(BaseAlgorithm):
 class Hassoun2015_basins_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005b_dic: Ha15b(dic)";
+        return "Hassoun2015_basins_dic: Ha15b(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -1529,7 +1529,7 @@ class Lee2000_dic(BaseAlgorithm):
 class Lefevre2010_dic(BaseAlgorithm):
     #String representation of the algorithm
     def __str__(self):
-        return "Lefevre2010: Lf10(dic)";
+        return "Lefevre2010_dic: Lf10(dic)";
     
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -1571,7 +1571,7 @@ class Lefevre2010_dic(BaseAlgorithm):
 class Lefevre2017_dic(BaseAlgorithm):
     #String representation of the algorithm
     def __str__(self):
-        return "Lefevre2017: Lf17(dic)";
+        return "Lefevre2017_dic: Lf17(dic)";
     
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -1614,7 +1614,7 @@ class Lefevre2017_dic(BaseAlgorithm):
 class Ternon2000_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Ternon00_dic: Te00(dic)";
+        return "Ternon2000_dic: Te00(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
