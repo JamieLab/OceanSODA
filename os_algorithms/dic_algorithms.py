@@ -228,7 +228,7 @@ class Brewer1995_dic(BaseAlgorithm):
 class Cooley2006a_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cooley2006a_dic (Amazon plume): C06a(dic)";
+        return "Cooley2006a_dic: C06a(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -397,7 +397,7 @@ class CopinMontegut2002b_dic(BaseAlgorithm):
 class Gemayel2015_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Gemayel2015_dic (Mediterranean): Ge15(dic)";
+        return "Gemayel2015_dic: Ge15(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -502,7 +502,7 @@ class Gemayel2015_dic(BaseAlgorithm):
 class Hassoun2015_full_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005_full_dic (whole Mediterranean): Ha15_full(dic)";
+        return "Hassoun2005_full_dic: Ha15_full(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -550,7 +550,7 @@ class Hassoun2015_full_dic(BaseAlgorithm):
 class Hassoun2015_basins_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005b_dic (Mediterranean East/West basins): Ha15b(dic)";
+        return "Hassoun2005b_dic: Ha15b(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod

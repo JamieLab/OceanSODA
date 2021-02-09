@@ -294,7 +294,7 @@ class Brewer1995_at(BaseAlgorithm):
 class Cai2010a_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cai2010a_at (Amazon plume): Ca10a(at)";
+        return "Cai2010a_at: Ca10a(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -336,7 +336,7 @@ class Cai2010a_at(BaseAlgorithm):
 class Cai2010b_at(BaseAlgorithm):
     #String representation of the algorithm
     def __str__(self):
-        return "Cai2010b_at (Mississippi plume): Ca10b(at)";
+        return "Cai2010b_at: Ca10b(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -378,7 +378,7 @@ class Cai2010b_at(BaseAlgorithm):
 class Cai2010c_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cai2010a_at (Labrador Sea): Ca10c(at)";
+        return "Cai2010a_at: Ca10c(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -420,7 +420,7 @@ class Cai2010c_at(BaseAlgorithm):
 class Cai2010d_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cai2010d_at (Gulf of Main: inner shelf): Ca10d(at)";
+        return "Cai2010d_at: Ca10d(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -461,7 +461,7 @@ class Cai2010d_at(BaseAlgorithm):
 class Cai2010e_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cai2010e_at (Gulf of Main: offshore waters): Ca10e(at)";
+        return "Cai2010e_at: Ca10e(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -502,7 +502,7 @@ class Cai2010e_at(BaseAlgorithm):
 class Cooley2006a_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Cooley2006a_dic (Amazon plume): C06(dic)";
+        return "Cooley2006a_dic: C06(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -665,7 +665,7 @@ class Corbiere2007_at(BaseAlgorithm):
 class Gemayel2015_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Gemayel2015_at (Mediterranean): Ge15(at)";
+        return "Gemayel2015_at: Ge15(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -732,7 +732,7 @@ class Gemayel2015_at(BaseAlgorithm):
 class Goyet1998_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Goyet1998_at (Amazon plume): G98(at)";
+        return "Goyet1998_at: G98(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -774,7 +774,7 @@ class Goyet1998_at(BaseAlgorithm):
 class Hassoun2015_full_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005_full_at (whole Mediterranean): Ha15_full(at)";
+        return "Hassoun2005_full_at: Ha15_full(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -820,7 +820,7 @@ class Hassoun2015_full_at(BaseAlgorithm):
 class Hassoun2015_basins_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005b_at (Mediterranean East/West basins): Ha15b(at)";
+        return "Hassoun2005b_at: Ha15b(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -1199,7 +1199,7 @@ class Lee2006_at(BaseAlgorithm):
 class Lefevre2010_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Lefevre2010_at (Amazon plume): Lf10(at)";
+        return "Lefevre2010_at: Lf10(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
@@ -1591,7 +1591,7 @@ class Tait2000_at(BaseAlgorithm):
 class Rivaro2010_at(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Rivaro2010_at (Mediterranean East/West basins): R10(at)";
+        return "Rivaro2010_at: R10(at)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod

@@ -24,38 +24,38 @@ import osoda_algorithm_comparison;
 osoda_algorithm_comparison.main(settings);
 
 
-# # ##########
-# # Download all prediction data sets and calculate gridded time series predictions
-# import osoda_calculate_gridded_predictions;
-# years = settings["years"];
-# regions = settings["regions"];
-# regionMaskPath= settings["regionMasksPath"];
+# ##########
+# Download all prediction data sets and calculate gridded time series predictions
+import osoda_calculate_gridded_predictions;
+years = settings["years"];
+regions = settings["regions"];
+regionMaskPath= settings["regionMasksPath"];
 
-# #Run for the 'best' algorithms
-# optAlgoTableBest = "output/algo_metrics/overall_best_algos.csv";
-# griddedTimeSeriesOutputPathBest = settings["bestGriddedTimeSeriesPathTemplate"];
-# osoda_calculate_gridded_predictions.main(optAlgoTableBest, griddedTimeSeriesOutputPathBest, years, regions, regionMaskPath);
+#Run for the 'best' algorithms
+optAlgoTableBest = "output/algo_metrics/overall_best_algos.csv";
+griddedTimeSeriesOutputPathBest = settings["bestGriddedTimeSeriesPathTemplate"];
+osoda_calculate_gridded_predictions.main(optAlgoTableBest, griddedTimeSeriesOutputPathBest, years, regions, regionMaskPath);
 
-# #Run for the 'long' (min 8 year time series) algorithms
-# optAlgoTableLong = "output/algo_metrics/overall_best_algos_min_years=8.csv";
-# griddedTimeSeriesOutputPathLong = settings["longGriddedTimeSeriesPathTemplate"];
-# osoda_calculate_gridded_predictions.main(optAlgoTableLong, griddedTimeSeriesOutputPathLong, years, regions, regionMaskPath);
+#Run for the 'long' (min 8 year time series) algorithms
+optAlgoTableLong = "output/algo_metrics/overall_best_algos_min_years=8.csv";
+griddedTimeSeriesOutputPathLong = settings["longGriddedTimeSeriesPathTemplate"];
+osoda_calculate_gridded_predictions.main(optAlgoTableLong, griddedTimeSeriesOutputPathLong, years, regions, regionMaskPath);
 
 
-# # ##########
-# # Calculate DIC outflow for the Amazon (case study 1)
-# import osoda_dic_outflow;
-# osodaMasksPath = settings["regionMasksPath"];
-# precomputedGridAreaPath = settings["gridAreasPath"];
-# regions = ["oceansoda_amazon_plume"];
-# #run for 'best'
-# carbonateParametersTemplateBest = settings["bestGriddedTimeSeriesPathTemplate"];
-# outputDirBest = path.join(settings["outputPathRoot"], "dic_outflow_amazon_best");
-# osoda_dic_outflow.main(carbonateParametersTemplateBest, outputDirBest, regions, osodaMasksPath, precomputedGridAreaPath);
-# #run for 'long'
-# carbonateParametersTemplateLong = settings["longGriddedTimeSeriesPathTemplate"];
-# outputDirLong = path.join(settings["outputPathRoot"], "dic_outflow_amazon_long");
-# osoda_dic_outflow.main(carbonateParametersTemplateLong, outputDirLong, regions, osodaMasksPath, precomputedGridAreaPath);
+# ##########
+# Calculate DIC outflow for the Amazon (case study 1)
+import osoda_dic_outflow;
+osodaMasksPath = settings["regionMasksPath"];
+precomputedGridAreaPath = settings["gridAreasPath"];
+regions = ["oceansoda_amazon_plume"];
+#run for 'best'
+carbonateParametersTemplateBest = settings["bestGriddedTimeSeriesPathTemplate"];
+outputDirBest = path.join(settings["outputPathRoot"], "dic_outflow_amazon_best");
+osoda_dic_outflow.main(carbonateParametersTemplateBest, outputDirBest, regions, osodaMasksPath, precomputedGridAreaPath);
+#run for 'long'
+carbonateParametersTemplateLong = settings["longGriddedTimeSeriesPathTemplate"];
+outputDirLong = path.join(settings["outputPathRoot"], "dic_outflow_amazon_long");
+osoda_dic_outflow.main(carbonateParametersTemplateLong, outputDirLong, regions, osodaMasksPath, precomputedGridAreaPath);
 
 
 
