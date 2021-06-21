@@ -177,8 +177,7 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
                 try: #If there is a missing data value, filter out missing values and replace with nans
                     missingValue = matchupNC[datasetInfoMap[commonName].matchupVariableName]._FillValue;
                     if np.isnan(missingValue) == False:
-                        #df[commonName][df[commonName]==missingValue] = np.nan;
-                        df.loc[df[commonName]==missingValue] = np.nan;
+                        df.loc[df[commonName]==missingValue, commonName] = np.nan;
                 except:
                     pass;
                 
@@ -187,6 +186,12 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
             if datasetInfoMap[commonName].matchupDatabaseError is not None:
                 try:
                     df[commonName+"_err"] = matchupNC[datasetInfoMap[commonName].matchupDatabaseError][:];
+                    try: #If there is a missing data value, filter out missing values and replace with nans
+                        missingValue = matchupNC[datasetInfoMap[commonName].matchupDatabaseError]._FillValue;
+                        if np.isnan(missingValue) == False:
+                            df.loc[df[commonName+"_err"]==missingValue, commonName+"_err"] = np.nan;
+                    except:
+                        pass;
                 except IndexError:
                     print("Missing uncertainty data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupErrorName);
         #Convert any C temperature units to K
@@ -216,7 +221,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables["time"]._FillValue;
                         if np.isnan(missingValue) == False:
-                            df.loc[df["time"]==missingValue] = np.nan;
+                            df.loc[df["time"]==missingValue, "time"] = np.nan;
                     except:
                         pass;
                 elif col == "AT":
@@ -224,7 +229,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables["region_at_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
-                            df.loc[df["region_at_mean"]==missingValue] = np.nan;
+                            df.loc[df["region_at_mean"]==missingValue, "region_at_mean"] = np.nan;
                     except:
                         pass;
                     
@@ -233,7 +238,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables["region_dic_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
-                            df.loc[df["region_dic_mean"]==missingValue] = np.nan;
+                            df.loc[df["region_dic_mean"]==missingValue, "region_dic_mean"] = np.nan;
                     except:
                         pass;
                 # elif col in ["AT", "DIC"]: #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
@@ -243,7 +248,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables[col]._FillValue;
                         if np.isnan(missingValue) == False:
-                            df.loc[df[col]==missingValue] = np.nan;
+                            df.loc[df[col]==missingValue, col] = np.nan;
                     except:
                         pass;
                 
