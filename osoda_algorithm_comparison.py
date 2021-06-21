@@ -421,6 +421,144 @@ def main(settings, extraAlgosToTest=[]):
 
 
 
+# #Calculates metrics between algorithms which can include custom algorithsm
+# #   algorithmsToCompare: A list of 'non-custom' algorithm classes. These include those defined in the global settings/algorithms files used in the main analysis (i.e. implemented algorithms which can calculate their own model output given appropriate inputs)
+# #   customAlgorithmInfo: A list of dictionaries containing information about the custom algorithms. These are algorithms for which python implementation of the algorithm isn't given, only the algorithm output (and RMSD and combined uncertainty). The data for these must be included in the matchup database
+# #   region: region name to use (must match an entry in settings["regions"])
+# #   sstDatasetName, sssDatasetName: The names of the SST and SSS datasets to be used for the comparison. These correspond to SSS and SST datasets in the matchup database, and their names must match the 'datasetName' field of the settings["datasetInfoMap"] entry corresponding to the dataset you want to select.
+# #   outputRoot: The root directory to write output to.
+# def custom_algorithm_metrics(settings, algorithmsToCompare, customAlgorithmInfo, region, sstDatasetName, sssDatasetName, outputRoot, diagnosticPlots=True):
+#     #make diagnostic plot directory
+#     if diagnosticPlots==True:
+#         if path.exists(path.join(outputRoot, "diagnostic_plots"))==False:
+#             makedirs(path.join(outputRoot, "diagnostic_plots"));
+    
+#     #### Find the input data set information corresponding to the sst and sss dataset names selected
+#     specificVariableToDatabaseMaps, specificVariableToDatabaseMapNames = utilities.get_dataset_variable_map_combinations(settings);
+#     combinationDict = combinationName = None;
+#     for i, combiName in enumerate(specificVariableToDatabaseMapNames):
+#         if (sstDatasetName in combiName) and (sssDatasetName in combiName):
+#             combinationDict = specificVariableToDatabaseMaps[i];
+#             combinationName = combiName;
+#             break;
+#     if combinationDict is None:
+#         raise ValueError("Couldn't find input data combination for the specified SST ({0}) and SSS({1}) data sets.".format(sstDatasetName, sssDatasetName));
+    
+    
+#     #### Create the directory to contain outputs. This is structured to be analogous to the main() output, even though it only contains a single input combination run
+#     currentCombinationOutputDirectory = path.join(outputRoot, combinationName);
+#     if path.exists(currentCombinationOutputDirectory) == False:
+#         makedirs(currentCombinationOutputDirectory);
+#     #### Write information about the combination of input datasets used:
+#     utilities.write_specific_variable_to_database_mapping(combinationDict, path.join(currentCombinationOutputDirectory, "inputs_used.txt"), combinationName);
+    
+    
+#     #### The non-custom algorithms need to be ran on the matchup database's input data for the selected input combination
+#     #### So this data must be extracted
+#     years = utilities.calculate_years_for_input_combination(settings, combinationDict); #Find the years where there is overlap in the selected input data combinations
+#     matchupData = utilities.load_matchup_to_dataframe(settings, combinationDict, years=years); #each year is concatinated to create a single dataframe
+    
+    
+#     #### Run each non-custom algorithm and store the model output, rmsd and uncertainty.
+#     implementedAlgoOutputList = [];
+#     for ialgorithm, AlgorithmFunctor in enumerate(algorithmsToCompare):
+#         print("Calculating model outputs for implemented algorithms ({0}/{1})".format(ialgorithm+1, len(algorithmsToCompare)));
+#         algorithm = AlgorithmFunctor(settings);
+        
+#         try:
+#             modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = \
+#                       run_algorithm(algorithm, matchupData,
+#                                     regionMaskPath=settings["regionMasksPath"], region=region,
+#                                     useDepthMask=settings["subsetWithDepthMask"],
+#                                     depthMaskPath=settings["depthMaskPath"],
+#                                     depthMaskVar=settings["depthMaskVar"],
+#                                     useDistToCoastMask=settings["subsetWithDistToCoast"],
+#                                     distToCoastMaskPath=settings["distToCoastMaskPath"],
+#                                     distToCoastMaskVar=settings["distToCoastMaskVar"]
+#                                     );
+            
+#             algorithmOutput = {};
+#             algorithmOutput["instance"] = algorithm;
+#             algorithmOutput["name"] = algorithm.__str__();
+#             algorithmOutput["outputVar"] = algorithm.output_name();
+#             algorithmOutput["modelOutput"] = modelOutput;
+#             algorithmOutput["propagatedInputUncertainty"] = propagatedInputUncertainty;
+#             algorithmOutput["rmsd"] = rmsd;
+#             algorithmOutput["combinedUncertainty"] = combinedUncertainty;
+#             algorithmOutput["dataUsedIndices"] = dataUsedIndices;
+#             implementedAlgoOutputList.append(algorithmOutput);
+            
+#             if diagnosticPlots == True:
+#                 outputVariable = algorithm.output_name();
+#                 savePath = path.join(outputRoot, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
+#                 prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable, savePath=savePath);
+            
+#             print("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
+#         except ValueError as e: #Raised if there are no matchup data rows left after spatial mask and algorithm internal subsetting has taken place
+#             print(algorithm, e.args[0]);
+#             print("No matchup data left after subsettings (region:"+region+", algo: "+algorithm.__class__.__name__+")");
+#             continue;
+    
+#     #### Combine implemented and custom algorithm output data.
+#     allAlgorithmOutputs = [implementedAlgoOutput for implementedAlgoOutput in implementedAlgoOutputList];
+#     for customAlgo in customAlgorithmInfo:
+#         #get model output, uncertainty, rmsd and indices from the matchup database
+#         colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"], customAlgo["inputUncertaintyName"]];
+#         ##### TODO:
+#         ##### Missing: combined uncertainty, matchupRMSD, matchupBias?
+#         customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
+        
+#         #subset to only include rows where there is model output
+#         customAlgoData = customAlgoData[np.isfinite(customAlgoData[customAlgo["outputVar"]])];
+#         customAlgoData["rmsd"] = customAlgo["algoRMSD"];
+#         customAlgoData["combindUncertainty"] = customAlgo["combinedUncertainty"];
+        
+#         #Construct compatible dictionary
+#         customAlgoDict = {};
+#         customAlgoDict["instance"] = None;
+#         customAlgoDict["name"] = customAlgo["name"];
+#         customAlgoDict["outputVar"] = customAlgo["outputVar"];
+#         customAlgoDict["modelOutput"] = customAlgoData[customAlgo["outputVar"]];
+#         customAlgoDict["rmsd"] = customAlgoData["rmsd"];
+#         customAlgoDict["propagatedInputUncertainty"] = customAlgoData[customAlgo["inputUncertaintyName"]];
+#         customAlgoDict["combinedUncertainty"] = customAlgoData["combindUncertainty"];
+#         customAlgoDict["dataUsedIndices"] = customAlgoData.index;
+#         allAlgorithmOutputs.append(customAlgoDict);
+        
+#         if diagnosticPlots == True:
+#             savePath = path.join(outputRoot, "diagnostic_plots", customAlgo["name"]+".png");
+#             prediction_accuracy_plot(customAlgoData[customAlgo["outputVar"]], customAlgoData[customAlgo["matchupVariableName"]], customAlgo["name"], customAlgo["outputVar"], savePath=savePath);
+        
+    
+#     #### Calculate metrics
+#     #First split algorithms into groups depending on which output variable (AT or DIC) they use
+#     for currentOutputVar in np.unique([v["outputVar"] for v in allAlgorithmOutputs]):
+#         algorithmOutputGroup = [v for v in allAlgorithmOutputs if v["outputVar"]==currentOutputVar];
+        
+#         basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
+#                         metrics.calc_all_metrics(algorithmOutputGroup, matchupData, settings);
+        
+#         ###########################
+#         ### Write outputs to file #
+#         outputDirectory = path.join(currentCombinationOutputDirectory, currentOutputVar, region);
+#         print("Writing metrics to: ", outputDirectory);
+#         write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, algorithmOutputGroup);
+    
+    
+#     #Calculate summary table for weighted metrics and output to file
+#     summaryTable_weighted = create_summary_table(settings, [combinationName], [combinationDict], useWeighted=True);
+#     summaryTableOutputPath = path.join(outputRoot, combinationName, "summary_best_algos.csv");
+#     summaryTable_weighted.to_csv(summaryTableOutputPath, sep=",", index=False);     
+#     print("Full weighted summary table written to:", path.abspath(summaryTableOutputPath));
+   
+#     #Calculate summary table for unweighted metrics and output to fill
+#     summaryTable_unweighted = create_summary_table(settings, [combinationName], [combinationDict], useWeighted=False);
+#     summaryTableOutputPathUnweighted = path.join(outputRoot, combinationName, "summary_best_algos_unweighted.csv");
+#     summaryTable_unweighted.to_csv(summaryTableOutputPathUnweighted, sep=",", index=False);     
+#     print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted));
+
+
+
 #Calculates metrics between algorithms which can include custom algorithsm
 #   algorithmsToCompare: A list of 'non-custom' algorithm classes. These include those defined in the global settings/algorithms files used in the main analysis (i.e. implemented algorithms which can calculate their own model output given appropriate inputs)
 #   customAlgorithmInfo: A list of dictionaries containing information about the custom algorithms. These are algorithms for which python implementation of the algorithm isn't given, only the algorithm output (and RMSD and combined uncertainty). The data for these must be included in the matchup database
@@ -503,21 +641,25 @@ def custom_algorithm_metrics(settings, algorithmsToCompare, customAlgorithmInfo,
     allAlgorithmOutputs = [implementedAlgoOutput for implementedAlgoOutput in implementedAlgoOutputList];
     for customAlgo in customAlgorithmInfo:
         #get model output, uncertainty, rmsd and indices from the matchup database
-        colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"], customAlgo["matchupRMSDName"], customAlgo["inputUncertaintyName"], customAlgo["matchupCombinedUncertaintyName"]];
+        colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"], customAlgo["inputUncertaintyName"]];
+        ##### TODO:
+        ##### Missing: combined uncertainty, matchupRMSD, matchupBias?
         customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
         
         #subset to only include rows where there is model output
-        customAlgoData = customAlgoData[np.isfinite(customAlgoData[customAlgo["matchupVariableName"]])];
+        customAlgoData = customAlgoData[np.isfinite(customAlgoData[customAlgo["outputVar"]])];
+        customAlgoData["rmsd"] = customAlgo["algoRMSD"];
+        customAlgoData["combindUncertainty"] = customAlgo["combinedUncertainty"];
         
         #Construct compatible dictionary
         customAlgoDict = {};
         customAlgoDict["instance"] = None;
         customAlgoDict["name"] = customAlgo["name"];
         customAlgoDict["outputVar"] = customAlgo["outputVar"];
-        customAlgoDict["modelOutput"] = customAlgoData[customAlgo["matchupVariableName"]];
-        customAlgoDict["rmsd"] = customAlgoData[customAlgo["matchupRMSDName"]];
+        customAlgoDict["modelOutput"] = customAlgoData[customAlgo["outputVar"]];
+        customAlgoDict["rmsd"] = customAlgoData["rmsd"];
         customAlgoDict["propagatedInputUncertainty"] = customAlgoData[customAlgo["inputUncertaintyName"]];
-        customAlgoDict["combinedUncertainty"] = customAlgoData[customAlgo["matchupCombinedUncertaintyName"]];
+        customAlgoDict["combinedUncertainty"] = customAlgoData["combindUncertainty"];
         customAlgoDict["dataUsedIndices"] = customAlgoData.index;
         allAlgorithmOutputs.append(customAlgoDict);
         
@@ -552,7 +694,6 @@ def custom_algorithm_metrics(settings, algorithmsToCompare, customAlgorithmInfo,
     summaryTableOutputPathUnweighted = path.join(outputRoot, combinationName, "summary_best_algos_unweighted.csv");
     summaryTable_unweighted.to_csv(summaryTableOutputPathUnweighted, sep=",", index=False);     
     print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted));
-
 
 
 if __name__ == "__main__":

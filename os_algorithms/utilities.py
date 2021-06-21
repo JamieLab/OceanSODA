@@ -133,7 +133,9 @@ def calculate_years_for_input_combination(settings, inputCombination, minYear=19
     
     for year in range(minYear, maxYear+1):
         try:
-            nc = Dataset(settings["matchupDatasetTemplate"].safe_substitute(YYYY=year), 'r');
+            filePath = settings["matchupDatasetTemplate"].safe_substitute(YYYY=year);
+            nc = Dataset(filePath, 'r');
+            nc.close();
         except FileNotFoundError:
             continue; #No file for this, continue as before.
         
@@ -172,6 +174,14 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
         for commonName in commonNames:
             try:
                 df[commonName] = matchupNC[datasetInfoMap[commonName].matchupVariableName][:];
+                try: #If there is a missing data value, filter out missing values and replace with nans
+                    missingValue = matchupNC[datasetInfoMap[commonName].matchupVariableName]._FillValue;
+                    if np.isnan(missingValue) == False:
+                        #df[commonName][df[commonName]==missingValue] = np.nan;
+                        df.loc[df[commonName]==missingValue] = np.nan;
+                except:
+                    pass;
+                
             except IndexError:
                 print("Missing data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupVariableName);
             if datasetInfoMap[commonName].matchupDatabaseError is not None:
@@ -183,6 +193,7 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
         if np.nanmean(df["SST"]) < 200.0: #Convert SST from C to K, if required
             df["SST"][np.isfinite(df["SST"])] += 273.15;
         dfList.append(df);
+        matchupNC.close();
     matchupData = pd.concat(dfList, ignore_index=True);
     
     #Convert date from time in seconds since 1980-01-01 to a pd.datetime object
@@ -202,10 +213,40 @@ def read_matchup_cols(matchupTemplate, cols, years):
             try:
                 if col == "date": #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
                     df[col] = matchupNC.variables["time"][:];
-                elif col in ["AT", "DIC"]: #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
-                    df[col] = matchupNC.variables[col+"_mean"][:];
+                    try: #If there is a missing data value, filter out missing values and replace with nans
+                        missingValue = matchupNC.variables["time"]._FillValue;
+                        if np.isnan(missingValue) == False:
+                            df.loc[df["time"]==missingValue] = np.nan;
+                    except:
+                        pass;
+                elif col == "AT":
+                    df[col] = matchupNC.variables["region_at_mean"][:];
+                    try: #If there is a missing data value, filter out missing values and replace with nans
+                        missingValue = matchupNC.variables["region_at_mean"]._FillValue;
+                        if np.isnan(missingValue) == False:
+                            df.loc[df["region_at_mean"]==missingValue] = np.nan;
+                    except:
+                        pass;
+                    
+                elif col == "DIC":
+                    df[col] = matchupNC.variables["region_dic_mean"][:];
+                    try: #If there is a missing data value, filter out missing values and replace with nans
+                        missingValue = matchupNC.variables["region_dic_mean"]._FillValue;
+                        if np.isnan(missingValue) == False:
+                            df.loc[df["region_dic_mean"]==missingValue] = np.nan;
+                    except:
+                        pass;
+                # elif col in ["AT", "DIC"]: #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
+                #     df[col] = matchupNC.variables[col+"_mean"][:];
                 else:
                     df[col] = matchupNC.variables[col][:];
+                    try: #If there is a missing data value, filter out missing values and replace with nans
+                        missingValue = matchupNC.variables[col]._FillValue;
+                        if np.isnan(missingValue) == False:
+                            df.loc[df[col]==missingValue] = np.nan;
+                    except:
+                        pass;
+                
             except IndexError:
                 print("Couldn't find {0} in the matchup database for year {1}. Continuing without this variable.".format(col, year));
             

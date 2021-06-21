@@ -40,9 +40,9 @@ def calc_reference_uncertainty(dataUsed, outputVar, settings):
     #Fill missing type A values with the nominal / state-of-the-art type B error from Bockmon 2015 ( https://www.sciencedirect.com/science/article/pii/S0304420315000213 )
     if settings["useErrorRatios"]:
         outputVarValues = dataUsed[outputVar];
-        uncertainties[missingTypeA] = outputVarValues[missingTypeA]*settings["insituErrorRatio"][outputVar]
+        uncertainties.loc[missingTypeA] = outputVarValues[missingTypeA]*(settings["insituErrorRatio"][outputVar])
     else:
-        uncertainties[missingTypeA] = settings["insituError"][outputVar];
+        uncertainties.loc[missingTypeA] = settings["insituError"][outputVar];
     
     return uncertainties;
 
