@@ -502,7 +502,7 @@ class Gemayel2015_dic(BaseAlgorithm):
 class Hassoun2015_full_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Hassoun2005_full_dic: Ha15_full(dic)";
+        return "Hassoun2015_full_dic: Ha15_full(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
