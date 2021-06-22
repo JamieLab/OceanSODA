@@ -132,23 +132,28 @@ def calculate_years_for_input_combination(settings, inputCombination, minYear=19
     years = [];
     
     for year in range(minYear, maxYear+1):
-        try:
-            filePath = settings["matchupDatasetTemplate"].safe_substitute(YYYY=year);
-            nc = Dataset(filePath, 'r');
+        print(year);
+        filePath = settings["matchupDatasetTemplate"].safe_substitute(YYYY=year);
+        if path.exists(filePath):
+            try:
+                nc = Dataset(filePath, 'r');
+            # except FileNotFoundError:
+            #     continue; #No file for this, continue as before.
+            except Exception as e:
+                print("SOMETHING WENT WRONG!");
+                print(e);
+            
+            #Make sure all input variables exist in this file
+            allExist = True;
+            for key, datasetInfo in inputCombination.items():
+                if datasetInfo.matchupVariableName not in nc.variables.keys():
+                    allExist = False;
+                    break;
             nc.close();
-        except FileNotFoundError:
-            continue; #No file for this, continue as before.
         
-        #Make sure all input variables exist in this file
-        allExist = True;
-        for key, datasetInfo in inputCombination.items():
-            if datasetInfo.matchupVariableName not in nc.variables.keys():
-                allExist = False;
-                break;
-        
-        #include the current year if all input variables exist
-        if allExist == True:
-            years.append(year);
+            #include the current year if all input variables exist
+            if allExist == True:
+                years.append(year);
     
     return years;
 
@@ -229,7 +234,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables["region_at_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
-                            df.loc[df["region_at_mean"]==missingValue, "region_at_mean"] = np.nan;
+                            df.loc[df["AT"]==missingValue, "AT"] = np.nan;
                     except:
                         pass;
                     
@@ -238,7 +243,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables["region_dic_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
-                            df.loc[df["region_dic_mean"]==missingValue, "region_dic_mean"] = np.nan;
+                            df.loc[df["DIC"]==missingValue, "DIC"] = np.nan;
                     except:
                         pass;
                 # elif col in ["AT", "DIC"]: #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
@@ -256,6 +261,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
                 print("Couldn't find {0} in the matchup database for year {1}. Continuing without this variable.".format(col, year));
             
         dfList.append(df);
+        matchupNC.close();
     
     #merge dataframes from each year
     data = pd.concat(dfList, ignore_index=True);
