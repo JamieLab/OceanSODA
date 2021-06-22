@@ -85,7 +85,7 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
         #calculate combined uncertainty
         if type(algorithmOutput["rmsd"]) is float:
             #If a single algorithm uncertainty is used, turn it into an array (one copied value for each model output)
-            algorithmOutput["rmsd"] = np.array(algorithmOutput["rmsd"]*len(algorithmOutput["modelOutput"]));
+            algorithmOutput["rmsd"] = np.array([algorithmOutput["rmsd"]]*len(algorithmOutput["modelOutput"]));
         
         matchupOutputVarUncertainty = calc_reference_uncertainty(dataUsed, outputVariable, settings);
         
