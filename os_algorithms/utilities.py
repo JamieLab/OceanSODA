@@ -132,7 +132,6 @@ def calculate_years_for_input_combination(settings, inputCombination, minYear=19
     years = [];
     
     for year in range(minYear, maxYear+1):
-        print(year);
         filePath = settings["matchupDatasetTemplate"].safe_substitute(YYYY=year);
         if path.exists(filePath):
             try:
