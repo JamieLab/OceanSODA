@@ -2458,7 +2458,7 @@ class Vangriesheim2009_open_ocean_dic(BaseAlgorithm):
 class Vangriesheim2009_all_dic(BaseAlgorithm):    
     #String representation of the algorithm
     def __str__(self):
-        return "Vangriesheim2009_all_dic: V00(dic)";
+        return "Vangriesheim2009_all_dic: V09(dic)";
 
     #common names of input and output variables (see global_settings for definitions of these
     @staticmethod
