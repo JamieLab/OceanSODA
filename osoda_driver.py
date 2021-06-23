@@ -20,7 +20,7 @@ pd.set_option("mode.chained_assignment", None);
 settings = osoda_global_settings.get_default_settings();
 
 #########
-# Compare algorithm performance using matchup data set
+# Compare algorithm performance using matchup data set 
 # Compute all metrics and determine the 'best' and 'long' optimal algorithm
 #    for DIC and AT
 import osoda_algorithm_comparison;

@@ -22,7 +22,7 @@ pd.set_option("mode.chained_assignment", None)
 import faulthandler;
 faulthandler.enable();
 
-runPairedMetrics = True;
+runPairedMetrics = False;
 runBasicMetrics = True;
 
 
@@ -58,18 +58,25 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                        "inputUncertaintyName": None, #"ethz_pco2_stddev", #propagated input data uncertainty
                        "combinedUncertainty": 14.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
-                      # {"name": "ethz_salinity", #Human readable name, this can be set to anything and is only used as a label
-                      #  "outputVar": "region_sss_mean", #DIC or AT
-                      #  "matchupVariableName": "ethz_salinity_mean", #netCDF variable name of the model output (algorithm prediction)
-                      #  "algoRMSD": None, #netCDF variable name of the RMSD of the (original) algorithm fit
-                      #  "inputUncertaintyName": None, #"ethz_salinity_stddev", #propagated input data uncertainty
-                      #  "combinedUncertainty": None, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
-                      #  },
+                       {"name": "cmems_ph", #Human readable name, this can be set to anything and is only used as a label
+                        "outputVar": "region_ph_mean", #DIC or AT
+                        "matchupVariableName": "cmems_ph_mean", #netCDF variable name of the model output (algorithm prediction)
+                        "algoRMSD": 0.03, #netCDF variable name of the RMSD of the (original) algorithm fit
+                        "inputUncertaintyName": None, #propagated input data uncertainty
+                        "combinedUncertainty": 0.03, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                        },
+                       {"name": "cmems_pco2", #Human readable name, this can be set to anything and is only used as a label
+                        "outputVar": "region_pco2w_mean", #DIC or AT
+                        "matchupVariableName": "cmems_pco2_mean", #netCDF variable name of the model output (algorithm prediction)
+                        "algoRMSD": 14.8, #netCDF variable name of the RMSD of the (original) algorithm fit
+                        "inputUncertaintyName": None, #propagated input data uncertainty
+                        "combinedUncertainty": 17.97, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                        },
                     ];
 
 settings = osoda_global_settings.get_default_settings();
 outputRoot=path.join("output/example_test_custom_algo_metrics/");
-diagnosticPlots = False;
+diagnosticPlots = True;
 regions = list(settings["regions"]);
 sstDatasetName = "SST-ESACCI-OSTIA"; #This is the matchup database variable name corresponding to the SST dataset used as input for the Ethz data
 sssDatasetName = "SSS-CORA"; #This is the matchup database variable name corresponding to the SSS dataset used as input for the Ethz data
@@ -232,13 +239,17 @@ if runBasicMetrics == True:
         print("Extracting data for custom algorithm: {0}".format(customAlgo["name"]));
             
         #Extract the model output from the matchup data
-        colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"]];
+        colsToExtract = ["date", "lat", customAlgo["outputVar"], customAlgo["matchupVariableName"]];
+        
         ##### TODO:
         ##### Missing: combined uncertainty, matchupRMSD, matchupBias?
         customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
         ###Subset to remove where model data is NaN
         customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["matchupVariableName"]])]; #remove where there is no model predictions
         customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["outputVar"]])]; #remove where there is no reference outputVar data
+        if customAlgo["name"] == "cmems_pco2": #unit conversion
+            customAlgoData["cmems_pco2_mean"] = customAlgoData["cmems_pco2_mean"]*0.00000986923 * 1000000;
+            
         
         algorithmOutput = {};
         algorithmOutput["instance"] = None;
@@ -278,27 +289,9 @@ if runBasicMetrics == True:
         del basicMetricsMap[key]["reference_output_uncertainty"];
         del basicMetricsMap[key]["weights"];
         del basicMetricsMap[key]["model_uncertainty"];
-        # try:
-        #     basicMetricsMap[key]["model_output"] = basicMetricsMap[key]["model_output"].tolist();
-        # except: pass;
-        # try:
-        #     basicMetricsMap[key]["reference_output_uncertainty"] = basicMetricsMap[key]["reference_output_uncertainty"].tolist();
-        # except: pass;
-        # try:
-        #     basicMetricsMap[key]["weights"] = basicMetricsMap[key]["weights"].tolist();
-        # except: pass;
-        # try:
-        #     basicMetricsMap[key]["model_uncertainty"] = basicMetricsMap[key]["model_uncertainty"].tolist();
-        # except: pass;
  
     
     with open(path.join(outputRoot, "basic_metrics_ETHZ.json"), 'w') as file:
         json.dump(basicMetricsMap, file, indent=4);
-    
 
-
-    
-    
-    
-    
     
