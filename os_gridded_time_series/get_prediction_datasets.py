@@ -352,7 +352,7 @@ def process_oisst_sst(dataRoot, downloadedRoot, startYear, endYear):
         if type(sourceTemplate) is not list:
             sourceTemplate = [sourceTemplate];
         
-        referenceFilename = path.join(path.dirname(__file__), "reference_data", "REFERENCE_FILE_FOR_METADATA-REYNOLDS.nc"); #Path to netCDF reference file.
+        referenceFilename = path.join(path.dirname(__file__), "../aux_data/reference_data", "REFERENCE_FILE_FOR_METADATA-REYNOLDS.nc"); #Path to netCDF reference file.
         referenceNc = Dataset(referenceFilename, 'r');
         
         yearMonthsToRun = get_year_month_pairs(startYear, startMonth, stopYear, stopMonth); #inclusive
@@ -1182,67 +1182,67 @@ def process_cora_sss_sst(dataRoot, downloadRoot, startYear, endYear):
             
 
 if __name__ == "__main__":
-    #Setup command line parser, and parse arguments.
-    description = """Utility for downloading and processing all prediction data sets
-        used to calculate gridded surface DIC and AT time series for the OceanSODA project.
-        This utility will download and pre-process input files into 1x1 degree monthly files.
-        It will avoid overwriting any existing files.
-        Processed datasets will located in their own subdirectories of the root path provided.
-        Raw downloaded files are stored in a 'downloaded' subdirectory, and can be removed after
-        script has finished.
-        (This script is in development, use with care)
-        """;
-    clParser = argparse.ArgumentParser(description=description, epilog="Both this script and the FluxEngine are in continual development. Use with care.");
-    clParser.add_argument("data_root", help="Path to root directory where all data sets will be downloaded to. Processed data sets will also be written to this directory.");    
-    clParser.add_argument("start_year", help="Data sets will be downloaded and processed from this date forward (inclusive). Whole years only (e.g. 2010).", type=int, default=2010);
-    clParser.add_argument("end_year", help="Data sets will be downloaded and processed up to and including this date. Whole years only (e.g. 2020).", type=int, default=2018);
-    clParser.add_argument("--cmems_user", "-u", help="Username for the CMEMS-DU.eu FTP server. If not specified user will be prompted.", type=str, default="");
-    clParser.add_argument("--cmems_pass", "-p", help="Password for the CMEMS-DU.eu FTP server. If not specified user will be prompted.", type=str, default="");
-    clArgs = clParser.parse_args();
+    # #Setup command line parser, and parse arguments.
+    # description = """Utility for downloading and processing all prediction data sets
+    #     used to calculate gridded surface DIC and AT time series for the OceanSODA project.
+    #     This utility will download and pre-process input files into 1x1 degree monthly files.
+    #     It will avoid overwriting any existing files.
+    #     Processed datasets will located in their own subdirectories of the root path provided.
+    #     Raw downloaded files are stored in a 'downloaded' subdirectory, and can be removed after
+    #     script has finished.
+    #     (This script is in development, use with care)
+    #     """;
+    # clParser = argparse.ArgumentParser(description=description, epilog="Both this script and the FluxEngine are in continual development. Use with care.");
+    # clParser.add_argument("data_root", help="Path to root directory where all data sets will be downloaded to. Processed data sets will also be written to this directory.");    
+    # clParser.add_argument("start_year", help="Data sets will be downloaded and processed from this date forward (inclusive). Whole years only (e.g. 2010).", type=int, default=2010);
+    # clParser.add_argument("end_year", help="Data sets will be downloaded and processed up to and including this date. Whole years only (e.g. 2020).", type=int, default=2018);
+    # clParser.add_argument("--cmems_user", "-u", help="Username for the CMEMS-DU.eu FTP server. If not specified user will be prompted.", type=str, default="");
+    # clParser.add_argument("--cmems_pass", "-p", help="Password for the CMEMS-DU.eu FTP server. If not specified user will be prompted.", type=str, default="");
+    # clArgs = clParser.parse_args();
     
     #Extract command line arguments
-    startYear = clArgs.start_year; #year to try to start downloading data for
-    endYear = clArgs.end_year; #last year to try to download data for
-    dataRoot = clArgs.data_root; #root directory to put processed and downloaded data in
-    cmemsUser = clArgs.cmems_user; #add username and password here to avoid prompt for my.cmems-du.eu credentials
-    cmemsPass = clArgs.cmems_pass; #add username and password here to avoid prompt for my.cmems-du.eu credentials
+    startYear = 2018; #clArgs.start_year; #year to try to start downloading data for
+    endYear = 2020; #clArgs.end_year; #last year to try to download data for
+    dataRoot = "../data/new_prediction_datasets/"; #clArgs.data_root; #root directory to put processed and downloaded data in
+    cmemsUser = "tholding"; #clArgs.cmems_user; #add username and password here to avoid prompt for my.cmems-du.eu credentials
+    cmemsPass = "CMEMS_Holding_2020#"; #clArgs.cmems_pass; #add username and password here to avoid prompt for my.cmems-du.eu credentials
     
     #Do not change these paths
     downloadedRoot = path.join(dataRoot, "downloaded");
     oceanMaskPath = path.join(path.dirname(__file__), "reference_data", "World_Seas-IHO-mask.nc");
     
     
-    #Ask for cmems-du.eu credentials if they were not provided
-    if cmemsUser == "":
-        import getpass;
-        print("In order to download CORA SSS and SST data, you must provide your username and password for the cmems-du.eu ftp server.");
-        cmemsUser = input("cmems-du.eu username: ");
-        cmemsPass = getpass.getpass("cmems-du.eu password: ");
+    # #Ask for cmems-du.eu credentials if they were not provided
+    # if cmemsUser == "":
+    #     import getpass;
+    #     print("In order to download CORA SSS and SST data, you must provide your username and password for the cmems-du.eu ftp server.");
+    #     cmemsUser = input("cmems-du.eu username: ");
+    #     cmemsPass = getpass.getpass("cmems-du.eu password: ");
     
-    #Do not download CORA data if we don't have login credentials
-    if cmemsUser != "" and cmemsPass != "":
-        download_cora_sss_sst(downloadedRoot, startYear, endYear, cmemsUser, cmemsPass);
-        process_cora_sss_sst(dataRoot, downloadedRoot, startYear, endYear);
-    else:
-        print(" *** No login credentials for cmems-du.eu ftp server, so CORA SSS and SST will be skipped.");
+    # #Do not download CORA data if we don't have login credentials
+    # if cmemsUser != "" and cmemsPass != "":
+    #     download_cora_sss_sst(downloadedRoot, startYear=2019, endYear=2021, ftpUser=cmemsUser, ftpPass=cmemsPass);
+         process_cora_sss_sst(dataRoot, downloadedRoot, startYear=2019, endYear=2021);
+    # else:
+    #     print(" *** No login credentials for cmems-du.eu ftp server, so CORA SSS and SST will be skipped.");
     
-    download_all_woa_nutrients(downloadedRoot);
-    process_all_woa_nutrients(dataRoot, downloadedRoot, oceanMaskPath);
+    # download_all_woa_nutrients(downloadedRoot);
+    # process_all_woa_nutrients(dataRoot, downloadedRoot, oceanMaskPath);
     
-    download_rss_smap_sss(downloadedRoot, startYear, endYear);
-    process_rss_smap_sss(dataRoot, downloadedRoot, startYear, endYear);
+    #download_rss_smap_sss(downloadedRoot, startYear=2020, endYear=2021); #last processed: May 2020
+    #process_rss_smap_sss(dataRoot, downloadedRoot, startYear=2020, stopYear=2021);
     
-    download_oisst_sst(downloadedRoot, startYear, endYear);
-    process_oisst_sst(dataRoot, downloadedRoot, startYear, endYear);
+    #download_oisst_sst(downloadedRoot, startYear=2020, endYear=2021);
+    #process_oisst_sst(dataRoot, downloadedRoot, startYear=2020, endYear=2021);
     
-    download_isas_sss_sst(dataRoot);
-    uncompress_isas_sss_sst(downloadedRoot);
-    process_isas_sss_sst(dataRoot, downloadedRoot, startYear, endYear);
+    # download_isas_sss_sst(dataRoot);
+    # uncompress_isas_sss_sst(downloadedRoot);
+    # process_isas_sss_sst(dataRoot, downloadedRoot, startYear=2015, endYear=2021);
     
-    download_cci_ostia_sst(downloadedRoot, startYear, endYear);
-    uncompress_cci_ostia_sst(downloadedRoot, startYear, endYear);
-    process_cci_ostia_sst(dataRoot, downloadedRoot, startYear, endYear);
+    # download_cci_ostia_sst(downloadedRoot, startYear=2016, endYear=2021);
+    # uncompress_cci_ostia_sst(downloadedRoot, startYear=2016, endYear=2021);
+    # process_cci_ostia_sst(dataRoot, downloadedRoot, startYear=2016, endYear=2021);
     
-    download_esacci_sss_smos(downloadedRoot, startYear, endYear);
-    process_esacci_sss_smos(dataRoot, downloadedRoot, startYear, endYear);
+    # download_esacci_sss_smos(downloadedRoot, startYear=2018, endYear=2021);
+    # process_esacci_sss_smos(dataRoot, downloadedRoot, startYear=2018, endYear=2021);
 
