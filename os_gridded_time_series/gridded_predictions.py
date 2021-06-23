@@ -361,8 +361,9 @@ def calculate_carbonate_parameters(tflag, atData, dicData, sssData, sstData, pAt
     #Get a handle to the SeaCarb R library
     try:
         seacarb = importr("seacarb");
-    except rpy2.rinterface.RRuntimeError: #If the library isn't installed, install it for the rpy2 version of r
+    except rpy2.robjects.packages.PackageNotInstalledError: #If the library isn't installed, install it for the rpy2 version of r
         print("Installing R package: seacarb");
+        from rpy2.robjects.packages import importr
         utils = importr('utils');
         utils.install_packages('seacarb', repos='https://cloud.r-project.org');
         seacarb = importr("seacarb");
