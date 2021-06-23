@@ -34,6 +34,7 @@ from os import path, makedirs;
 import numpy as np;
 from netCDF4 import Dataset;
 import pickle;
+import json;
 import logging;
 import datetime;
 import pandas as pd;
@@ -45,7 +46,7 @@ from os_algorithms.diagnostic_plotting import prediction_accuracy_plot;
 
 #control flags (turn parts of the script on/off)
 runAlgorithmsAndCalculateMetrics = True;
-diagnosticPlots = False; #Diagnostic plots to help see if algorithms are making sensible predictions
+diagnosticPlots = True; #Diagnostic plots to help see if algorithms are making sensible predictions
 
 
 #Run an algorithm on the matchup dataset and returns the predicted (model) output and the rows of the matchup database which those predictions were made from
@@ -98,7 +99,19 @@ def write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersect
     
     
     #Write basicMetrics object
-    pickle.dump(basicMetrics, open(path.join(outputDirectory, "basic_metrics.json"), 'wb'));
+    pickle.dump(basicMetrics, open(path.join(outputDirectory, "basic_metrics.pickle"), 'wb'));
+    #Do not output long vectors of data in the json summary file, so copy the full basic metrics then delete the vectors
+    basicMetricsJson = {algoNameOrder[i]: basicMetrics[i].copy() for i in range(len(basicMetrics))}
+    for key in basicMetricsJson.keys():
+        del basicMetricsJson[key]["model_output"];
+        del basicMetricsJson[key]["reference_output_uncertainty"];
+        del basicMetricsJson[key]["weights"];
+        del basicMetricsJson[key]["model_uncertainty"];
+        del basicMetricsJson[key]["model_propagated_input_uncertainty"];
+        del basicMetricsJson[key]["model_combined_output_uncertainty"];
+    with open(path.join(outputDirectory, "basic_metrics.json"), 'w') as file:
+        json.dump(basicMetricsJson, file, indent=4);
+    
 
     #Write paired metrics
     nIntersectMatrixDF = pd.DataFrame(nIntersectMatrix, dtype=int, columns=algoNameOrder, index=algoNameOrder);
@@ -356,7 +369,10 @@ def main(settings, extraAlgosToTest=[]):
                     #Diagnostic plot to compare model and reference output
                     if diagnosticPlots == True:
                         outputVariable = algorithm.output_name();
-                        prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable);
+                        if path.exists(path.join(currentCombinationOutputDirectory, algorithmOutput["outputVar"], region, "diagnostic_plots")) == False:
+                            makedirs(path.join(currentCombinationOutputDirectory, algorithmOutput["outputVar"], region, "diagnostic_plots"));
+                        savePath = path.join(currentCombinationOutputDirectory, algorithmOutput["outputVar"], region, "diagnostic_plots",  algorithmOutput["name"].split(":")[0]+".png");
+                        prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable, savePath=savePath);
                     
                 
                 #######################################
@@ -499,7 +515,8 @@ def custom_algorithm_metrics(settings, algorithmsToCompare, customAlgorithmInfo,
             
             if diagnosticPlots == True:
                 outputVariable = algorithm.output_name();
-                savePath = path.join(outputRoot, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
+                savePath = path.join(currentCombinationOutputDirectory, customAlgo["outputVar"], region, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
+                #savePath = path.join(outputRoot, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
                 prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable, savePath=savePath);
             
             print("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
@@ -535,7 +552,7 @@ def custom_algorithm_metrics(settings, algorithmsToCompare, customAlgorithmInfo,
         allAlgorithmOutputs.append(customAlgoDict);
         
         if diagnosticPlots == True:
-            savePath = path.join(outputRoot, "diagnostic_plots", customAlgo["name"]+".png");
+            savePath = path.join(currentCombinationOutputDirectory, customAlgo["outputVar"], region, "diagnostic_plots", customAlgo["name"]+".png");
             prediction_accuracy_plot(customAlgoData[customAlgo["outputVar"]], customAlgoData[customAlgo["matchupVariableName"]], customAlgo["name"], customAlgo["outputVar"], savePath=savePath);
         
     
