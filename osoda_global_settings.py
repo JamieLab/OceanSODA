@@ -142,6 +142,8 @@ def get_default_settings():
                                    "SiO4":DatasetInfo(commonName="SiO4", datasetName="SiO4-WOA", matchupVariableName="woa18_silicate_i_an", matchupDatabaseError="woa18_silicate_i_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot, "data", "prediction_datasets/WOA_data_sets/WOA_silicate/woa18_all_i${MM}_processed.nc")), predictionDatasetVariable="i_an", predictionDatasetError="i_uncertainty"),
                                    "DIC": DatasetInfo(commonName="DIC", datasetName="DIC-matchup", matchupVariableName="region_dic_mean", matchupDatabaseError="region_dic_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "AT": DatasetInfo(commonName="AT", datasetName="AT-matchup", matchupVariableName="region_at_mean", matchupDatabaseError="region_at_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "region_ph_mean": DatasetInfo(commonName="AT", datasetName="pH-matchup", matchupVariableName="region_ph_mean", matchupDatabaseError="region_ph_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
+                                   "region_pco2w_mean": DatasetInfo(commonName="AT", datasetName="pCO2-matchup", matchupVariableName="region_pco2w_mean", matchupDatabaseError="region_pco2w_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    };
     
     

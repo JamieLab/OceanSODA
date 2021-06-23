@@ -38,11 +38,14 @@ def calc_reference_uncertainty(dataUsed, outputVar, settings):
     missingTypeA = np.isfinite(uncertainties) == False; #Which rows are missing type A uncertainty
     
     #Fill missing type A values with the nominal / state-of-the-art type B error from Bockmon 2015 ( https://www.sciencedirect.com/science/article/pii/S0304420315000213 )
-    if settings["useErrorRatios"]:
-        outputVarValues = dataUsed[outputVar];
-        uncertainties.loc[missingTypeA] = outputVarValues[missingTypeA]*(settings["insituErrorRatio"][outputVar])
-    else:
-        uncertainties.loc[missingTypeA] = settings["insituError"][outputVar];
+    try:
+        if settings["useErrorRatios"]:
+            outputVarValues = dataUsed[outputVar];
+            uncertainties.loc[missingTypeA] = outputVarValues[missingTypeA]*(settings["insituErrorRatio"][outputVar])
+        else:
+            uncertainties.loc[missingTypeA] = settings["insituError"][outputVar];
+    except KeyError: #E.g. for pH and pCO2w the settings["insituError"] values aren't currently provided. In this case nothing to be done but discard the data
+        uncertainties.loc[missingTypeA] = np.nan;
     
     return uncertainties;
 
@@ -53,7 +56,7 @@ def calc_reference_uncertainty(dataUsed, outputVar, settings):
 def calc_weights(algorithmUncertainty, matchupOutputVarUncertainty):
     combinedUncertainty = np.sqrt( algorithmUncertainty**2 + matchupOutputVarUncertainty**2 );
     weights = 1.0 / combinedUncertainty;
-    weights /= weights.sum(); #normalise
+    weights /= np.nansum(weights); #normalise
     return weights;
 
 
@@ -108,8 +111,8 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
     predictionRmsd = np.sqrt(predictionErrorsSquared.mean()); #rmse
     predictionMad = absPredictionError.mean(); #mean absolute difference
     if hasWeights:
-        wpredictionRmsd = np.sqrt((weights*predictionErrorsSquared).sum()); #weighted sum of the squared prediction error. Note sum not mean because the weights are normalised to sum to 1.
-        wpredictionMad = (weights*absPredictionError).sum(); #weighted mean absolute difference. Note sum is used, not mean, as weights are already normalised to sum to 1
+        wpredictionRmsd = np.sqrt(np.nansum(weights*predictionErrorsSquared)); #weighted sum of the squared prediction error. Note sum not mean because the weights are normalised to sum to 1.
+        wpredictionMad = (np.nansum(weights*absPredictionError)); #weighted mean absolute difference. Note sum is used, not mean, as weights are already normalised to sum to 1
     else:
         wpredictionRmsd = np.nan;
         wpredictionMad = np.nan;
@@ -118,8 +121,8 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
     meanModelOutput = algorithmOutput["modelOutput"].mean();
     meanReferenceOutput = dataUsed[outputVariable].mean();
     if hasWeights:
-        wMeanModelOutput = (weights*algorithmOutput["modelOutput"]).sum(); #weighted mean of the model/predicted output. Note sum is used, not mean, as weights are already normalised to sum to 1
-        wMeanInSituOutput = (weights*dataUsed[outputVariable]).sum(); #weighted mean of the in situ measured output. Note sum is used, not mean, as weights are already normalised to sum to 1
+        wMeanModelOutput = np.nansum(weights*algorithmOutput["modelOutput"]); #weighted mean of the model/predicted output. Note sum is used, not mean, as weights are already normalised to sum to 1
+        wMeanInSituOutput = np.nansum(weights*dataUsed[outputVariable]); #weighted mean of the in situ measured output. Note sum is used, not mean, as weights are already normalised to sum to 1
     else:
         wMeanModelOutput = np.nan;
         wMeanInSituOutput = np.nan;
@@ -138,9 +141,9 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
         
         #weighted standard deviations and correlation coefficient
         if hasWeights:
-            sumX2 = (weights * (dataUsed[outputVariable] - wMeanInSituOutput) ** 2).sum()
-            sumY2 = (weights * (algorithmOutput["modelOutput"] - wMeanModelOutput) ** 2).sum()
-            sumXY = ((weights * (dataUsed[outputVariable] - wMeanInSituOutput) * (algorithmOutput["modelOutput"] - wMeanModelOutput)).sum())
+            sumX2 = np.nansum(weights * (dataUsed[outputVariable] - wMeanInSituOutput) ** 2)
+            sumY2 = np.nansum(weights * (algorithmOutput["modelOutput"] - wMeanModelOutput) ** 2)
+            sumXY = np.nansum(weights * (dataUsed[outputVariable] - wMeanInSituOutput) * (algorithmOutput["modelOutput"] - wMeanModelOutput))
             try:
                 referenceOutputWSD = sumX2 ** .5 #wsd = weighted standard deviation
             except:

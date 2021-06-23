@@ -14,9 +14,12 @@ from string import Template;
 import osoda_global_settings;
 from os import path;
 
+import pandas as pd;
+pd.set_option("mode.chained_assignment", None);
+
 settings = osoda_global_settings.get_default_settings();
 
-# #########
+#########
 # Compare algorithm performance using matchup data set
 # Compute all metrics and determine the 'best' and 'long' optimal algorithm
 #    for DIC and AT
@@ -24,7 +27,7 @@ import osoda_algorithm_comparison;
 osoda_algorithm_comparison.main(settings);
 
 
-# ##########
+##########
 # Download all prediction data sets and calculate gridded time series predictions
 import osoda_calculate_gridded_predictions;
 years = settings["years"];
@@ -42,11 +45,12 @@ griddedTimeSeriesOutputPathLong = settings["longGriddedTimeSeriesPathTemplate"];
 osoda_calculate_gridded_predictions.main(optAlgoTableLong, griddedTimeSeriesOutputPathLong, years, regions, regionMaskPath);
 
 
-# ##########
+##########
 # Calculate DIC outflow for the Amazon (case study 1)
 import osoda_dic_outflow;
 osodaMasksPath = settings["regionMasksPath"];
 precomputedGridAreaPath = settings["gridAreasPath"];
+
 regions = ["oceansoda_amazon_plume"];
 #run for 'best'
 carbonateParametersTemplateBest = settings["bestGriddedTimeSeriesPathTemplate"];
