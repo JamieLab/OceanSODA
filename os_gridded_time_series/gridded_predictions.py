@@ -14,7 +14,7 @@ from netCDF4 import Dataset;
 from datetime import datetime;
 import pandas as pd;
 import numpy as np;
-
+import PyCO2SYS as pyco2
 import osoda_global_settings;
 
 
@@ -128,59 +128,99 @@ def create_gridded_timeseries_output_netCDF_file(outputPath, algoInfo, datasetIn
     if includeSeaCarbVariables:
         var = ncout.createVariable("pH", float, ("time", "lat", "lon"), zlib=True);
         var.units = "pH";
-        var.long_name = "pH calculated from AT and DIC using SeaCarb";
+        var.long_name = "pH calculated from AT and DIC using pyco2sys";
         
-        var = ncout.createVariable("pH_err", float, ("time", "lat", "lon"), zlib=True);
+        var = ncout.createVariable("u_pH", float, ("time", "lat", "lon"), zlib=True);
         var.units = "pH";
-        var.long_name = "Uncertainty in pH calculated from AT and DIC using SeaCarb. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        var.long_name = "Uncertainty in pH calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
         
-        var = ncout.createVariable("CO2", float, ("time", "lat", "lon"), zlib=True);
-        var.units = "mol kg-1";
-        var.long_name = "CO2 concentration calculated from AT and DIC using SeaCarb";
+        var = ncout.createVariable("pH_total", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "pH";
+        var.long_name = "pH_total calculated from AT and DIC using pyco2sys";
         
-        var = ncout.createVariable("CO2_err", float, ("time", "lat", "lon"), zlib=True);
-        var.units = "mol kg-1";
-        var.long_name = "CO2 concentration uncertainty calculated from AT and DIC using SeaCarb. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        var = ncout.createVariable("u_pH_total", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "pH";
+        var.long_name = "Uncertainty in pH_total calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        
+        var = ncout.createVariable("pH_free", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "pH";
+        var.long_name = "pH_free calculated from AT and DIC using pyco2sys";
+        
+        var = ncout.createVariable("u_pH_free", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "pH";
+        var.long_name = "Uncertainty in pH_free calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        
+        var = ncout.createVariable("hydrogen_free", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "umol kg-1";
+        var.long_name = "hydrogen_free calculated from AT and DIC using pyco2sys";
+        
+        var = ncout.createVariable("u_hydrogen_free", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "umol kg-1";
+        var.long_name = "Uncertainty in hydrogen_free calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        
+        
+        var = ncout.createVariable("pCO2", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "ppm";
+        var.long_name = "pCO2  calculated from AT and DIC using pyco2sys";
+        
+        var = ncout.createVariable("u_pCO2", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "ppm";
+        var.long_name = "pCO2  uncertainty calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        
+        
         
         var = ncout.createVariable("fCO2", float, ("time", "lat", "lon"), zlib=True);
         var.units = "uatm";
-        var.long_name = "'standard' CO2 fugacity computed from AT and DIC using SeaCarb";
+        var.long_name = "'standard' CO2 fugacity computed from AT and DIC using pyco2sys";
         
-        var = ncout.createVariable("fCO2_err", float, ("time", "lat", "lon"), zlib=True);
+        var = ncout.createVariable("u_fCO2", float, ("time", "lat", "lon"), zlib=True);
         var.units = "uatm";
-        var.long_name = "'standard' CO2 fugacity uncertainty computed from AT and DIC using SeaCarb. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        var.long_name = "'standard' CO2 fugacity uncertainty computed from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        
+        
+        
         
         var = ncout.createVariable("HCO3", float, ("time", "lat", "lon"), zlib=True);
         var.units = "mol kg-1";
-        var.long_name = "HCO3 concentration calculated from AT and DIC using SeaCarb";
+        var.long_name = "HCO3 concentration calculated from AT and DIC using pyco2sys";
         
-        var = ncout.createVariable("HCO3_err", float, ("time", "lat", "lon"), zlib=True);
+        var = ncout.createVariable("u_HCO3", float, ("time", "lat", "lon"), zlib=True);
         var.units = "mol kg-1";
-        var.long_name = "HCO3 concentration uncertainty calculated from AT and DIC using SeaCarb. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        var.long_name = "HCO3 concentration uncertainty calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        
+        
+        
         
         var = ncout.createVariable("CO3", float, ("time", "lat", "lon"), zlib=True);
         var.units = "mol kg-1";
-        var.long_name = "CO3 concentration calculated from AT and DIC using SeaCarb";
+        var.long_name = "CO3 concentration calculated from AT and DIC using pyco2sys";
         
-        var = ncout.createVariable("CO3_err", float, ("time", "lat", "lon"), zlib=True);
+        var = ncout.createVariable("u_CO3", float, ("time", "lat", "lon"), zlib=True);
         var.units = "mol kg-1";
-        var.long_name = "CO3 concentration uncertainty calculated from AT and DIC using SeaCarb. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        var.long_name = "CO3 concentration uncertainty calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
         
-        var = ncout.createVariable("OmegaAragonite", float, ("time", "lat", "lon"), zlib=True);
-        var.units = "none";
-        var.long_name = "Aragonite saturation state calculated from AT and DIC using SeaCarb";
         
-        var = ncout.createVariable("OmegaAragonite_err", float, ("time", "lat", "lon"), zlib=True);
-        var.units = "none";
-        var.long_name = "Aragonite saturation state uncertainty calculated from AT and DIC using SeaCarb. Uncertainty includes those arising from SSS, SST, DIC and AT.";
         
-        var = ncout.createVariable("OmegaCalcite", float, ("time", "lat", "lon"), zlib=True);
-        var.units = "none";
-        var.long_name = "Calcite saturation state calculated from AT and DIC using SeaCarb";
         
-        var = ncout.createVariable("OmegaCalcite_err", float, ("time", "lat", "lon"), zlib=True);
+        var = ncout.createVariable("saturation_aragonite", float, ("time", "lat", "lon"), zlib=True);
         var.units = "none";
-        var.long_name = "Calcite saturation state uncertainty calculated from AT and DIC using SeaCarb. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        var.long_name = "Aragonite saturation state calculated from AT and DIC using pyco2sys";
+        
+        var = ncout.createVariable("u_saturation_aragonite", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "none";
+        var.long_name = "Aragonite saturation state uncertainty calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+        
+        
+        
+        
+        var = ncout.createVariable("saturation_calcite", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "none";
+        var.long_name = "Calcite saturation state calculated from AT and DIC using pyco2sys";
+        
+        var = ncout.createVariable("u_saturation_calcite", float, ("time", "lat", "lon"), zlib=True);
+        var.units = "none";
+        var.long_name = "Calcite saturation state uncertainty calculated from AT and DIC using pyco2sys. Uncertainty includes those arising from SSS, SST, DIC and AT.";
+    
     return ncout;
 
 
@@ -347,86 +387,6 @@ def calculate_gridded_output_from_inputs(AlgorithmClass, inputVariables, lon, la
     return griddedOutput, griddedRMSD, griddedInputUncertainty, griddedCombinedUncertainty, df; #return the gridded output and the dataframe that was used by the algorithm to make the predictions
 
 
-#Calculates other carbonate parameters from AT and DIC using the SeaCarb package for R
-#Requires numpy objects as inputs
-#See for details of SeaCarb's 'carb' function:
-#https://cran.r-project.org/web/packages/seacarb/seacarb.pdf
-def calculate_carbonate_parameters(tflag, atData, dicData, sssData, sstData, pAtm, pHydrostatic, atErr, dicErr, SErr, TErr, k1k2="x"):
-    import rpy2.robjects as ro;
-    import rpy2.robjects.numpy2ri; #Convert between R objects and numpy objects
-    import rpy2.robjects.pandas2ri; #Convert between R objects and pandas objects
-    import rpy2;
-    from rpy2.robjects.packages import importr;
-    
-    #Get a handle to the SeaCarb R library
-    try:
-        seacarb = importr("seacarb");
-    except rpy2.robjects.packages.PackageNotInstalledError: #If the library isn't installed, install it for the rpy2 version of r
-        print("Installing R package: seacarb");
-        from rpy2.robjects.packages import importr
-        utils = importr('utils');
-        utils.install_packages('seacarb', repos='https://cloud.r-project.org');
-        seacarb = importr("seacarb");
-    
-    rpy2.robjects.numpy2ri.activate();
-    output = seacarb.carb(tflag, atData, dicData, S=sssData, T=sstData, Patm=pAtm, P=pHydrostatic, k1k2=k1k2);
-    ##output = seacarb.carb(15, at, dic, S=35.0, T=20.0, Patm=1.0, Pt=0.0, k1k2="x");
-    uncertainties = seacarb.errors(tflag, atData, dicData, S=sssData, T=sstData, Patm=pAtm, P=pHydrostatic, k1k2=k1k2, evar1=atErr, evar2=dicErr, eS=SErr, eT=TErr);
-    
-    try:
-        output = rpy2.robjects.pandas2ri.ri2py(output); #convert form recarray to pandas dataframe
-        uncertainties = rpy2.robjects.pandas2ri.ri2py(uncertainties); #convert form recarray to pandas dataframe
-    except AttributeError: #Changed in rpy2 v3.3.6, now use:
-        output = pd.DataFrame(output); #convert form recarray to pandas dataframe
-        uncertainties = pd.DataFrame(uncertainties); #convert form recarray to pandas dataframe
-    
-#    #No longer needed in rpy2 v3.3.6
-#    #output = rpy2.robjects.pandas2ri.ri2py(output);
-#    output = pd.DataFrame(output); #convert form recarray to pandas dataframe
-    
-#    from rpy2.robjects.conversion import localconverter;
-#    with localconverter(ro.default_converter + pandas2ri.converter):
-#        tmp = ro.conversion.ri2py(output)
-#    
-#    output = pd.DataFrame(output);
-    
-    #Convert back to umol/kg
-    output["CO2"] = output["CO2"] * 1000000;
-    output["HCO3"] = output["HCO3"] * 1000000;
-    output["CO3"] = output["CO3"] * 1000000;
-    
-    #Add uncertainty info and convert back to umol/kg
-    output["pH_err"] = uncertainties["pH"];
-    output["CO2_err"] = uncertainties["CO2"] * 1000000;
-    output["fCO2_err"] = uncertainties["fCO2"];
-    output["pCO2_err"] = uncertainties["pCO2"];
-    output["HCO3_err"] = uncertainties["HCO3"] * 1000000;
-    output["CO3_err"] = uncertainties["CO3"] * 1000000;
-    output["OmegaAragonite_err"] = uncertainties["OmegaAragonite"];
-    output["OmegaCalcite_err"] = uncertainties["OmegaCalcite"];
-    
-    return output;
-
-
-#Converts a pandas DataFrame into a list of 2D numpy arrays (gridded spatially according to lonlatIndices)
-#Assumes centred grid cells and 1x1 degree spatial resolution
-def convert_dataframe_to_gridded_list(df, latColName, lonColName):
-    output = {};
-    for variable in df.keys():
-        if variable not in [latColName, lonColName]:
-            griddedOutput = df.pivot(index=latColName, columns=lonColName, values=variable); #unstack into a grid again
-            griddedOutput = np.array(griddedOutput);
-            
-            #place in a 180x360 grid, choosing position based on existing lat values
-            #find ilat and ilon index offsets
-            ilatOffset = int((df[latColName].min() + 89.5));
-            ilonOffset = int((df[lonColName].min() + 179.5));
-            centredGriddedOutput = np.full((180,360), np.nan);
-            centredGriddedOutput[ilatOffset:ilatOffset+griddedOutput.shape[0], ilonOffset:ilonOffset+griddedOutput.shape[1]] = griddedOutput;
-            
-            output[variable] = np.array(centredGriddedOutput);
-    return output;
-
 
 #Writes predicted algorithm output and input data used to make predictions for a single year and month to an already open netCDF file
 def write_yearmonth_to_netCDF(ncFileHandle, iyear, imonth, outputVar, griddedModelOutput, griddedRMSD, griddedInputUncertainty, griddedCombinedUncertainty, loadedInputData, carbonateParameters):
@@ -465,6 +425,25 @@ def get_combination_dataset_info(settings, algoObj, inputCombinationName, always
     
     return datasetInfoMapAlgo;
 
+#Converts a pandas DataFrame into a list of 2D numpy arrays (gridded spatially according to lonlatIndices)
+#Assumes centred grid cells and 1x1 degree spatial resolution
+def convert_dataframe_to_gridded_list(df, latColName, lonColName):
+    output = {};
+    for variable in df.keys():
+        if variable not in [latColName, lonColName]:
+            griddedOutput = df.pivot(index=latColName, columns=lonColName, values=variable); #unstack into a grid again
+            griddedOutput = np.array(griddedOutput);
+            
+            #place in a 180x360 grid, choosing position based on existing lat values
+            #find ilat and ilon index offsets
+            ilatOffset = int((df[latColName].min() + 89.5));
+            ilonOffset = int((df[lonColName].min() + 179.5));
+            centredGriddedOutput = np.full((180,360), np.nan);
+            centredGriddedOutput[ilatOffset:ilatOffset+griddedOutput.shape[0], ilonOffset:ilonOffset+griddedOutput.shape[1]] = griddedOutput;
+            
+            output[variable] = np.array(centredGriddedOutput);
+    return output;
+
 def calculate_gridded_timeseries_single_region(outputPathAT, outputPathDIC, atAlgo, atAlgoInfo, dicAlgo, dicAlgoInfo, settings, years, region, regionMaskNC, latRes=1.0, lonRes=1.0, verbose=False):
     if (atAlgo is None) and (dicAlgo is None):
         return;
@@ -487,18 +466,22 @@ def calculate_gridded_timeseries_single_region(outputPathAT, outputPathDIC, atAl
             
             #read input netCDF files and create a DataFrame which can be used by the algorithms
             if atAlgo is not None:
+                print("test1:");
                 loadedInputDataAT, inputLatsAT, inputLonsAT = load_input_data(datasetInfoMapAT, year, monthStr);
             if dicAlgo is not None:
                 loadedInputDataDIC, inputLatsDIC, inputLonsDIC = load_input_data(datasetInfoMapDIC, year, monthStr);
             if (atAlgo is not None) and (dicAlgo is not None):
                 if (loadedInputDataAT is None) & (loadedInputDataDIC is None): #No input data for this year/month so move to the next
+                    print("test3:");
                     continue;
             curDate = pd.to_datetime(datetime(year, imonth+1, 1));
             griddedOutputAT = griddedOutputDIC = None;
             if atAlgo is not None:
                 if loadedInputDataAT != None: #If there was missing input data, move to the next month
                     #run algorithm to get the predicted gridded outputs
+                    print("test4:");
                     if atAlgo is not None:
+                        print("test5:");
                         griddedOutputAT, griddedRMSDAT, griddedInputUncertaintyAT, griddedCombinedUncertaintyAT, dfUsedByAlgorithmAT = calculate_gridded_output_from_inputs(atAlgo, loadedInputDataAT, inputLonsAT, inputLatsAT, curDate, region, regionMaskNC, settings);
             if dicAlgo is not None:
                 if loadedInputDataDIC != None: #If there was missing input data, move to the next month
@@ -513,51 +496,72 @@ def calculate_gridded_timeseries_single_region(outputPathAT, outputPathDIC, atAl
             carbonateParametersDIC = None;
             if (griddedOutputAT is not None) & (griddedOutputDIC is not None):
                 if verbose:
-                    print("Calculate carbonate parameters using SeaCarb...");
+                    print("Calculate carbonate parameters using pyco2...");
                 
-                #collect the parameter's for the seacarb call
-                flag = 15; #This is the SeaCarb flag for calculating carbonate system from AT and DIC
-                at = dfUsedByAlgorithmAT["AT_pred"].values/1000000.0; #AT values converted from umol kg-1 to mol kg-1
-                atErr = dfUsedByAlgorithmAT["AT_pred_combined_uncertainty"].values/1000000.0; #AT values converted from umol kg-1 to mol kg-1
-                dic = dfUsedByAlgorithmDIC["DIC_pred"].values/1000000.0; #DIC values converted to umol kg-1 mol kg-1
-                dicErr = dfUsedByAlgorithmDIC["DIC_pred_combined_uncertainty"].values/1000000.0; #DIC values converted to umol kg-1 mol kg-1
-                sss_at = dfUsedByAlgorithmAT["SSS"].values; #SSS values
-                sssErr_at = dfUsedByAlgorithmAT["SSS_err"].values;
-                sst_at = dfUsedByAlgorithmAT["SST"].values - 273.15; #SST values converted to C
-                sstErr_at = dfUsedByAlgorithmAT["SST_err"].values;
-                sss_dic = dfUsedByAlgorithmDIC["SSS"].values; #SSS values
-                sssErr_dic = dfUsedByAlgorithmDIC["SSS_err"].values;
-                sst_dic = dfUsedByAlgorithmDIC["SST"].values - 273.15; #SST values converted to C
-                sstErr_dic = dfUsedByAlgorithmDIC["SST_err"].values;
+                #CO2SYS on the data - USE TA best temp and sal setup
+                kwargs = dict(
+                par1 = dfUsedByAlgorithmAT["AT_pred"].values,  # Value of the first parameter
+                par2 = dfUsedByAlgorithmDIC["DIC_pred"].values,  # Value of the second parameter
+                par1_type = 1,  # The first parameter supplied is of type "1", which is "alkalinity"
+                par2_type = 2,  # The second parameter supplied is of type "2", which is "DIC"
+                salinity = dfUsedByAlgorithmAT["SSS"].values,  # Salinity of the sample
+                temperature = dfUsedByAlgorithmAT["SST"].values - 273.15,  # Temperature at input conditions
+                pressure = 1.0,  # Pressure    at input conditions#Pressure at sea surface, in atm
+                # total_silicate = matchupData.SiO4[ph_loop],  # Concentration of silicate  in the sample (in umol/kg)
+                # total_phosphate = matchupData.PO4[ph_loop],  # Concentration of phosphate in the sample (in umol/kg)
+                opt_k_carbonic = 4,  # Choice of H2CO3 and HCO3- dissociation constants K1 and K2 ("4" means "Mehrbach refit")
+                opt_k_bisulfate = 1,);  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
+                    
                 
-                pAtm = 1.0; #Pressure at sea surface, in atm
-                pHydrostatic = 0.0; #Hydrostatic pressure, 0=surface
+                carbonateParametersAT = pyco2.sys(**kwargs,
+                                                uncertainty_into=["pCO2", "pH","hydrogen_free","fCO2","CO3","HCO3","saturation_aragonite","saturation_calcite"],
+                                                uncertainty_from={"par1": dfUsedByAlgorithmAT["AT_pred_combined_uncertainty"].values,
+                                                                  "par2": dfUsedByAlgorithmDIC["DIC_pred_combined_uncertainty"].values,
+                                                                  "temperature": dfUsedByAlgorithmAT["SST_err"].values,
+                                                                  "salinity": dfUsedByAlgorithmAT["SSS_err"].values});
                 
-                #Don't try to solve carbonate system with seacarb is essential data is missing
-                #so get indexers for AT and DIC versions
-                wNoNanAT = np.where(np.isfinite(at) & np.isfinite(atErr) &
-                                    np.isfinite(dic) & np.isfinite(dicErr) &
-                                    np.isfinite(sst_at) & np.isfinite(sstErr_at) &
-                                    np.isfinite(sss_at) & np.isfinite(sssErr_at)
-                                    );
-                wNoNanDIC = np.where(np.isfinite(at) & np.isfinite(atErr) &
-                                    np.isfinite(dic) & np.isfinite(dicErr) &
-                                    np.isfinite(sst_dic) & np.isfinite(sstErr_dic) &
-                                    np.isfinite(sss_dic) & np.isfinite(sssErr_dic)
-                                    );
+                #CO2SYS on the data - USE DIC best temp and sal setup
+                kwargs2 = dict(
+                par1 = dfUsedByAlgorithmAT["AT_pred"].values,  # Value of the first parameter
+                par2 = dfUsedByAlgorithmDIC["DIC_pred"].values,  # Value of the second parameter
+                par1_type = 1,  # The first parameter supplied is of type "1", which is "alkalinity"
+                par2_type = 2,  # The second parameter supplied is of type "2", which is "DIC"
+                salinity = dfUsedByAlgorithmDIC["SSS"].values,  # Salinity of the sample
+                temperature = dfUsedByAlgorithmDIC["SST"].values - 273.15,  # Temperature at input conditions
+                pressure = 1.0,  # Pressure    at input conditions#Pressure at sea surface, in atm
+                # total_silicate = matchupData.SiO4[ph_loop],  # Concentration of silicate  in the sample (in umol/kg)
+                # total_phosphate = matchupData.PO4[ph_loop],  # Concentration of phosphate in the sample (in umol/kg)
+                opt_k_carbonic = 4,  # Choice of H2CO3 and HCO3- dissociation constants K1 and K2 ("4" means "Mehrbach refit")
+                opt_k_bisulfate = 1,);  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
+                    
+                
+                carbonateParametersDIC = pyco2.sys(**kwargs2,
+                                                uncertainty_into=["pCO2", "pH","hydrogen_free","fCO2","CO3","HCO3","saturation_aragonite","saturation_calcite"],
+                                                uncertainty_from={"par1": dfUsedByAlgorithmAT["AT_pred_combined_uncertainty"].values,
+                                                                  "par2": dfUsedByAlgorithmDIC["DIC_pred_combined_uncertainty"].values,
+                                                                  "temperature": dfUsedByAlgorithmDIC["SST_err"].values,
+                                                                  "salinity": dfUsedByAlgorithmDIC["SSS_err"].values});
+                
                 
 
-                #calculate for DIC and AT separately
-                carbonateParametersAT = calculate_carbonate_parameters(flag, at[wNoNanAT], dic[wNoNanAT], sssData=sss_at[wNoNanAT], sstData=sst_at[wNoNanAT], atErr=atErr[wNoNanAT], dicErr=dicErr[wNoNanAT], SErr=sssErr_at[wNoNanAT], TErr=sstErr_at[wNoNanAT], pAtm=pAtm, pHydrostatic=pHydrostatic, k1k2="x");
-                carbonateParametersAT["lat"] = dfUsedByAlgorithmAT["lat"].values[wNoNanAT]; #Add lon lat information
-                carbonateParametersAT["lon"] = dfUsedByAlgorithmAT["lon"].values[wNoNanAT]; #Add lon lat information
+
+                #this variable in the output is 'auto' which is a string, donta ctually need this
+                #so just delete the element
+                del carbonateParametersAT["buffers_mode"];
+                del carbonateParametersDIC["buffers_mode"];
+
+                #carbonateParametersAT = calculate_carbonate_parameters(flag, at[wNoNanAT], dic[wNoNanAT], sssData=sss_at[wNoNanAT], sstData=sst_at[wNoNanAT], atErr=atErr[wNoNanAT], dicErr=dicErr[wNoNanAT], SErr=sssErr_at[wNoNanAT], TErr=sstErr_at[wNoNanAT], pAtm=pAtm, pHydrostatic=pHydrostatic, k1k2="x");
+                carbonateParametersAT["lat"] = dfUsedByAlgorithmAT["lat"].values; #Add lon lat information
+                carbonateParametersAT["lon"] = dfUsedByAlgorithmAT["lon"].values; #Add lon lat information
+                carbonateParametersAT=pd.DataFrame.from_dict(carbonateParametersAT);
                 carbonateParametersAT = convert_dataframe_to_gridded_list(carbonateParametersAT, "lat", "lon"); #convert to a list of 2D matrices ready for writing to netCDF
                 
-                carbonateParametersDIC = calculate_carbonate_parameters(flag, at[wNoNanDIC], dic[wNoNanDIC], sssData=sss_dic[wNoNanDIC], sstData=sst_dic[wNoNanDIC], atErr=atErr[wNoNanDIC], dicErr=dicErr[wNoNanDIC], SErr=sssErr_dic[wNoNanDIC], TErr=sstErr_dic[wNoNanDIC], pAtm=pAtm, pHydrostatic=pHydrostatic, k1k2="x");
-                carbonateParametersDIC["lat"] = dfUsedByAlgorithmDIC["lat"].values[wNoNanDIC]; #Add lon lat information
-                carbonateParametersDIC["lon"] = dfUsedByAlgorithmDIC["lon"].values[wNoNanDIC]; #Add lon lat information
+                #carbonateParametersDIC = calculate_carbonate_parameters(flag, at[wNoNanDIC], dic[wNoNanDIC], sssData=sss_dic[wNoNanDIC], sstData=sst_dic[wNoNanDIC], atErr=atErr[wNoNanDIC], dicErr=dicErr[wNoNanDIC], SErr=sssErr_dic[wNoNanDIC], TErr=sstErr_dic[wNoNanDIC], pAtm=pAtm, pHydrostatic=pHydrostatic, k1k2="x");
+                carbonateParametersDIC["lat"] = dfUsedByAlgorithmDIC["lat"].values; #Add lon lat information
+                carbonateParametersDIC["lon"] = dfUsedByAlgorithmDIC["lon"].values; #Add lon lat information
+                carbonateParametersDIC=pd.DataFrame.from_dict(carbonateParametersDIC);
                 carbonateParametersDIC = convert_dataframe_to_gridded_list(carbonateParametersDIC, "lat", "lon"); #convert to a list of 2D matrices ready for writing to netCDF
-            
+                
             #write predicted output for this year/month to the netCDF file
             if griddedOutputAT is not None:
                 write_yearmonth_to_netCDF(ncoutAT, iyear, imonth, "AT", griddedOutputAT, griddedRMSDAT, griddedInputUncertaintyAT, griddedCombinedUncertaintyAT, loadedInputDataAT, carbonateParametersAT);
@@ -589,37 +593,42 @@ def calculate_gridded_timeseries_all_regions(tablePath, outputPathTemplate, year
     
     #make gridded time series predictions for each region, using the best input combination and algorithms
     for region in regions:
-        #Find the best input combination and algorithm for DIC and AT
-        atAlgoInfo = bestAlgoTable[(bestAlgoTable["region"]==region) & (bestAlgoTable["output_var"]=="AT")];
-        if len(atAlgoInfo) != 1:
-            raise ValueError("Error: 0 or more than 1 entries returned for the best AT algorithm in "+region);
+        if region =="oceansoda_st_lawrence":  
+            pass
+        elif region =="oceansoda_mississippi":
+            pass
         else:
-            atAlgoInfo = atAlgoInfo.iloc[0]; #get row from dataframe with only one row
-        
-        dicAlgoInfo = bestAlgoTable[(bestAlgoTable["region"]==region) & (bestAlgoTable["output_var"]=="DIC")];
-        if len(dicAlgoInfo) != 1:
-            raise ValueError("Error: 0 or more than 1 entries returned for the best DIC algorithm in "+region);
-        else:
-            dicAlgoInfo = dicAlgoInfo.iloc[0]; #get row from dataframe with only one row
-        
-        #create instances of the algorithm functors by searching the available algorithms using the algorithm name
-        if type(atAlgoInfo.algo_name) == str:
-            atAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == atAlgoInfo["algo_name"].split(":")[0]][0];
-        else:
-            atAlgo = None;
-        if type(dicAlgoInfo.algo_name) == str:
-            dicAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == dicAlgoInfo["algo_name"].split(":")[0]][0];
-        else:
-            dicAlgo = None;
-        
-        
-        #Create output file path
-        griddedPredictionOutputPathAT = outputPathTemplate.safe_substitute(REGION=region, LATRES=latRes, LONRES=lonRes, OUTPUTVAR="AT");
-        griddedPredictionOutputPathDIC = outputPathTemplate.safe_substitute(REGION=region, LATRES=latRes, LONRES=lonRes, OUTPUTVAR="DIC");
-        if path.exists(path.dirname(griddedPredictionOutputPathAT)) == False:
-            os.makedirs(path.dirname(griddedPredictionOutputPathAT));
-        #calculate the gridded time series and write to file for this input / region combination
-        calculate_gridded_timeseries_single_region(griddedPredictionOutputPathAT, griddedPredictionOutputPathDIC, atAlgo, atAlgoInfo, dicAlgo, dicAlgoInfo, settings, years, region, regionMaskNC, latRes, lonRes, verbose=True);
+            #Find the best input combination and algorithm for DIC and AT
+            atAlgoInfo = bestAlgoTable[(bestAlgoTable["region"]==region) & (bestAlgoTable["output_var"]=="AT")];
+            if len(atAlgoInfo) != 1:
+                raise ValueError("Error: 0 or more than 1 entries returned for the best AT algorithm in "+region);
+            else:
+                atAlgoInfo = atAlgoInfo.iloc[0]; #get row from dataframe with only one row
+            
+            dicAlgoInfo = bestAlgoTable[(bestAlgoTable["region"]==region) & (bestAlgoTable["output_var"]=="DIC")];
+            if len(dicAlgoInfo) != 1:
+                raise ValueError("Error: 0 or more than 1 entries returned for the best DIC algorithm in "+region);
+            else:
+                dicAlgoInfo = dicAlgoInfo.iloc[0]; #get row from dataframe with only one row
+            
+            #create instances of the algorithm functors by searching the available algorithms using the algorithm name
+            if type(atAlgoInfo.algo_name) == str:
+                atAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == atAlgoInfo["algo_name"].split(":")[0]][0];
+            else:
+                atAlgo = None;
+            if type(dicAlgoInfo.algo_name) == str:
+                dicAlgo = [algorithm for algorithm in settings["algorithmRegionMapping"][region] if algorithm.__name__ == dicAlgoInfo["algo_name"].split(":")[0]][0];
+            else:
+                dicAlgo = None;
+            
+            
+            #Create output file path
+            griddedPredictionOutputPathAT = outputPathTemplate.safe_substitute(REGION=region, LATRES=latRes, LONRES=lonRes, OUTPUTVAR="AT");
+            griddedPredictionOutputPathDIC = outputPathTemplate.safe_substitute(REGION=region, LATRES=latRes, LONRES=lonRes, OUTPUTVAR="DIC");
+            if path.exists(path.dirname(griddedPredictionOutputPathAT)) == False:
+                os.makedirs(path.dirname(griddedPredictionOutputPathAT));
+            #calculate the gridded time series and write to file for this input / region combination
+            calculate_gridded_timeseries_single_region(griddedPredictionOutputPathAT, griddedPredictionOutputPathDIC, atAlgo, atAlgoInfo, dicAlgo, dicAlgoInfo, settings, years, region, regionMaskNC, latRes, lonRes, verbose=True);
 
 
 
