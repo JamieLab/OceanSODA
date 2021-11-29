@@ -329,7 +329,6 @@ def subset_from_mask(data, maskNC, maskName, maskValue=1):
 #metricsRootDirectory should include the input combination directory, if using input combinations
 def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], useWeightedRMSDe=True, verbose=False):
     finalScoresTemplatePath = Template(path.join(metricsRootDirectory, "${OUTPUTVAR}/${REGION}/final_scores.csv"));
-    
     rmsdeCol="final_wrmsd" if useWeightedRMSDe else "final_rmsd";
     
     bestAlgorithms = {}; #Store the names of the best algorithms for each output variable
@@ -337,12 +336,18 @@ def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], 
         finalScoresPath = finalScoresTemplatePath.safe_substitute(OUTPUTVAR=outputVar, REGION=region);
         try:
             finalScores = pd.read_csv(finalScoresPath);
+            # below threshold
+            bool_remove=(finalScores["n"] >= 30);
+            finalScores=finalScores.loc[bool_remove,];
+            finalScores.reset_index(drop=True, inplace=True);
         except FileNotFoundError:
             if verbose:
                 print("No output file found at:", finalScoresPath);
             bestAlgorithms[outputVar] = None;
             continue;
         
+        
+            
         if np.all(np.isfinite(finalScores[rmsdeCol])==False):
             if verbose:
                 print("*** All NaN encountered in finalScores.csv", rmsdeCol, "row at", finalScoresPath);
@@ -352,9 +357,12 @@ def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], 
         
         #Now we know there is at least one non-NaN value, find the best algorithm and store its name
         ibestAlgo = np.nanargmin(finalScores[rmsdeCol]);
+        #added this rich
+        bestAlgobias = finalScores["bias"][ibestAlgo];
+        #rich added end, also added to outputs
         bestAlgoName = finalScores["algorithm"][ibestAlgo];
         numAlgosCompared = sum(finalScores[rmsdeCol].isna()==False);
-        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo], numAlgosCompared); #store tuple of algorithm name and selected RMSDe
+        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo], numAlgosCompared,bestAlgobias); #store tuple of algorithm name and selected RMSDe
         
         if verbose:
             print("Best algorithm:", outputVar, region, bestAlgoName);

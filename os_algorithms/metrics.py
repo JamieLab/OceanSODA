@@ -33,6 +33,7 @@ def calc_insitu_uncertainty(insituData, variable, settings):
 #   outputVar: name of the output variable (i.e. 'AT' or 'DIC')
 #   settings: the global settings dictionary
 def calc_reference_uncertainty(dataUsed, outputVar, settings):
+    
     uncertainties = dataUsed[outputVar+"_err"]; #type A uncertainties
     
     missingTypeA = np.isfinite(uncertainties) == False; #Which rows are missing type A uncertainty
@@ -303,7 +304,8 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings):
     #finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     #finalScores["w_algos_compared"] = [np.sum(np.isfinite(pairedWScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     finalScores["n"] = [basicMetric["n"] for basicMetric in basicMetrics];
-    
+    finalScores["bias"] = [basicMetric["bias"] for basicMetric in basicMetrics];
+
     #Calculate representative RMSD
     nArray = np.array([metrics["n"] for metrics in basicMetrics], dtype=float);
     nArray[nArray==0] = np.nan;
