@@ -38,6 +38,7 @@ import json;
 import logging;
 import datetime;
 import pandas as pd;
+import csv
 
 import os_algorithms.metrics as metrics;
 import os_algorithms.utilities as utilities;
@@ -64,6 +65,14 @@ def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=No
         subsetData = utilities.subset_from_mask(matchupData, regionMaskNC, region);
         regionMaskNC.close();
         
+    #commented to debug
+    # #new changes start rich
+    else:
+        regionMaskNC = Dataset(regionMaskPath=settings["regionMaskPath"]);
+        utilities.subset_from_mask(customMatchupData, regionMaskNC, region=region);
+        regionMaskNC.close();
+    # #new changes end rich
+        
     #Subset based on depth
     if useDepthMask == True:
         depthMaskNC = Dataset(depthMaskPath, 'r');
@@ -77,13 +86,14 @@ def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=No
         distToCoastMaskNC.close();
     
     #Run the algorithm to make predictions using the subsetted matchup dataset as input
+    
     try:
         algorithmOutputTuple = algorithmInstance(subsetData); #model output is the predictions, dataUsed indicates a further subset of the matchup dataset (e.g. some rows may not contain values for all required inputs, or may exceed the valid ranges for the algorithm)
         modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = algorithmOutputTuple;
     except ValueError: #After subsetting there's no data left to make predictions with.
         raise; #Pass exception up the stack
     
-    return modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed;
+    return modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed,subsetData;
 
 
 #Writes basic metrics objects, paired metrics matrices, final score dataframe, appended matchup dataset subsets (with predicted values), and algorithm name ordered list to file
@@ -132,6 +142,10 @@ def write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersect
     
     #Construct new matchup datasets with additional predicted column and output this to file
     for i in range(len(currentAlgorithmOutputs)):
+        #commented to debug
+        # if(currentAlgorithmOutputs[i]["instance"])==None:
+        #     algorithmName=currentAlgorithmOutputs[i]["name"]
+        # else:
         algorithmName = type(currentAlgorithmOutputs[i]["instance"]).__name__;
         outputVariable = currentAlgorithmOutputs[i]["outputVar"]; #The common name of the output variable (i.e. 'AT' or 'DIC')
         reconstructedData = matchupData.loc[currentAlgorithmOutputs[i]["dataUsedIndices"]];
@@ -158,6 +172,9 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
     combinationNamesList = [];
     numAlgosComparedAT = [];
     numAlgosComparedDIC = [];
+    bestbiasAT=[];
+    bestbiasDIC=[];
+    
     
     if regionOverload is not None:
         regions = regionOverload;
@@ -176,20 +193,26 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
                 bestAlgosAT.append(bestAlgorithmInfo["AT"][0]);
                 bestRMSDesAT.append(bestAlgorithmInfo["AT"][1]);
                 numAlgosComparedAT.append(bestAlgorithmInfo["AT"][2]);
+                bestbiasAT.append(bestAlgorithmInfo["AT"][3]);
+
             else: #No best algorithm, fill with default data
                 bestAlgosAT.append(np.nan);
                 bestRMSDesAT.append(np.nan);
                 numAlgosComparedAT.append(np.nan);
-            
+                bestbiasAT.append(np.nan);
+                
             if bestAlgorithmInfo["DIC"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
                 bestAlgosDIC.append(bestAlgorithmInfo["DIC"][0]);
                 bestRMSDesDIC.append(bestAlgorithmInfo["DIC"][1]);
                 numAlgosComparedDIC.append(bestAlgorithmInfo["DIC"][2]);
+                bestbiasDIC.append(bestAlgorithmInfo["DIC"][3]);
+                
             else: #No best algorithm, fill with default data
                 bestAlgosDIC.append(np.nan);
                 bestRMSDesDIC.append(np.nan);
                 numAlgosComparedDIC.append(np.nan);
-    
+                bestbiasDIC.append(np.nan);
+
     #Concatinate to a dataframe
     summaryTable = pd.DataFrame();
     summaryTable["region"] = regionNamesList;
@@ -200,10 +223,14 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
     summaryTable["AT_RMSDe"] = bestRMSDesAT;
     summaryTable["AT_n"] = [np.nan]*len(summaryTable);
     summaryTable["AT_algos_compared"] = numAlgosComparedAT;
+    summaryTable["AT_bias"] = bestbiasAT;
+
     summaryTable["DIC_best_algorithm"] = bestAlgosDIC;
     summaryTable["DIC_RMSDe"] = bestRMSDesDIC;
     summaryTable["DIC_n"] = [np.nan]*len(summaryTable);
     summaryTable["DIC_algos_compared"] = numAlgosComparedDIC;
+    summaryTable["DIC_bias"] = bestbiasDIC;
+
     summaryTable["n_years"] = [0]*len(summaryTable);
     summaryTable["min_year"] = [0]*len(summaryTable);
     summaryTable["max_year"] = [0]*len(summaryTable);
@@ -252,29 +279,29 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
 #   summaryTable: the metric summary data for all algorithms and input combinations. If a string this is assumed to be a path to the table and read into a dataframe
 #   regions: ocean soda region strings
 #   minTimeSpanYears: minimum number of years for which the input data combination covers. Combinations below this number will be excluded from consideration
-def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0):
+def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0, minMatchupsTA = 0, minMatchupsDIC =0):
     if isinstance(_summaryTable, str):
         summaryTable = pd.read_csv(_summaryTable, sep=",");
     else:
         summaryTable = _summaryTable;
     
-    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared", "n_years", "min_year", "max_year"]);
+    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared","bias", "n_years", "min_year", "max_year"]);
     for region in regions:
         #find best AT algorithm info by sorting a subset of the summary table for just this region, and only include entries where the time range meets the criteria
-        regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
+        regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears) & (summaryTable["AT_n"] >= minMatchupsTA)];
         if len(regionTable) > 0: #if there are any entries left, sort and select the best
-            regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared", "DIC_RMSDe"], ascending=[True, False, False, True]);
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"], regionTable.iloc[0]["AT_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared","AT_bias", "DIC_RMSDe"], ascending=[True, False, False,True, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"],  regionTable.iloc[0]["AT_algos_compared"],regionTable.iloc[0]["AT_bias"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
         else: #no entries, so inserts nans
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, 0, 0, 0];
         
         #find best DIC algorithm info by sorting a subset of the summary table for just this region
-        regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears)];
+        regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears) & (summaryTable["DIC_n"] >= minMatchupsDIC)];
         if len(regionTable) > 0: #if there are any entries left, sort and select the best
-            regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared", "AT_RMSDe"], ascending=[True, False, False, True]);
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared","DIC_bias","AT_RMSDe"], ascending=[True, False, False,True, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"],regionTable.iloc[0]["DIC_bias"],  regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
         else: #no entries, so insert nans
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan, np.nan, 0, 0, 0];
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, 0, 0, 0];
         
     return overallBestAlgos;
 
@@ -290,6 +317,21 @@ def main(settings, extraAlgosToTest=[]):
     logger.addHandler(loggerFileHandle);
     logger.info("Started execution at: "+str(datetime.datetime.now()));
     
+    # these are output dictionarys so we can get the output for plotting only
+    final_scores_allcombos_oceansoda_amazon_plume_AT={};
+    final_scores_allcombos_oceansoda_amazon_plume_DIC={};
+    
+    final_scores_allcombos_oceansoda_congo_AT={};
+    final_scores_allcombos_oceansoda_congo_DIC={};
+    
+    final_scores_allcombos_oceansoda_mississippi_AT={};
+    final_scores_allcombos_oceansoda_mississippi_DIC={};
+    
+    final_scores_allcombos_oceansoda_st_lawrence_AT={};
+    final_scores_allcombos_oceansoda_st_lawrence_DIC={};
+    
+    final_scores_allcombos_oceansoda_mediterranean_AT={};
+    final_scores_allcombos_oceansoda_mediterranean_DIC={};
     
     #We'll run each algorithm for every possible combination of input variables.
     #This gets a list of dictionaries, each dictionary represents the mapping of the ocean parameter names to database variable names for one specific combination input variables
@@ -306,7 +348,8 @@ def main(settings, extraAlgosToTest=[]):
             distToCoastMaskPath=settings["distToCoastMaskVar"]
         else:
             distToCoastMaskPath=None;
-        
+            
+        earthobs_dataset_iteration_number=1;
         ### Iterate through each specific combination of input variables (aka specific variable to database mappings)
         for inputCombinationName, inputCombination in zip(specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps):
             logger.info("Begining new combination of input variables: "+inputCombinationName);
@@ -324,6 +367,117 @@ def main(settings, extraAlgosToTest=[]):
             years = utilities.calculate_years_for_input_combination(settings, inputCombination);
             matchupData = utilities.load_matchup_to_dataframe(settings, inputCombination, years=years); #each year is concatinated to create a single dataframe
             
+            #Rich_edits start_ perform checks on the Matchup databse files to check that they are
+            #realistic and fall within the expected range
+            
+            SST_max=40;
+            SST_min=-10;
+            SSS_max=50;
+            SSS_min=0;      
+            DIC_max=3000;
+            DIC_min=500; 
+            pH_max=8.5;
+            pH_min=7;
+            pCO2_max=800;
+            pCO2_min=100;
+            TA_max=3000;
+            TA_min=500;
+            
+            #SST
+            mdb_SST = matchupData["SST"];
+            mdb_SST_numeric=mdb_SST.values-273.15;
+            #Upper realistic limit 
+            states=mdb_SST_numeric>SST_max;
+            index_temp_exceed=np.where(states)[0]
+            #Lower realistic limit -10 degrees
+            states2=mdb_SST_numeric<SST_min;
+            index_temp_below=np.where(states2)[0]
+            
+            #Salinity
+            mdb_SSS = matchupData["SSS"];
+            mdb_SSS_numeric=mdb_SSS.values;
+            #Upper realistic limit 50 PSU
+            states3=mdb_SSS_numeric>SSS_max;
+            index_sal_exceed=np.where(states3)[0]
+            #Lower realistic limit <0 PSU
+            states4=mdb_SSS_numeric<SSS_min;
+            index_sal_below=np.where(states4)[0]        
+            
+            #DIC
+            mdb_DIC = matchupData["DIC"];
+            mdb_DIC_numeric=mdb_DIC.values;
+            #Upper realistic limit 2500 UMOLKG?
+            states5=mdb_DIC_numeric>DIC_max;
+            index_DIC_exceed=np.where(states5)[0]
+            #Lower realistic limit <500 UMOL KG
+            states6=mdb_DIC_numeric<DIC_min;
+            index_DIC_below=np.where(states6)[0] 
+            
+            #pH
+            mdb_pH = matchupData["region_ph_mean"];
+            mdb_pH_numeric=mdb_pH.values;
+            #Upper realistic limit 8.5
+            states7=mdb_pH_numeric>pH_max;
+            index_pH_exceed=np.where(states7)[0]
+            #Lower realistic limit <7
+            states8=mdb_pH_numeric<pH_min;
+            index_pH_below=np.where(states8)[0]
+            
+            #pCO2
+            mdb_pco2 = matchupData["region_pco2w_mean"];
+            mdb_pco2_numeric=mdb_pco2.values;
+            #Upper realistic limit 700 ppm
+            states9=mdb_pco2_numeric>pCO2_max;
+            index_pco2_exceed=np.where(states9)[0]
+            #Lower realistic limit <200 ppm
+            states10=mdb_pco2_numeric<pCO2_min;
+            index_pco2_below=np.where(states10)[0]
+            
+            #TA
+            mdb_TA = matchupData["AT"];
+            mdb_TA_numeric=mdb_TA.values;
+            #Upper realistic limit 3000 umol kg
+            states11=mdb_TA_numeric>TA_max;
+            index_TA_exceed=np.where(states11)[0]
+            #Lower realistic limit <500 umol kg
+            states12=mdb_TA_numeric<TA_min;
+            index_TA_below=np.where(states12)[0]        
+            
+        
+            #these variables could also have bounds placed on them but not applied 
+            #for this iteration
+            # lat long date OC chla DO NO3 PO4 SiO4
+            
+            # now produce a file with all of the out of bounds data points from the mdb
+            
+            mdb_flag_warnings_list=['SST greater than maximum value of', 'SST less than minimum value of', 'SSS greater than maximum value of', 'SST less than minimum value of'\
+                                    , 'DIC greater than maximum value of', 'DIC less than minimum value of','pH greater than maximum value of','pH less than minimum value of'\
+                                    ,'pCO2 greater than maximum value of','pCO2 less than minimum value of','TA greater than maximum value of','TA less than minimum value of']
+        
+            mdb_flag_index_list=[index_temp_exceed, index_temp_below, index_sal_exceed, index_sal_below, index_DIC_exceed, index_DIC_below\
+                                  ,index_pH_exceed,index_pH_below,index_pco2_exceed,index_pco2_below,index_TA_exceed,index_TA_below]
+            
+                
+            mdb_flag_limits_list=[SST_max,SST_min,SSS_max,SSS_min,DIC_max, DIC_min,  pH_max, pH_min,pCO2_max, pCO2_min, TA_max,TA_min]  
+            
+            for idx, g in enumerate(mdb_flag_index_list):
+                print(idx, g)
+                if len(g) == 0:
+                    print("list is empty")
+                else:
+                    #this prints a header for what the entries have been flagged for
+                    with open('mdb_flag.csv','a') as result_file:
+                        wr = csv.writer(result_file, dialect='excel')
+                        wr.writerow([mdb_flag_warnings_list[idx]]+ [mdb_flag_limits_list[idx]])
+                    #this prints the values that have been flagged to the csv    
+                    print(matchupData.loc[g].to_csv("mdb_flag.csv",mode='a'));
+        
+            #now filter those mdb from the analysis
+            mdb_ind_rmv =np.concatenate(mdb_flag_index_list) #combine all the numpy arrays into a single array of 'bad data point indexes'
+            
+            matchupData = matchupData.drop(matchupData.index[mdb_ind_rmv])
+        
+            #Rich_edits end
             
             ### For each region, run all the algorithms that are relevant for that region
             for region in settings["regions"]:
@@ -334,11 +488,13 @@ def main(settings, extraAlgosToTest=[]):
                 
                 ######################################
                 ### For each algorithm in the region, run the algorithm using relevent matchup database rows and store model output
+    
                 for AlgorithmFunctor in settings["algorithmRegionMapping"][region]:
+                    
                     algorithm = AlgorithmFunctor(settings); #Create an instance of the algorithm functor, this is the handle used to access the algorithm
                     
                     try:
-                        modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = \
+                        modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed,subsetData = \
                                   run_algorithm(algorithm, matchupData,
                                   regionMaskPath=settings["regionMasksPath"], region=region,
                                   useDepthMask=settings["subsetWithDepthMask"],
@@ -355,6 +511,8 @@ def main(settings, extraAlgosToTest=[]):
                         algorithmOutput["combinedUncertainty"] = combinedUncertainty;
                         algorithmOutput["dataUsedIndices"] = dataUsedIndices;
                         
+                        
+
                         logger.info("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
                     except ValueError as e: #Raised if there are no matchup data rows left after spatial mask and algorithm internal subsetting has taken place
                         print(algorithm, e.args[0]);
@@ -373,7 +531,7 @@ def main(settings, extraAlgosToTest=[]):
                             makedirs(path.join(currentCombinationOutputDirectory, algorithmOutput["outputVar"], region, "diagnostic_plots"));
                         savePath = path.join(currentCombinationOutputDirectory, algorithmOutput["outputVar"], region, "diagnostic_plots",  algorithmOutput["name"].split(":")[0]+".png");
                         prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable, savePath=savePath);
-                    
+                    #increase iteration
                 
                 #######################################
                 ### Calculate metrics for each region #
@@ -392,13 +550,20 @@ def main(settings, extraAlgosToTest=[]):
                     basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
                         metrics.calc_all_metrics(currentAlgorithmOutputs, matchupData, settings);
                     
+
+                    #x is the string of the dictionary to add to
+                    #add final scores output to the dictionary
+                    x="final_scores_allcombos_{0}_{1}".format(region,currentOutputVar)
+                    eval(x)[inputCombinationName]=finalScores
+
+
                     ###########################
                     ### Write outputs to file #
                     outputDirectory = path.join(currentCombinationOutputDirectory, currentOutputVar, region);
                     print("Writing metrics to: ", outputDirectory);
                     write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs);
 
-    
+            earthobs_dataset_iteration_number=earthobs_dataset_iteration_number+1;
     #Calculate summary table for weighted metrics and output to file
     summaryTable_weighted = create_summary_table(settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=True);
     summaryTableOutputPath = path.join(settings["outputPathMetrics"], "summary_best_algos.csv");
@@ -414,175 +579,54 @@ def main(settings, extraAlgosToTest=[]):
     
     
     ##### For weighted metrics
+    
+    minMatchupsTArange = 30;
+    minMatchupsDICrange = 30;
+    
     ### Calculate overall best algorithms / input combinations for each egion
-    overallBestAlgos = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=0);
+    overallBestAlgos = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=0, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
     overallBestAlgosOutputPath = path.join(settings["outputPathMetrics"], "overall_best_algos.csv");
     overallBestAlgos.to_csv(overallBestAlgosOutputPath, sep=",", index=False);     
     print("Overall best algorithm table written to:", path.abspath(overallBestAlgosOutputPath));
     
     ### Calculate overall best algorithms / input combinations for each region again, but this time ensuring a minimum time series range
     minYearRange = 8;
-    overallBestAlgosMinRange = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=minYearRange);
+    overallBestAlgosMinRange = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=minYearRange, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
     overallBestAlgosOutputPath = path.join(settings["outputPathMetrics"], "overall_best_algos_min_years="+str(minYearRange)+".csv");
     overallBestAlgosMinRange.to_csv(overallBestAlgosOutputPath, sep=",", index=False);     
     print("Overall best algorithm (with min year range="+str(minYearRange)+") table written to:", path.abspath(overallBestAlgosOutputPath));
     
     ##### Forun weighted metrics
     ### Calculate overall best algorithms / input combinations for each egion
-    overallBestAlgosUnweighted = get_best_algorithms(summaryTableOutputPathUnweighted, settings["regions"], minTimeSpanYears=0);
+    overallBestAlgosUnweighted = get_best_algorithms(summaryTableOutputPathUnweighted, settings["regions"], minTimeSpanYears=0, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
     overallBestAlgosOutputPathUnweighted = path.join(settings["outputPathMetrics"], "overall_best_algos_unweighted.csv");
     overallBestAlgosUnweighted.to_csv(overallBestAlgosOutputPathUnweighted, sep=",", index=False);     
     print("Overall best unweighted algorithm table written to:", path.abspath(overallBestAlgosOutputPathUnweighted));
     
     ### Calculate overall best algorithms / input combinations for each region again, but this time ensuring a minimum time series range
     minYearRange = 8;
-    overallBestAlgosUnweightedMinRange = get_best_algorithms(summaryTableOutputPathUnweighted, settings["regions"], minTimeSpanYears=minYearRange);
+    overallBestAlgosUnweightedMinRange = get_best_algorithms(summaryTableOutputPathUnweighted, settings["regions"], minTimeSpanYears=minYearRange, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
     overallBestAlgosOutputPathUnweighted = path.join(settings["outputPathMetrics"], "overall_best_algos_unweighted_min_years="+str(minYearRange)+".csv");
     overallBestAlgosUnweightedMinRange.to_csv(overallBestAlgosOutputPathUnweighted, sep=",", index=False);     
     print("Overall best unweighted algorithm (with min year range="+str(minYearRange)+") table written to:", path.abspath(overallBestAlgosOutputPathUnweighted));
     
+    
+    #Store these dictionaries at pickle txt files for plotting
+    import pickle
+    with open("Amazon_AT_fs_pickled.txt", "wb") as myFile:
+        pickle.dump(final_scores_allcombos_oceansoda_amazon_plume_AT, myFile)
+    
+    with open("Amazon_DIC_fs_pickled.txt", "wb") as myFile2:
+        pickle.dump(final_scores_allcombos_oceansoda_amazon_plume_DIC, myFile2) 
+        
+    with open("Congo_AT_fs_pickled.txt", "wb") as myFile3:
+        pickle.dump(final_scores_allcombos_oceansoda_congo_AT, myFile3) 
+        
+    with open("Congo_DIC_fs_pickled.txt", "wb") as myFile4:
+        pickle.dump(final_scores_allcombos_oceansoda_congo_DIC, myFile4)
+        
     #Shutdown logger
     loggerFileHandle.close();
-
-
-
-#Calculates metrics between algorithms which can include custom algorithsm
-#   algorithmsToCompare: A list of 'non-custom' algorithm classes. These include those defined in the global settings/algorithms files used in the main analysis (i.e. implemented algorithms which can calculate their own model output given appropriate inputs)
-#   customAlgorithmInfo: A list of dictionaries containing information about the custom algorithms. These are algorithms for which python implementation of the algorithm isn't given, only the algorithm output (and RMSD and combined uncertainty). The data for these must be included in the matchup database
-#   region: region name to use (must match an entry in settings["regions"])
-#   sstDatasetName, sssDatasetName: The names of the SST and SSS datasets to be used for the comparison. These correspond to SSS and SST datasets in the matchup database, and their names must match the 'datasetName' field of the settings["datasetInfoMap"] entry corresponding to the dataset you want to select.
-#   outputRoot: The root directory to write output to.
-def custom_algorithm_metrics(settings, algorithmsToCompare, customAlgorithmInfo, region, sstDatasetName, sssDatasetName, outputRoot, diagnosticPlots=True):
-    #make diagnostic plot directory
-    if diagnosticPlots==True:
-        if path.exists(path.join(outputRoot, "diagnostic_plots"))==False:
-            makedirs(path.join(outputRoot, "diagnostic_plots"));
-    
-    #### Find the input data set information corresponding to the sst and sss dataset names selected
-    specificVariableToDatabaseMaps, specificVariableToDatabaseMapNames = utilities.get_dataset_variable_map_combinations(settings);
-    combinationDict = combinationName = None;
-    for i, combiName in enumerate(specificVariableToDatabaseMapNames):
-        if (sstDatasetName in combiName) and (sssDatasetName in combiName):
-            combinationDict = specificVariableToDatabaseMaps[i];
-            combinationName = combiName;
-            break;
-    if combinationDict is None:
-        raise ValueError("Couldn't find input data combination for the specified SST ({0}) and SSS({1}) data sets.".format(sstDatasetName, sssDatasetName));
-    
-    
-    #### Create the directory to contain outputs. This is structured to be analogous to the main() output, even though it only contains a single input combination run
-    currentCombinationOutputDirectory = path.join(outputRoot, combinationName);
-    if path.exists(currentCombinationOutputDirectory) == False:
-        makedirs(currentCombinationOutputDirectory);
-    #### Write information about the combination of input datasets used:
-    utilities.write_specific_variable_to_database_mapping(combinationDict, path.join(currentCombinationOutputDirectory, "inputs_used.txt"), combinationName);
-    
-    
-    #### The non-custom algorithms need to be ran on the matchup database's input data for the selected input combination
-    #### So this data must be extracted
-    years = utilities.calculate_years_for_input_combination(settings, combinationDict); #Find the years where there is overlap in the selected input data combinations
-    matchupData = utilities.load_matchup_to_dataframe(settings, combinationDict, years=years); #each year is concatinated to create a single dataframe
-    
-    
-    #### Run each non-custom algorithm and store the model output, rmsd and uncertainty.
-    implementedAlgoOutputList = [];
-    for ialgorithm, AlgorithmFunctor in enumerate(algorithmsToCompare):
-        print("Calculating model outputs for implemented algorithms ({0}/{1})".format(ialgorithm+1, len(algorithmsToCompare)));
-        algorithm = AlgorithmFunctor(settings);
-        
-        try:
-            modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = \
-                      run_algorithm(algorithm, matchupData,
-                                    regionMaskPath=settings["regionMasksPath"], region=region,
-                                    useDepthMask=settings["subsetWithDepthMask"],
-                                    depthMaskPath=settings["depthMaskPath"],
-                                    depthMaskVar=settings["depthMaskVar"],
-                                    useDistToCoastMask=settings["subsetWithDistToCoast"],
-                                    distToCoastMaskPath=settings["distToCoastMaskPath"],
-                                    distToCoastMaskVar=settings["distToCoastMaskVar"]
-                                    );
-            
-            algorithmOutput = {};
-            algorithmOutput["instance"] = algorithm;
-            algorithmOutput["name"] = algorithm.__str__();
-            algorithmOutput["outputVar"] = algorithm.output_name();
-            algorithmOutput["modelOutput"] = modelOutput;
-            algorithmOutput["propagatedInputUncertainty"] = propagatedInputUncertainty;
-            algorithmOutput["rmsd"] = rmsd;
-            algorithmOutput["combinedUncertainty"] = combinedUncertainty;
-            algorithmOutput["dataUsedIndices"] = dataUsedIndices;
-            implementedAlgoOutputList.append(algorithmOutput);
-            
-            if diagnosticPlots == True:
-                outputVariable = algorithm.output_name();
-                savePath = path.join(currentCombinationOutputDirectory, customAlgo["outputVar"], region, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
-                #savePath = path.join(outputRoot, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
-                prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable, savePath=savePath);
-            
-            print("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
-        except ValueError as e: #Raised if there are no matchup data rows left after spatial mask and algorithm internal subsetting has taken place
-            print(algorithm, e.args[0]);
-            print("No matchup data left after subsettings (region:"+region+", algo: "+algorithm.__class__.__name__+")");
-            continue;
-    
-    #### Combine implemented and custom algorithm output data.
-    allAlgorithmOutputs = [implementedAlgoOutput for implementedAlgoOutput in implementedAlgoOutputList];
-    for customAlgo in customAlgorithmInfo:
-        #get model output, uncertainty, rmsd and indices from the matchup database
-        colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"], customAlgo["inputUncertaintyName"]];
-        ##### TODO:
-        ##### Missing: combined uncertainty, matchupRMSD, matchupBias?
-        customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
-        
-        #subset to only include rows where there is model output
-        customAlgoData = customAlgoData[np.isfinite(customAlgoData[customAlgo["outputVar"]])];
-        customAlgoData["rmsd"] = customAlgo["algoRMSD"];
-        customAlgoData["combindUncertainty"] = customAlgo["combinedUncertainty"];
-        
-        #Construct compatible dictionary
-        customAlgoDict = {};
-        customAlgoDict["instance"] = None;
-        customAlgoDict["name"] = customAlgo["name"];
-        customAlgoDict["outputVar"] = customAlgo["outputVar"];
-        customAlgoDict["modelOutput"] = customAlgoData[customAlgo["outputVar"]];
-        customAlgoDict["rmsd"] = customAlgoData["rmsd"];
-        customAlgoDict["propagatedInputUncertainty"] = customAlgoData[customAlgo["inputUncertaintyName"]];
-        customAlgoDict["combinedUncertainty"] = customAlgoData["combindUncertainty"];
-        customAlgoDict["dataUsedIndices"] = customAlgoData.index;
-        allAlgorithmOutputs.append(customAlgoDict);
-        
-        if diagnosticPlots == True:
-            savePath = path.join(currentCombinationOutputDirectory, customAlgo["outputVar"], region, "diagnostic_plots", customAlgo["name"]+".png");
-            prediction_accuracy_plot(customAlgoData[customAlgo["outputVar"]], customAlgoData[customAlgo["matchupVariableName"]], customAlgo["name"], customAlgo["outputVar"], savePath=savePath);
-        
-    
-    #### Calculate metrics
-    #First split algorithms into groups depending on which output variable (AT or DIC) they use
-    for currentOutputVar in np.unique([v["outputVar"] for v in allAlgorithmOutputs]):
-        algorithmOutputGroup = [v for v in allAlgorithmOutputs if v["outputVar"]==currentOutputVar];
-        
-        basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
-                        metrics.calc_all_metrics(algorithmOutputGroup, matchupData, settings);
-        
-        ###########################
-        ### Write outputs to file #
-        outputDirectory = path.join(currentCombinationOutputDirectory, currentOutputVar, region);
-        print("Writing metrics to: ", outputDirectory);
-        write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, algorithmOutputGroup);
-    
-    
-    #Calculate summary table for weighted metrics and output to file
-    summaryTable_weighted = create_summary_table(settings, [combinationName], [combinationDict], useWeighted=True);
-    summaryTableOutputPath = path.join(outputRoot, combinationName, "summary_best_algos.csv");
-    summaryTable_weighted.to_csv(summaryTableOutputPath, sep=",", index=False);     
-    print("Full weighted summary table written to:", path.abspath(summaryTableOutputPath));
-   
-    #Calculate summary table for unweighted metrics and output to fill
-    summaryTable_unweighted = create_summary_table(settings, [combinationName], [combinationDict], useWeighted=False);
-    summaryTableOutputPathUnweighted = path.join(outputRoot, combinationName, "summary_best_algos_unweighted.csv");
-    summaryTable_unweighted.to_csv(summaryTableOutputPathUnweighted, sep=",", index=False);     
-    print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted));
-
 
 if __name__ == "__main__":
     #Load the settings for this run

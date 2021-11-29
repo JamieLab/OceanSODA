@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Jun 20 07:14:07 2021
 
-Calculate algorithm metrics including algorithms for which there are no python implementations (i.e. only model output and std dev data are available)
+# Created on Sun Jun 20 07:14:07 2021
 
-@author: tom holding
-"""
+# Calculate algorithm metrics including algorithms for which there are no python implementations (i.e. only model output and std dev data are available)
+
+# @author: tom holding
+
 
 import osoda_global_settings;
 import osoda_algorithm_comparison;
@@ -14,16 +14,22 @@ import os_algorithms.utilities as utilities;
 import os_algorithms.metrics as metrics;
 from os_algorithms.diagnostic_plotting import prediction_accuracy_plot;
 from os import path, makedirs;
-
+import csv
+import PyCO2SYS as pyco2
+import math
 import numpy as np;
 import pandas as pd;
 pd.set_option("mode.chained_assignment", None)
+import pickle
 
 import faulthandler;
 faulthandler.enable();
 
-runPairedMetrics = False;
+runPairedMetrics = True;
 runBasicMetrics = True;
+
+
+
 
 
 #outputVar is AT or DIC etc. definiing the parameter which is the target output of the algorithm
@@ -45,11 +51,11 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                        "combinedUncertainty": 16.3, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
                       {"name": "ethz_ph", #Human readable name, this can be set to anything and is only used as a label
-                       "outputVar": "region_ph_mean", #DIC or AT
+                       "outputVar":"region_ph_mean", # "region_ph_mean", #DIC or AT
                        "matchupVariableName": "ethz_ph_mean", #netCDF variable name of the model output (algorithm prediction)
-                       "algoRMSD": None, #netCDF variable name of the RMSD of the (original) algorithm fit
+                       "algoRMSD": 0.024, #netCDF variable name of the RMSD of the (original) algorithm fit
                        "inputUncertaintyName": None, #"ethz_ph_stddev", #propagated input data uncertainty
-                       "combinedUncertainty": None, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                       "combinedUncertainty": 0.024, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
                       {"name": "ethz_pco2", #Human readable name, this can be set to anything and is only used as a label
                        "outputVar": "region_pco2w_mean", #DIC or AT
@@ -59,7 +65,7 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                        "combinedUncertainty": 14.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
                        {"name": "cmems_ph", #Human readable name, this can be set to anything and is only used as a label
-                        "outputVar": "region_ph_mean", #DIC or AT
+                        "outputVar":"region_ph_mean", #"region_ph_mean", #DIC or AT
                         "matchupVariableName": "cmems_ph_mean", #netCDF variable name of the model output (algorithm prediction)
                         "algoRMSD": 0.03, #netCDF variable name of the RMSD of the (original) algorithm fit
                         "inputUncertaintyName": None, #propagated input data uncertainty
@@ -72,15 +78,28 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                         "inputUncertaintyName": None, #propagated input data uncertainty
                         "combinedUncertainty": 17.97, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                         },
+                       {"name": "pml_at", #Human readable name, this can be set to anything and is only used as a label
+                        "outputVar": "AT", #DIC or AT
+                        "matchupVariableName": "pml_ta_mu", #netCDF variable name of the model output (algorithm prediction)
+                        "algoRMSD": 17.0, #netCDF variable name of the RMSD of the (original) algorithm fit
+                        "inputUncertaintyName": None, #propagated input data uncertainty
+                        "combinedUncertainty": 22.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                        },
                     ];
 
 settings = osoda_global_settings.get_default_settings();
 outputRoot=path.join("output/example_test_custom_algo_metrics/");
-diagnosticPlots = True;
+diagnosticPlots = False;
 regions = list(settings["regions"]);
 sstDatasetName = "SST-ESACCI-OSTIA"; #This is the matchup database variable name corresponding to the SST dataset used as input for the Ethz data
 sssDatasetName = "SSS-CORA"; #This is the matchup database variable name corresponding to the SSS dataset used as input for the Ethz data
 
+name_amazon={};
+out_amazon={};
+name_congo={};
+out_congo={};
+name_med={};
+out_med={};
 
 #First find the combination that corresponds to the Ethz input data.
 #We'll then run all algorithms using this input data combination, in order to compare like-for-like.
@@ -93,7 +112,6 @@ for i, combiName in enumerate(specificVariableToDatabaseMapNames):
         break;
 if combinationMap is None:
     raise ValueError("Couldn't find input data combination for the specified SST ({0}) and SSS({1}) data sets.".format(sstDatasetName, sssDatasetName));
-
 
 if runPairedMetrics == True:
     buildInAlgorithmsMap = settings["algorithmRegionMapping"];
@@ -117,14 +135,125 @@ if runPairedMetrics == True:
         years = utilities.calculate_years_for_input_combination(settings, combinationMap); #Find the years where there is overlap in the selected input data combinations
         matchupData = utilities.load_matchup_to_dataframe(settings, combinationMap, years=years); #each year is concatinated to create a single dataframe
         
+        # #Rich_edits start_ perform checks on the Matchup databse files to check that they are
+        # #realistic and fall within the expected range
         
+        SST_max=40;
+        SST_min=-10;
+        SSS_max=50;
+        SSS_min=0;      
+        DIC_max=3000;
+        DIC_min=500; 
+        pH_max=8.5;
+        pH_min=7;
+        pCO2_max=800;
+        pCO2_min=100;
+        TA_max=3000;
+        TA_min=500;
+        
+        #SST
+        mdb_SST = matchupData["SST"];
+        mdb_SST_numeric=mdb_SST.values-273.15;
+        #Upper realistic limit 
+        states=mdb_SST_numeric>SST_max;
+        index_temp_exceed=np.where(states)[0]
+        #Lower realistic limit -10 degrees
+        states2=mdb_SST_numeric<SST_min;
+        index_temp_below=np.where(states2)[0]
+        
+        #Salinity
+        mdb_SSS = matchupData["SSS"];
+        mdb_SSS_numeric=mdb_SSS.values;
+        #Upper realistic limit 50 PSU
+        states3=mdb_SSS_numeric>SSS_max;
+        index_sal_exceed=np.where(states3)[0]
+        #Lower realistic limit <0 PSU
+        states4=mdb_SSS_numeric<SSS_min;
+        index_sal_below=np.where(states4)[0]        
+        
+        #DIC
+        mdb_DIC = matchupData["DIC"];
+        mdb_DIC_numeric=mdb_DIC.values;
+        #Upper realistic limit 2500 UMOLKG?
+        states5=mdb_DIC_numeric>DIC_max;
+        index_DIC_exceed=np.where(states5)[0]
+        #Lower realistic limit <500 UMOL KG
+        states6=mdb_DIC_numeric<DIC_min;
+        index_DIC_below=np.where(states6)[0] 
+        
+        #pH
+        mdb_pH = matchupData["region_ph_mean"];
+        mdb_pH_numeric=mdb_pH.values;
+        #Upper realistic limit 8.5
+        states7=mdb_pH_numeric>pH_max;
+        index_pH_exceed=np.where(states7)[0]
+        #Lower realistic limit <7
+        states8=mdb_pH_numeric<pH_min;
+        index_pH_below=np.where(states8)[0]
+        
+        #pCO2
+        mdb_pco2 = matchupData["region_pco2w_mean"];
+        mdb_pco2_numeric=mdb_pco2.values;
+        #Upper realistic limit 700 ppm
+        states9=mdb_pco2_numeric>pCO2_max;
+        index_pco2_exceed=np.where(states9)[0]
+        #Lower realistic limit <200 ppm
+        states10=mdb_pco2_numeric<pCO2_min;
+        index_pco2_below=np.where(states10)[0]
+        
+        #TA
+        mdb_TA = matchupData["AT"];
+        mdb_TA_numeric=mdb_TA.values;
+        #Upper realistic limit 3000 umol kg
+        states11=mdb_TA_numeric>TA_max;
+        index_TA_exceed=np.where(states11)[0]
+        #Lower realistic limit <500 umol kg
+        states12=mdb_TA_numeric<TA_min;
+        index_TA_below=np.where(states12)[0]        
+        
+
+        #these variables could also have bounds placed on them but not applied 
+        #for this iteration
+        # lat long date OC chla DO NO3 PO4 SiO4
+        
+        # now produce a file with all of the out of bounds data points from the mdb
+        
+        mdb_flag_warnings_list=['SST greater than maximum value of', 'SST less than minimum value of', 'SSS greater than maximum value of', 'SST less than minimum value of'\
+                                , 'DIC greater than maximum value of', 'DIC less than minimum value of','pH greater than maximum value of','pH less than minimum value of'\
+                                ,'pCO2 greater than maximum value of','pCO2 less than minimum value of','TA greater than maximum value of','TA less than minimum value of']
+
+        mdb_flag_index_list=[index_temp_exceed, index_temp_below, index_sal_exceed, index_sal_below, index_DIC_exceed, index_DIC_below,index_pH_exceed,index_pH_below,index_pco2_exceed,index_pco2_below,index_TA_exceed,index_TA_below]
+        
+            
+        mdb_flag_limits_list=[SST_max,SST_min,SSS_max,SSS_min,DIC_max, DIC_min,  pH_max, pH_min,pCO2_max, pCO2_min, TA_max,TA_min]  
+        
+        for idx, g in enumerate(mdb_flag_index_list):
+            print(idx, g)
+            if len(g) == 0:
+                print("list is empty")
+            else:
+                #this prints a header for what the entries have been flagged for
+                with open('mdb_flag.csv','a') as result_file:
+                    wr = csv.writer(result_file, dialect='excel')
+                    wr.writerow([mdb_flag_warnings_list[idx]]+ [mdb_flag_limits_list[idx]])
+                #this prints the values that have been flagged to the csv    
+                print(matchupData.loc[g].to_csv("mdb_flag.csv",mode='a'));
+       
+        #now filter those mdb from the analysis
+        mdb_ind_rmv =np.concatenate(mdb_flag_index_list) #combine all the numpy arrays into a single array of 'bad data point indexes'
+        matchupData = matchupData.drop(matchupData.index[mdb_ind_rmv])
+        
+        del states, states2, states3 ,states4, states5, states6, states7 ,states8, states9, states10, states11, states12
+        del mdb_DIC,mdb_DIC_numeric,mdb_SSS,mdb_SSS_numeric,mdb_SST,mdb_SST_numeric,mdb_TA,mdb_TA_numeric,mdb_pH,mdb_pH_numeric,mdb_pco2,mdb_pco2_numeric
+        #Rich_edits end
+                
         ### Run each of the build in algorithms to compute model output, extract RMSD etc
         allAlgoOutputInfo = [];
         for ialgorithm, AlgorithmFunctor in enumerate(builtInAlgorithms):
             print("Calculating model outputs for implemented algorithms ({0}/{1}): {2}".format(ialgorithm+1, len(builtInAlgorithms), str(AlgorithmFunctor)));
             algorithm = AlgorithmFunctor(settings);
             try:
-                modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed = \
+                modelOutput, propagatedInputUncertainty, rmsd, combinedUncertainty, dataUsedIndices, dataUsed,subsetData = \
                           osoda_algorithm_comparison.run_algorithm(algorithm, matchupData,
                                                                    regionMaskPath=settings["regionMasksPath"], region=region,
                                                                    useDepthMask=settings["subsetWithDepthMask"],
@@ -147,31 +276,70 @@ if runPairedMetrics == True:
                 algorithmOutput["dataUsedIndices"] = dataUsedIndices;
                 allAlgoOutputInfo.append(algorithmOutput);
                 
+                if region=="oceansoda_amazon_plume":
+                    name_amazon[AlgorithmFunctor]=algorithmOutput["name"];
+                    out_amazon[AlgorithmFunctor]=algorithmOutput["modelOutput"];
+                elif region=="oceansoda_congo":
+                    name_congo[AlgorithmFunctor]=algorithmOutput["name"];
+                    out_congo[AlgorithmFunctor]=algorithmOutput["modelOutput"];
+                elif region=="oceansoda_mediterranean":
+                    name_med[AlgorithmFunctor]=algorithmOutput["name"];
+                    out_med[AlgorithmFunctor]=algorithmOutput["modelOutput"];
+                else:
+                    pass
+                
                 if diagnosticPlots == True:
                     outputVariable = algorithm.output_name();
                     savePath = path.join(outputRoot, "diagnostic_plots", algorithm.__str__().split(":")[0]+".png");
                     prediction_accuracy_plot(dataUsed[outputVariable], modelOutput, algorithm.__class__.__name__, outputVariable, savePath=savePath);
                 
+
                 print("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
             except ValueError as e: #Raised if there are no matchup data rows left after spatial mask and algorithm internal subsetting has taken place
                 print(algorithm, e.args[0]);
                 print("No matchup data left after subsettings (region:"+region+", algo: "+algorithm.__class__.__name__+")");
                 continue;
-                
-                
+              
+
         ###### Now add extract the custom algorithm data (e.g. rmsd, output), construct output dictionaries, and append them to the algo output info list.
         for customAlgo in customAlgorithms:
-            print("Extracting data for custom algorithm: {0}".format(customAlgo["name"]));
             
+            #Extract the model output from the matchup data
+            colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"]];
+            ##### TODO: Missing: combined uncertainty, matchupRMSD, matchupBias?
+            customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
+
             #Extract the model output from the matchup data
             colsToExtract = ["date", customAlgo["outputVar"], customAlgo["matchupVariableName"]];
             ##### TODO:
             ##### Missing: combined uncertainty, matchupRMSD, matchupBias?
             customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
+            
+            #this takes the subset information e.g. region/depth/distance coast filters etc
+            #and applies it to the custom algos as well
+            customAlgoData=customAlgoData.loc[subsetData.index,]
+            
+            # rich edit 2 start
+            # data are loaded in here again, delete rows that are removed by QC
+            A=customAlgoData.index#these are the rows in the subset
+            B=mdb_ind_rmv#these are the bad rows to removed
+            #this finds the indexes
+            B_unique_sorted, B_idx = np.unique(B, return_index=True)
+            B_in_A_bool = np.in1d(B_unique_sorted, A, assume_unique=True)
+            inthesubset=B_idx[B_in_A_bool]
+            C=B[inthesubset]
+            #this line then drops the bad rows
+            customAlgoData = customAlgoData.drop(customAlgoData.index[inthesubset]); #remove where there is no reference outputVar data
+            
+
+            # rich edit 2 end
+       
             ###Subset to remove where model data is NaN
             customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["matchupVariableName"]])]; #remove where there is no model predictions
             customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["outputVar"]])]; #remove where there is no reference outputVar data
             
+            if customAlgo["name"] == "cmems_pco2": #unit conversion
+                customAlgoData["cmems_pco2_mean"] = customAlgoData["cmems_pco2_mean"]*0.00000986923 * 1000000;
             
             algorithmOutput = {};
             algorithmOutput["instance"] = None;
@@ -219,8 +387,58 @@ if runPairedMetrics == True:
 
 
 
-
-
+customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set to anything and is only used as a label
+                       "outputVar": "AT", #DIC or AT
+                       "matchupVariableName": "ethz_ta_mean", #netCDF variable name of the model output (algorithm prediction)
+                       "algoRMSD": 13.0, #netCDF variable name of the RMSD of the (original) algorithm fit
+                       "inputUncertaintyName": None, #"ethz_ta_stddev", #propagated input data uncertainty
+                       "combinedUncertainty": 21.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                       },
+                      {"name": "ethz_dic", #Human readable name, this can be set to anything and is only used as a label
+                       "outputVar": "DIC", #DIC or AT
+                       "matchupVariableName": "ethz_dic_mean", #netCDF variable name of the model output (algorithm prediction)
+                       "algoRMSD": 16.3, #netCDF variable name of the RMSD of the (original) algorithm fit
+                       "inputUncertaintyName": None, #"ethz_dic_stddev", #propagated input data uncertainty
+                       "combinedUncertainty": 16.3, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                       },
+                      {"name": "ethz_ph", #Human readable name, this can be set to anything and is only used as a label
+                       "outputVar":"region_ph_mean", # "region_ph_mean", #DIC or AT
+                       "matchupVariableName": "ethz_ph_mean", #netCDF variable name of the model output (algorithm prediction)
+                       "algoRMSD":None, # value from algo - 0.024, #netCDF variable name of the RMSD of the (original) algorithm fit
+                       "inputUncertaintyName": None, #"ethz_ph_stddev", #propagated input data uncertainty
+                       "combinedUncertainty":None, # value from algo - 0.024, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                       },
+                      {"name": "ethz_pco2", #Human readable name, this can be set to anything and is only used as a label
+                       "outputVar": "region_pco2w_mean", #DIC or AT
+                       "matchupVariableName": "ethz_pco2_mean", #netCDF variable name of the model output (algorithm prediction)
+                       "algoRMSD": 12.0, #netCDF variable name of the RMSD of the (original) algorithm fit
+                       "inputUncertaintyName": None, #"ethz_pco2_stddev", #propagated input data uncertainty
+                       "combinedUncertainty": 14.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                       },
+                       {"name": "cmems_ph", #Human readable name, this can be set to anything and is only used as a label
+                        "outputVar":"region_ph_mean", #"region_ph_mean", #DIC or AT
+                        "matchupVariableName": "cmems_ph_mean", #netCDF variable name of the model output (algorithm prediction)
+                        "algoRMSD":None,# 0.03, #netCDF variable name of the RMSD of the (original) algorithm fit
+                        "inputUncertaintyName": None, #propagated input data uncertainty
+                        "combinedUncertainty":None, #value from algo - 0.03, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                        },
+                       {"name": "cmems_pco2", #Human readable name, this can be set to anything and is only used as a label
+                        "outputVar": "region_pco2w_mean", #DIC or AT
+                        "matchupVariableName": "cmems_pco2_mean", #netCDF variable name of the model output (algorithm prediction)
+                        "algoRMSD": 14.8, #netCDF variable name of the RMSD of the (original) algorithm fit
+                        "inputUncertaintyName": None, #propagated input data uncertainty
+                        "combinedUncertainty": 17.97, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                        },
+                       {"name": "pml_at", #Human readable name, this can be set to anything and is only used as a label
+                        "outputVar": "AT", #DIC or AT
+                        "matchupVariableName": "pml_ta_mu", #netCDF variable name of the model output (algorithm prediction)
+                        "algoRMSD": 17.0, #netCDF variable name of the RMSD of the (original) algorithm fit
+                        "inputUncertaintyName": None, #propagated input data uncertainty
+                        "combinedUncertainty": 22.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                        },
+                    ];
+#note that in this configuration the basic metrics have not been subset at all meaning
+#they are comparing globally
 if runBasicMetrics == True:
     ##########
     #calculate individual level metrics for the non-AT/DIC parameters
@@ -232,6 +450,237 @@ if runBasicMetrics == True:
     years = utilities.calculate_years_for_input_combination(settings, combinationMap);
     matchupData = utilities.load_matchup_to_dataframe(settings, combinationMap, years); #each year is concatinated to create a single dataframe
     
+    #note that the mdb ph is at 25 so we need to convert it to the SST in the SST column
+    #This should be fixed in future versions of the MDB 3.4 onwards!
+    
+    #for every ph entry in matchupdatabase with pH
+    #look for ph - ta pairing
+    #look for ph - pco2 pairing
+    #look for ph dic pairing
+    # if no ph pairing remove that entry. 
+    
+    #create a new variable in matchupdata for ph that is temp adjusted and populate with nans
+    matchupData["ph_corr_insitu_temp"] = ""
+    NaN = np.nan
+    matchupData["ph_corr_insitu_temp"]  = NaN
+    
+    matchupData["ph_corr_insitu_temp_err"] = ""
+    NaN = np.nan
+    matchupData["ph_corr_insitu_temp_err"]  = NaN
+    
+    matchupData["hydrogen_free"] = ""
+    NaN = np.nan
+    matchupData["hydrogen_free"]  = NaN
+    
+    loopsize=matchupData.region_ph_mean.size
+    for ph_loop in range(0,loopsize):
+        #if the ph value is nan make new variable nan
+        if math.isnan(matchupData.region_ph_mean[ph_loop])==True:
+            #print("skipping at nan step")
+            pass
+            #do nothing - no ph data to temp adjust
+            #look for ph - ta pairing
+        elif math.isnan(matchupData.region_ph_mean[ph_loop])==False and math.isnan(matchupData.AT[ph_loop])==False:
+            #CO2SYS tHE DATA
+            #print("use ta and ph")
+            kwargs = dict(
+            par1 = matchupData.AT[ph_loop],  # Value of the first parameter
+            par2 = matchupData.region_ph_mean[ph_loop],  # Value of the second parameter
+            par1_type = 1,  # The first parameter supplied is of type "1", which is "alkalinity"
+            par2_type = 3,  # The second parameter supplied is of type "2", which is "pH"
+            salinity = matchupData.SSS[ph_loop],  # Salinity of the sample
+            temperature = 25,  # Temperature at input conditions
+            temperature_out = matchupData.SST[ph_loop]-273.15,  # Temperature at output conditions
+            pressure = 0,  # Pressure    at input conditions
+            pressure_out = 0,  # Pressure    at output conditions
+            total_silicate = matchupData.SiO4[ph_loop],  # Concentration of silicate  in the sample (in umol/kg)
+            total_phosphate = matchupData.PO4[ph_loop],  # Concentration of phosphate in the sample (in umol/kg)
+            opt_k_carbonic = 4,  # Choice of H2CO3 and HCO3- dissociation constants K1 and K2 ("4" means "Mehrbach refit")
+            opt_k_bisulfate = 1,);  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
+            results = pyco2.sys(**kwargs);
+            matchupData["ph_corr_insitu_temp"][ph_loop]=results["pH_out"];
+            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["region_ph_mean_err"][ph_loop]
+            matchupData["hydrogen_free"][ph_loop]=results["hydrogen_free_out"]*1e-6;
+        #look for ph - pco2 pairing
+        elif math.isnan(matchupData.region_ph_mean[ph_loop])==False and math.isnan(matchupData.region_pco2w_mean[ph_loop])==False:
+            #print("use ta and pco2")
+            #CO2SYS tHE DATA
+            kwargs = dict(
+            par1 = matchupData.region_pco2w_mean[ph_loop],  # Value of the first parameter
+            par2 = matchupData.region_ph_mean[ph_loop],  # Value of the second parameter
+            par1_type = 4,  # The first parameter supplied is of type "1", which is "PCO2"
+            par2_type = 3,  # The second parameter supplied is of type "2", which is "pH"
+            salinity = matchupData.SSS[ph_loop],  # Salinity of the sample
+            temperature = 25,  # Temperature at input conditions
+            temperature_out = matchupData.SST[ph_loop]-273.15,  # Temperature at output conditions
+            pressure = 0,  # Pressure    at input conditions
+            pressure_out = 0,  # Pressure    at output conditions
+            total_silicate = matchupData.SiO4[ph_loop],  # Concentration of silicate  in the sample (in umol/kg)
+            total_phosphate = matchupData.PO4[ph_loop],  # Concentration of phosphate in the sample (in umol/kg)
+            opt_k_carbonic = 4,  # Choice of H2CO3 and HCO3- dissociation constants K1 and K2 ("4" means "Mehrbach refit")
+            opt_k_bisulfate = 1,)  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
+            results = pyco2.sys(**kwargs)
+            matchupData["ph_corr_insitu_temp"][ph_loop]=results["pH_out"]
+            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["region_ph_mean_err"][ph_loop]
+            matchupData["hydrogen_free"][ph_loop]=results["hydrogen_free_out"]*1e-6;
+        #look for ph - dic pairing
+        elif math.isnan(matchupData.region_ph_mean[ph_loop])==False and math.isnan(matchupData.DIC[ph_loop])==False:
+            #print("use ta and dic")
+            #CO2SYS tHE DATA
+            kwargs = dict(
+            par1 = matchupData.DIC[ph_loop],  # Value of the first parameter
+            par2 = matchupData.region_ph_mean[ph_loop],  # Value of the second parameter
+            par1_type = 2,  # The first parameter supplied is of type "1", which is "DIC"
+            par2_type = 3,  # The second parameter supplied is of type "2", which is "pH"
+            salinity = matchupData.SSS[ph_loop],  # Salinity of the sample
+            temperature = 25,  # Temperature at input conditions
+            temperature_out = matchupData.SST[ph_loop]-273.15,  # Temperature at output conditions
+            pressure = 0,  # Pressure    at input conditions
+            pressure_out = 0,  # Pressure    at output conditions
+            total_silicate = matchupData.SiO4[ph_loop],  # Concentration of silicate  in the sample (in umol/kg)
+            total_phosphate = matchupData.PO4[ph_loop],  # Concentration of phosphate in the sample (in umol/kg)
+            opt_k_carbonic = 4,  # Choice of H2CO3 and HCO3- dissociation constants K1 and K2 ("4" means "Mehrbach refit")
+            opt_k_bisulfate = 1,)  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
+            results = pyco2.sys(**kwargs)
+            matchupData["ph_corr_insitu_temp"][ph_loop]=results["pH_out"]
+            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["region_ph_mean_err"][ph_loop]
+            matchupData["hydrogen_free"][ph_loop]=results["hydrogen_free_out"]*1e-6;
+        #if there is no secondary carbonate variable the correction is not possible 
+        else:
+            pass
+            #print('Congratulations! You guessed it.')
+            #do nothing pass
+
+    #Rich_edits start_ perform checks on the Matchup databse files to check that they are
+    #realistic and fall within the expected range
+    
+    SST_max=40;
+    SST_min=-10;
+    SSS_max=50;
+    SSS_min=0;      
+    DIC_max=3000;
+    DIC_min=500; 
+    pH_max=8.5;
+    pH_min=7;
+    pCO2_max=800;
+    pCO2_min=100;
+    TA_max=3000;
+    TA_min=500;
+    hfree_max=1e-7;
+    hfree_min=0;
+    
+    #SST
+    mdb_SST = matchupData["SST"];
+    mdb_SST_numeric=mdb_SST.values-273.15;
+    #Upper realistic limit 
+    states=mdb_SST_numeric>SST_max;
+    index_temp_exceed=np.where(states)[0]
+    #Lower realistic limit -10 degrees
+    states2=mdb_SST_numeric<SST_min;
+    index_temp_below=np.where(states2)[0]
+    
+    #Salinity
+    mdb_SSS = matchupData["SSS"];
+    mdb_SSS_numeric=mdb_SSS.values;
+    #Upper realistic limit 50 PSU
+    states3=mdb_SSS_numeric>SSS_max;
+    index_sal_exceed=np.where(states3)[0]
+    #Lower realistic limit <0 PSU
+    states4=mdb_SSS_numeric<SSS_min;
+    index_sal_below=np.where(states4)[0]        
+    
+    #DIC
+    mdb_DIC = matchupData["DIC"];
+    mdb_DIC_numeric=mdb_DIC.values;
+    #Upper realistic limit 2500 UMOLKG?
+    states5=mdb_DIC_numeric>DIC_max;
+    index_DIC_exceed=np.where(states5)[0]
+    #Lower realistic limit <500 UMOL KG
+    states6=mdb_DIC_numeric<DIC_min;
+    index_DIC_below=np.where(states6)[0] 
+    
+    #pH
+    mdb_pH = matchupData["ph_corr_insitu_temp"];
+    mdb_pH_numeric=mdb_pH.values;
+    #Upper realistic limit 8.5
+    states7=mdb_pH_numeric>pH_max;
+    index_pH_exceed=np.where(states7)[0]
+    #Lower realistic limit <7
+    states8=mdb_pH_numeric<pH_min;
+    index_pH_below=np.where(states8)[0]
+    
+    #pH - as H+
+    mdb_hfree = matchupData["hydrogen_free"];
+    mdb_hfree_numeric=mdb_hfree.values;
+    #Upper realistic limit 8.5
+    states13=mdb_hfree_numeric>hfree_max;
+    index_hfree_exceed=np.where(states13)[0]
+    #Lower realistic limit <7
+    states14=mdb_hfree_numeric<hfree_min;
+    index_hfree_below=np.where(states14)[0]
+    
+    #pCO2
+    mdb_pco2 = matchupData["region_pco2w_mean"];
+    mdb_pco2_numeric=mdb_pco2.values;
+    #Upper realistic limit 700 ppm
+    states9=mdb_pco2_numeric>pCO2_max;
+    index_pco2_exceed=np.where(states9)[0]
+    #Lower realistic limit <200 ppm
+    states10=mdb_pco2_numeric<pCO2_min;
+    index_pco2_below=np.where(states10)[0]
+    
+    #TA
+    mdb_TA = matchupData["AT"];
+    mdb_TA_numeric=mdb_TA.values;
+    #Upper realistic limit 3000 umol kg
+    states11=mdb_TA_numeric>TA_max;
+    index_TA_exceed=np.where(states11)[0]
+    #Lower realistic limit <500 umol kg
+    states12=mdb_TA_numeric<TA_min;
+    index_TA_below=np.where(states12)[0]        
+    
+
+    #these variables could also have bounds placed on them but not applied 
+    #for this iteration
+    # lat long date OC chla DO NO3 PO4 SiO4
+    
+    # now produce a file with all of the out of bounds data points from the mdb
+    
+    mdb_flag_warnings_list=['SST greater than maximum value of', 'SST less than minimum value of', 'SSS greater than maximum value of', 'SST less than minimum value of'\
+                            , 'DIC greater than maximum value of', 'DIC less than minimum value of','pH greater than maximum value of','pH less than minimum value of'\
+                            ,'pCO2 greater than maximum value of','pCO2 less than minimum value of','TA greater than maximum value of','TA less than minimum value of'\
+                                ,'H+ greater than maximum value of','H+ less than minimum value of']
+
+    mdb_flag_index_list=[index_temp_exceed, index_temp_below, index_sal_exceed, index_sal_below, index_DIC_exceed, index_DIC_below\
+                         ,index_pH_exceed,index_pH_below,index_pco2_exceed,index_pco2_below,index_TA_exceed,index_TA_below,index_hfree_exceed,index_hfree_below]
+    
+        
+    mdb_flag_limits_list=[SST_max,SST_min,SSS_max,SSS_min,DIC_max, DIC_min,  pH_max, pH_min,pCO2_max, pCO2_min, TA_max,TA_min,hfree_max,hfree_min]  
+    
+    for idx, g in enumerate(mdb_flag_index_list):
+        print(idx, g)
+        if len(g) == 0:
+            print("list is empty")
+        else:
+            #this prints a header for what the entries have been flagged for
+            with open('mdb_flag.csv','a') as result_file:
+                wr = csv.writer(result_file, dialect='excel')
+                wr.writerow([mdb_flag_warnings_list[idx]]+ [mdb_flag_limits_list[idx]])
+            #this prints the values that have been flagged to the csv    
+            print(matchupData.loc[g].to_csv("mdb_flag.csv",mode='a'));
+
+    #now filter those mdb from the analysis
+    mdb_ind_rmv =np.concatenate(mdb_flag_index_list) #combine all the numpy arrays into a single array of 'bad data point indexes'
+    del states, states2, states3 ,states4, states5, states6, states7 ,states8, states9, states10, states11, states12
+    del mdb_DIC,mdb_DIC_numeric,mdb_SSS,mdb_SSS_numeric,mdb_SST,mdb_SST_numeric,mdb_TA,mdb_TA_numeric,mdb_pH,mdb_pH_numeric,mdb_pco2,mdb_pco2_numeric
+       
+    
+    
+    matchupData = matchupData.drop(matchupData.index[mdb_ind_rmv])
+
+    #Rich_edits end
+            
+
     #Extract algorithm output for each custom algorithm
     algorithmOutputs = [];
     dataUsedList = [];
@@ -244,54 +693,123 @@ if runBasicMetrics == True:
         ##### TODO:
         ##### Missing: combined uncertainty, matchupRMSD, matchupBias?
         customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
+        
+
         ###Subset to remove where model data is NaN
         customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["matchupVariableName"]])]; #remove where there is no model predictions
         customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["outputVar"]])]; #remove where there is no reference outputVar data
+        
+
+        # rich edit 2 start
+        # data are loaded in here again, delete rows that are removed by QC
+        A=customAlgoData.index#these are the rows in the subset
+        B=mdb_ind_rmv#these are the bad rows to removed
+        #this finds the indexes
+        B_unique_sorted, B_idx = np.unique(B, return_index=True)
+        B_in_A_bool = np.in1d(B_unique_sorted, A, assume_unique=True)
+        inthesubset=B_idx[B_in_A_bool]
+        C=B[inthesubset]
+        #this line then drops the bad rows
+        # rich edit 2 end
+        
+        
+        D=customAlgoData.index#these are the rows in the subset
+        
+        D_unique_sorted, D_idx = np.unique(D, return_index=True)
+        D_in_C_bool = np.in1d(D_unique_sorted, C, assume_unique=True)
+        inthesubset2=D_idx[D_in_C_bool]
+        
+        customAlgoData = customAlgoData.drop(customAlgoData.index[inthesubset2]); #remove where there is no reference outputVar data
+
+        
+
+
+
         if customAlgo["name"] == "cmems_pco2": #unit conversion
             customAlgoData["cmems_pco2_mean"] = customAlgoData["cmems_pco2_mean"]*0.00000986923 * 1000000;
             
-        
         algorithmOutput = {};
         algorithmOutput["instance"] = None;
-        algorithmOutput["name"] = customAlgo["name"];
-        algorithmOutput["outputVar"] = customAlgo["outputVar"]; #e.g. AT or DIC
-        algorithmOutput["modelOutput"] = customAlgoData[customAlgo["matchupVariableName"]]; #The modelled output DIC or AT from matchup database
+        algorithmOutput["name"] = customAlgo["name"];      
         algorithmOutput["propagatedInputUncertainty"] = None;
         algorithmOutput["rmsd"] = customAlgo["algoRMSD"]; #Goodness of fit from the original algorithm fit
         algorithmOutput["combinedUncertainty"] = customAlgo["combinedUncertainty"];
+        algorithmOutput["outputVar"] = customAlgo["outputVar"]; #e.g. AT or DIC
         algorithmOutput["dataUsedIndices"] = customAlgoData.index;
+        algorithmOutput["modelOutput"] = customAlgoData[customAlgo["matchupVariableName"]]; #The modelled output DIC or AT from matchup database
+        #need to use new processed ph instead
+        if algorithmOutput["name"] == "ethz_ph" or algorithmOutput["name"] == "cmems_ph":
+             #know the indexes that correspond to matchupdatabase, use these to access
+             #the ph column added above with pyc02sys
+             algorithmOutput["dataUsedIndices"]= matchupData["hydrogen_free"][customAlgoData.index];#was previously matchupData["ph_corr_insitu_temp"][customAlgoData.index];  
+             print("used correctly")
+             #now remove entries from matchup where there isn't any temp corrected matchup
+             Indexes_temp_adjusted_Ph=~(np.isnan(algorithmOutput["dataUsedIndices"]))#get the indexes where there is a pH
+             algorithmOutput["dataUsedIndices"]=algorithmOutput["dataUsedIndices"][Indexes_temp_adjusted_Ph]
+             algorithmOutput["modelOutput"]=10 ** (-1*algorithmOutput["modelOutput"][Indexes_temp_adjusted_Ph])# this is cmems/ethz ph- converted to H+
+             algorithmOutput["outputVar"] = "hydrogen_free";
+             algorithmOutput["dataUsedIndices"]=algorithmOutput["dataUsedIndices"].index
+        else:
+            pass
+        
+        x=algorithmOutput["dataUsedIndices"]
         algorithmOutputs.append(algorithmOutput);
-        
-        dataUsedList.append(matchupData.iloc[algorithmOutput["dataUsedIndices"]]);
-        
+        dataUsedList.append((matchupData.reindex(x)));
+
         if diagnosticPlots == True:
             savePath = path.join(outputRoot, "diagnostic_plots", customAlgo["name"]+".png");
             prediction_accuracy_plot(customAlgoData[customAlgo["outputVar"]], customAlgoData[customAlgo["matchupVariableName"]], customAlgo["name"], customAlgo["outputVar"], savePath=savePath);
     
-    
+
     basicMetricsMap = {};
     for i in range(0, len(algorithmOutputs)):
         basicMetrics = metrics.calc_basic_metrics(algorithmOutputs[i], dataUsedList[i], settings);
         basicMetricsMap[algorithmOutputs[i]["name"]] = basicMetrics;
+
+#add two more dictionary entries then do the pH conversions
+import copy
+x=copy.copy(basicMetricsMap["cmems_ph"])
+y=copy.copy(basicMetricsMap["ethz_ph"]) 
+basicMetricsMap["cmems_ph_Hion_to_pH"] =x 
+basicMetricsMap["ethz_ph_Hion_to_pH"] =y
+
+#pH conversions for these variables
+basicMetricsMap["ethz_ph_Hion_to_pH"]["model_output_mean"]=-np.log10(basicMetricsMap["ethz_ph"]["model_output_mean"])
+basicMetricsMap["ethz_ph_Hion_to_pH"]["model_output_sd"]=-np.log10(basicMetricsMap["ethz_ph"]["model_output_mean"]+basicMetricsMap["ethz_ph"]["reference_output_sd"])+np.log10(basicMetricsMap["ethz_ph"]["model_output_mean"])
+basicMetricsMap["ethz_ph_Hion_to_pH"]["reference_output_mean"]=-np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"])
+basicMetricsMap["ethz_ph_Hion_to_pH"]["reference_output_sd"]=-np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"]+basicMetricsMap["ethz_ph"]["reference_output_sd"])+np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"])
+basicMetricsMap["ethz_ph_Hion_to_pH"]["bias"]=-np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"]+basicMetricsMap["ethz_ph"]["bias"])+np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"])
+basicMetricsMap["ethz_ph_Hion_to_pH"]["mad"]=-np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"]+basicMetricsMap["ethz_ph"]["mad"])+np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"])
+basicMetricsMap["ethz_ph_Hion_to_pH"]["rmsd"]=-np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"]+basicMetricsMap["ethz_ph"]["rmsd"])+np.log10(basicMetricsMap["ethz_ph"]["reference_output_mean"])
+
+
+basicMetricsMap["cmems_ph_Hion_to_pH"]["model_output_mean"]=-np.log10(basicMetricsMap["cmems_ph"]["model_output_mean"])
+basicMetricsMap["cmems_ph_Hion_to_pH"]["model_output_sd"]=-np.log10(basicMetricsMap["cmems_ph"]["model_output_mean"]+basicMetricsMap["cmems_ph"]["reference_output_sd"])+np.log10(basicMetricsMap["cmems_ph"]["model_output_mean"])
+basicMetricsMap["cmems_ph_Hion_to_pH"]["reference_output_mean"]=-np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"])
+basicMetricsMap["cmems_ph_Hion_to_pH"]["reference_output_sd"]=-np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"]+basicMetricsMap["cmems_ph"]["reference_output_sd"])+np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"])
+basicMetricsMap["cmems_ph_Hion_to_pH"]["bias"]=-np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"]+basicMetricsMap["cmems_ph"]["bias"])+np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"])
+basicMetricsMap["cmems_ph_Hion_to_pH"]["mad"]=-np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"]+basicMetricsMap["cmems_ph"]["mad"])+np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"])
+basicMetricsMap["cmems_ph_Hion_to_pH"]["rmsd"]=-np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"]+basicMetricsMap["cmems_ph"]["rmsd"])+np.log10(basicMetricsMap["cmems_ph"]["reference_output_mean"])
+
+
+#####Write basicMetrics object
+if path.exists(outputRoot) == False:
+    makedirs(outputRoot);
     
-    #####Write basicMetrics object
-    if path.exists(outputRoot) == False:
-        makedirs(outputRoot);
-        
-    #binary pickle dump
-    pickle.dump(basicMetricsMap, open(path.join(outputRoot, "basic_metrics_ETHZ.pickle"), 'wb'));
-    #basicMetricsRead = pickle.load(open(path.join(outputRoot, "basic_metrics_ETHZ.pickle"), 'rb'));
-    
-    #For json file, remove long vectors
-    ##For json files, convert pd.Series types to nunpy array for json serialisation
-    for key in basicMetricsMap.keys():
-        del basicMetricsMap[key]["model_output"];
-        del basicMetricsMap[key]["reference_output_uncertainty"];
-        del basicMetricsMap[key]["weights"];
-        del basicMetricsMap[key]["model_uncertainty"];
+#binary pickle dump
+pickle.dump(basicMetricsMap, open(path.join(outputRoot, "basic_metrics_ETHZ.pickle"), 'wb'));
+#basicMetricsRead = pickle.load(open(path.join(outputRoot, "basic_metrics_ETHZ.pickle"), 'rb'));
+
+#For json file, remove long vectors
+##For json files, convert pd.Series types to nunpy array for json serialisation
+for key in basicMetricsMap.keys():
+    del basicMetricsMap[key]["model_output"];
+    del basicMetricsMap[key]["reference_output_uncertainty"];
+    del basicMetricsMap[key]["weights"];
+    del basicMetricsMap[key]["model_uncertainty"];
  
-    
-    with open(path.join(outputRoot, "basic_metrics_ETHZ.json"), 'w') as file:
-        json.dump(basicMetricsMap, file, indent=4);
+
+with open(path.join(outputRoot, "basic_metrics_ETHZ.json"), 'a') as file:
+    json.dump(basicMetricsMap, file, indent=4);
 
     
