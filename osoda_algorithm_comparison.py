@@ -63,16 +63,8 @@ def run_algorithm(algorithmInstance, matchupData, regionMaskPath=None, region=No
     if regionMaskPath != None:
         regionMaskNC = Dataset(regionMaskPath, 'r');
         subsetData = utilities.subset_from_mask(matchupData, regionMaskNC, region);
-        regionMaskNC.close();
-        
-    #commented to debug
-    # #new changes start rich
-    else:
-        regionMaskNC = Dataset(regionMaskPath=settings["regionMaskPath"]);
-        utilities.subset_from_mask(customMatchupData, regionMaskNC, region=region);
-        regionMaskNC.close();
-    # #new changes end rich
-        
+        regionMaskNC.close();     
+    
     #Subset based on depth
     if useDepthMask == True:
         depthMaskNC = Dataset(depthMaskPath, 'r');
@@ -162,7 +154,7 @@ def write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersect
 
 #Extracts the best algorithm for each region and input data combination.
 #Compiles information into a dataframe and returns
-def create_summary_table(settings, inputCombinationNames, inputCombinationVariableMaps, useWeighted, regionOverload=None):
+def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombinationVariableMaps, useWeighted, regionOverload=None):
     #FIXME: appending columns to dataframe in two different ways, this is confusing and annoying...
     bestAlgosAT = [];
     bestAlgosDIC = [];
@@ -174,17 +166,19 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
     numAlgosComparedDIC = [];
     bestbiasAT=[];
     bestbiasDIC=[];
-    
-    
+    bestuncendtoendAT=[];
+    bestRMSD_DIC=[]; 
+    bestRMSD_AT=[];
+    bestuncendtoendDIC=[]; 
     if regionOverload is not None:
         regions = regionOverload;
     else:
         regions = settings["regions"];
-    
+
     for region in regions:
         for inputCombinationName in inputCombinationNames:
             metricsRootDirectory = path.join(settings["outputPathMetrics"], inputCombinationName);
-            bestAlgorithmInfo = utilities.find_best_algorithm(metricsRootDirectory, region, useWeightedRMSDe=useWeighted, verbose=False);
+            bestAlgorithmInfo = utilities.find_best_algorithm(n_threshold,metricsRootDirectory, region, useWeightedRMSDe=useWeighted, verbose=False);
             
             #Append to columns
             regionNamesList.append(region);
@@ -194,24 +188,34 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
                 bestRMSDesAT.append(bestAlgorithmInfo["AT"][1]);
                 numAlgosComparedAT.append(bestAlgorithmInfo["AT"][2]);
                 bestbiasAT.append(bestAlgorithmInfo["AT"][3]);
+                bestuncendtoendAT.append(bestAlgorithmInfo["AT"][4]);
+                bestRMSD_AT.append(bestAlgorithmInfo["AT"][5]);
+
 
             else: #No best algorithm, fill with default data
                 bestAlgosAT.append(np.nan);
                 bestRMSDesAT.append(np.nan);
                 numAlgosComparedAT.append(np.nan);
-                bestbiasAT.append(np.nan);
-                
+                bestbiasAT.append(np.nan); 
+                bestuncendtoendAT.append(np.nan);
+                bestRMSD_AT.append(np.nan);
+
+
             if bestAlgorithmInfo["DIC"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
                 bestAlgosDIC.append(bestAlgorithmInfo["DIC"][0]);
                 bestRMSDesDIC.append(bestAlgorithmInfo["DIC"][1]);
                 numAlgosComparedDIC.append(bestAlgorithmInfo["DIC"][2]);
                 bestbiasDIC.append(bestAlgorithmInfo["DIC"][3]);
-                
+                bestuncendtoendDIC.append(bestAlgorithmInfo["DIC"][4]);
+                bestRMSD_DIC.append(bestAlgorithmInfo["DIC"][5]);
+
             else: #No best algorithm, fill with default data
                 bestAlgosDIC.append(np.nan);
                 bestRMSDesDIC.append(np.nan);
                 numAlgosComparedDIC.append(np.nan);
                 bestbiasDIC.append(np.nan);
+                bestuncendtoendDIC.append(np.nan);
+                bestRMSD_DIC.append(np.nan);
 
     #Concatinate to a dataframe
     summaryTable = pd.DataFrame();
@@ -219,17 +223,22 @@ def create_summary_table(settings, inputCombinationNames, inputCombinationVariab
     summaryTable["input_combination"] = combinationNamesList;
     summaryTable["AT_best_in_region"] = [False]*len(summaryTable);
     summaryTable["DIC_best_in_region"] = [False]*len(summaryTable);
+    
     summaryTable["AT_best_algorithm"] = bestAlgosAT;
     summaryTable["AT_RMSDe"] = bestRMSDesAT;
     summaryTable["AT_n"] = [np.nan]*len(summaryTable);
     summaryTable["AT_algos_compared"] = numAlgosComparedAT;
     summaryTable["AT_bias"] = bestbiasAT;
+    summaryTable["AT_uncendtoend"] = bestuncendtoendAT;
+    summaryTable["AT_RMSD"] = bestRMSD_AT;
 
     summaryTable["DIC_best_algorithm"] = bestAlgosDIC;
     summaryTable["DIC_RMSDe"] = bestRMSDesDIC;
     summaryTable["DIC_n"] = [np.nan]*len(summaryTable);
     summaryTable["DIC_algos_compared"] = numAlgosComparedDIC;
     summaryTable["DIC_bias"] = bestbiasDIC;
+    summaryTable["DIC_uncendtoend"] = bestuncendtoendDIC;
+    summaryTable["DIC_RMSD"] = bestRMSD_DIC;
 
     summaryTable["n_years"] = [0]*len(summaryTable);
     summaryTable["min_year"] = [0]*len(summaryTable);
@@ -285,23 +294,23 @@ def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0, minMatchup
     else:
         summaryTable = _summaryTable;
     
-    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared","bias", "n_years", "min_year", "max_year"]);
+    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared","bias","uncendtoend","RMSD", "n_years", "min_year", "max_year"]);
     for region in regions:
         #find best AT algorithm info by sorting a subset of the summary table for just this region, and only include entries where the time range meets the criteria
         regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears) & (summaryTable["AT_n"] >= minMatchupsTA)];
         if len(regionTable) > 0: #if there are any entries left, sort and select the best
-            regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared","AT_bias", "DIC_RMSDe"], ascending=[True, False, False,True, True]);
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"],  regionTable.iloc[0]["AT_algos_compared"],regionTable.iloc[0]["AT_bias"], regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared","AT_bias","AT_uncendtoend","AT_RMSD", "DIC_RMSDe"], ascending=[True, False, False,True, True,True, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"],  regionTable.iloc[0]["AT_algos_compared"],regionTable.iloc[0]["AT_bias"], regionTable.iloc[0]["AT_uncendtoend"], regionTable.iloc[0]["AT_RMSD"],regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
         else: #no entries, so inserts nans
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, 0, 0, 0];
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan, 0, 0, 0];
         
         #find best DIC algorithm info by sorting a subset of the summary table for just this region
         regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears) & (summaryTable["DIC_n"] >= minMatchupsDIC)];
         if len(regionTable) > 0: #if there are any entries left, sort and select the best
-            regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared","DIC_bias","AT_RMSDe"], ascending=[True, False, False,True, True]);
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"],regionTable.iloc[0]["DIC_bias"],  regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared","DIC_bias","DIC_uncendtoend","DIC_RMSD","AT_RMSDe"], ascending=[True, False, False,True,True,True, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"],regionTable.iloc[0]["DIC_bias"],regionTable.iloc[0]["DIC_uncendtoend"],regionTable.iloc[0]["DIC_RMSD"],  regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
         else: #no entries, so insert nans
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, 0, 0, 0];
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan, 0, 0, 0];
         
     return overallBestAlgos;
 
@@ -317,7 +326,8 @@ def main(settings, extraAlgosToTest=[]):
     logger.addHandler(loggerFileHandle);
     logger.info("Started execution at: "+str(datetime.datetime.now()));
     
-    # these are output dictionarys so we can get the output for plotting only
+    # these are output dictionarys so we can get the final scores output 
+    # in a consolidated format which is very useful  for plotting
     final_scores_allcombos_oceansoda_amazon_plume_AT={};
     final_scores_allcombos_oceansoda_amazon_plume_DIC={};
     
@@ -367,25 +377,25 @@ def main(settings, extraAlgosToTest=[]):
             years = utilities.calculate_years_for_input_combination(settings, inputCombination);
             matchupData = utilities.load_matchup_to_dataframe(settings, inputCombination, years=years); #each year is concatinated to create a single dataframe
             
-            #Rich_edits start_ perform checks on the Matchup databse files to check that they are
+            #checks on the Matchup databse files to check that they are
             #realistic and fall within the expected range
             
-            SST_max=40;
-            SST_min=-10;
-            SSS_max=50;
-            SSS_min=0;      
-            DIC_max=3000;
-            DIC_min=500; 
-            pH_max=8.5;
-            pH_min=7;
-            pCO2_max=800;
-            pCO2_min=100;
-            TA_max=3000;
-            TA_min=500;
+            SST_max=settings["MDB_flags"]["SST_max"];
+            SST_min=settings["MDB_flags"]["SST_min"];
+            SSS_max=settings["MDB_flags"]["SSS_max"];
+            SSS_min=settings["MDB_flags"]["SSS_min"];      
+            DIC_max=settings["MDB_flags"]["DIC_max"];
+            DIC_min=settings["MDB_flags"]["DIC_min"]; 
+            pH_max=settings["MDB_flags"]["pH_max"];
+            pH_min=settings["MDB_flags"]["pH_min"];
+            pCO2_max=settings["MDB_flags"]["pCO2_max"];
+            pCO2_min=settings["MDB_flags"]["pCO2_min"];
+            TA_max=settings["MDB_flags"]["TA_max"];
+            TA_min=settings["MDB_flags"]["TA_min"];
             
             #SST
             mdb_SST = matchupData["SST"];
-            mdb_SST_numeric=mdb_SST.values-273.15;
+            mdb_SST_numeric=mdb_SST.values-273.15;#unit conversion
             #Upper realistic limit 
             states=mdb_SST_numeric>SST_max;
             index_temp_exceed=np.where(states)[0]
@@ -443,13 +453,10 @@ def main(settings, extraAlgosToTest=[]):
             states12=mdb_TA_numeric<TA_min;
             index_TA_below=np.where(states12)[0]        
             
-        
-            #these variables could also have bounds placed on them but not applied 
-            #for this iteration
-            # lat long date OC chla DO NO3 PO4 SiO4
+            #note that other variables could also have bounds placed on them but not applied 
+            #for this code iteration e.g. lat long date OC chla DO NO3 PO4 SiO4
             
             # now produce a file with all of the out of bounds data points from the mdb
-            
             mdb_flag_warnings_list=['SST greater than maximum value of', 'SST less than minimum value of', 'SSS greater than maximum value of', 'SST less than minimum value of'\
                                     , 'DIC greater than maximum value of', 'DIC less than minimum value of','pH greater than maximum value of','pH less than minimum value of'\
                                     ,'pCO2 greater than maximum value of','pCO2 less than minimum value of','TA greater than maximum value of','TA less than minimum value of']
@@ -466,26 +473,23 @@ def main(settings, extraAlgosToTest=[]):
                     print("list is empty")
                 else:
                     #this prints a header for what the entries have been flagged for
-                    with open('mdb_flag.csv','a') as result_file:
-                        wr = csv.writer(result_file, dialect='excel')
+                    with open('output/mdb_flag.csv','a') as flag_result_file:
+                        wr = csv.writer(flag_result_file, dialect='excel')
                         wr.writerow([mdb_flag_warnings_list[idx]]+ [mdb_flag_limits_list[idx]])
                     #this prints the values that have been flagged to the csv    
-                    print(matchupData.loc[g].to_csv("mdb_flag.csv",mode='a'));
+                    print(matchupData.loc[g].to_csv("output/mdb_flag.csv",mode='a'));
         
             #now filter those mdb from the analysis
             mdb_ind_rmv =np.concatenate(mdb_flag_index_list) #combine all the numpy arrays into a single array of 'bad data point indexes'
-            
+            #new matchupdatabase filtered for bad data
             matchupData = matchupData.drop(matchupData.index[mdb_ind_rmv])
-        
-            #Rich_edits end
-            
+                    
             ### For each region, run all the algorithms that are relevant for that region
             for region in settings["regions"]:
                 print("Running for region:", region);
                 logger.info("Beginning new region: "+region);
                 algorithmOutputList = [];
-                
-                
+                 
                 ######################################
                 ### For each algorithm in the region, run the algorithm using relevent matchup database rows and store model output
     
@@ -510,8 +514,6 @@ def main(settings, extraAlgosToTest=[]):
                         algorithmOutput["rmsd"] = rmsd;
                         algorithmOutput["combinedUncertainty"] = combinedUncertainty;
                         algorithmOutput["dataUsedIndices"] = dataUsedIndices;
-                        
-                        
 
                         logger.info("Output calculated (region:"+region+", algo: "+algorithm.__class__.__name__+")");
                     except ValueError as e: #Raised if there are no matchup data rows left after spatial mask and algorithm internal subsetting has taken place
@@ -548,7 +550,7 @@ def main(settings, extraAlgosToTest=[]):
                     currentAlgorithmOutputs = [algorithmOutputList[i] for i in algosMatchingCurrentOutputVar];
                     
                     basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
-                        metrics.calc_all_metrics(currentAlgorithmOutputs, matchupData, settings);
+                        metrics.calc_all_metrics(currentAlgorithmOutputs, matchupData, settings,currentOutputVar);
                     
 
                     #x is the string of the dictionary to add to
@@ -564,46 +566,67 @@ def main(settings, extraAlgosToTest=[]):
                     write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, currentAlgorithmOutputs);
 
             earthobs_dataset_iteration_number=earthobs_dataset_iteration_number+1;
+    
     #Calculate summary table for weighted metrics and output to file
-    summaryTable_weighted = create_summary_table(settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=True);
+    n_threshold=0
+    summaryTable_weighted_no_n_req = create_summary_table(n_threshold,settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=True);
+    summaryTableOutputPath_no_n_req = path.join(settings["outputPathMetrics"], "summary_best_algos_no_n_req.csv");
+    summaryTable_weighted_no_n_req.to_csv(summaryTableOutputPath_no_n_req, sep=",", index=False);     
+    print("Full weighted summary table written to:", path.abspath(summaryTableOutputPath_no_n_req));
+   
+    #Calculate summary table for weighted metrics and output to file
+    n_threshold=30
+    summaryTable_weighted = create_summary_table(n_threshold,settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=True);
     summaryTableOutputPath = path.join(settings["outputPathMetrics"], "summary_best_algos.csv");
     summaryTable_weighted.to_csv(summaryTableOutputPath, sep=",", index=False);     
     print("Full weighted summary table written to:", path.abspath(summaryTableOutputPath));
    
+    #Calculate summary table for unweighted metrics and output to file
+    n_threshold=0
+    summaryTable_unweighted_no_n_req = create_summary_table(n_threshold, settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps,useWeighted=False);
+    summaryTableOutputPathUnweighted_no_n_req = path.join(settings["outputPathMetrics"], "summary_best_algos_unweighted_no_n_req.csv");
+    summaryTable_unweighted_no_n_req.to_csv(summaryTableOutputPathUnweighted_no_n_req, sep=",", index=False);     
+    print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted_no_n_req));
     
     #Calculate summary table for unweighted metrics and output to file
-    summaryTable_unweighted = create_summary_table(settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=False);
+    n_threshold=30
+    summaryTable_unweighted = create_summary_table(n_threshold,settings, specificVariableToDatabaseMapNames, specificVariableToDatabaseMaps, useWeighted=False);
     summaryTableOutputPathUnweighted = path.join(settings["outputPathMetrics"], "summary_best_algos_unweighted.csv");
     summaryTable_unweighted.to_csv(summaryTableOutputPathUnweighted, sep=",", index=False);     
     print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted));
     
-    
     ##### For weighted metrics
-    
-    minMatchupsTArange = 30;
-    minMatchupsDICrange = 30;
-    
-    ### Calculate overall best algorithms / input combinations for each egion
-    overallBestAlgos = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=0, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
+    minMatchupsTArange = 0;
+    minMatchupsDICrange = 0;
+    minYearRange = 0;
+    ### Calculate overall best algorithms / input combinations for each region
+    overallBestAlgos = get_best_algorithms(summaryTableOutputPath_no_n_req, settings["regions"], minTimeSpanYears=0, minMatchupsTA = 0, minMatchupsDIC=0);
     overallBestAlgosOutputPath = path.join(settings["outputPathMetrics"], "overall_best_algos.csv");
     overallBestAlgos.to_csv(overallBestAlgosOutputPath, sep=",", index=False);     
     print("Overall best algorithm table written to:", path.abspath(overallBestAlgosOutputPath));
     
-    ### Calculate overall best algorithms / input combinations for each region again, but this time ensuring a minimum time series range
+    ### Calculate overall best algorithms / input combinations for each region again, but this time ensuring a minimum time series range and number of matchup points.
+    minMatchupsTArange = 30;
+    minMatchupsDICrange = 30;
     minYearRange = 8;
     overallBestAlgosMinRange = get_best_algorithms(summaryTableOutputPath, settings["regions"], minTimeSpanYears=minYearRange, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
     overallBestAlgosOutputPath = path.join(settings["outputPathMetrics"], "overall_best_algos_min_years="+str(minYearRange)+".csv");
     overallBestAlgosMinRange.to_csv(overallBestAlgosOutputPath, sep=",", index=False);     
     print("Overall best algorithm (with min year range="+str(minYearRange)+") table written to:", path.abspath(overallBestAlgosOutputPath));
     
-    ##### Forun weighted metrics
+    ##### For unweighted metrics
     ### Calculate overall best algorithms / input combinations for each egion
-    overallBestAlgosUnweighted = get_best_algorithms(summaryTableOutputPathUnweighted, settings["regions"], minTimeSpanYears=0, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
+    minMatchupsTArange = 0;
+    minMatchupsDICrange = 0;
+    minYearRange = 0;
+    overallBestAlgosUnweighted = get_best_algorithms(summaryTableOutputPathUnweighted_no_n_req, settings["regions"], minTimeSpanYears=0, minMatchupsTA = 0, minMatchupsDIC=0);
     overallBestAlgosOutputPathUnweighted = path.join(settings["outputPathMetrics"], "overall_best_algos_unweighted.csv");
     overallBestAlgosUnweighted.to_csv(overallBestAlgosOutputPathUnweighted, sep=",", index=False);     
     print("Overall best unweighted algorithm table written to:", path.abspath(overallBestAlgosOutputPathUnweighted));
     
-    ### Calculate overall best algorithms / input combinations for each region again, but this time ensuring a minimum time series range
+    ### Calculate overall best algorithms / input combinations for each region again, but this time ensuring a minimum time series range and number of matchup points.
+    minMatchupsTArange = 30;
+    minMatchupsDICrange = 30;
     minYearRange = 8;
     overallBestAlgosUnweightedMinRange = get_best_algorithms(summaryTableOutputPathUnweighted, settings["regions"], minTimeSpanYears=minYearRange, minMatchupsTA = minMatchupsTArange, minMatchupsDIC=minMatchupsDICrange);
     overallBestAlgosOutputPathUnweighted = path.join(settings["outputPathMetrics"], "overall_best_algos_unweighted_min_years="+str(minYearRange)+".csv");
@@ -612,17 +635,18 @@ def main(settings, extraAlgosToTest=[]):
     
     
     #Store these dictionaries at pickle txt files for plotting
+    #They contain the final scores data as tables
     import pickle
-    with open("Amazon_AT_fs_pickled.txt", "wb") as myFile:
+    with open("output/algo_metrics/Amazon_AT_finalscores_pickled.txt", "wb") as myFile:
         pickle.dump(final_scores_allcombos_oceansoda_amazon_plume_AT, myFile)
     
-    with open("Amazon_DIC_fs_pickled.txt", "wb") as myFile2:
+    with open("output/algo_metrics/Amazon_DIC_finalscores_pickled.txt", "wb") as myFile2:
         pickle.dump(final_scores_allcombos_oceansoda_amazon_plume_DIC, myFile2) 
         
-    with open("Congo_AT_fs_pickled.txt", "wb") as myFile3:
+    with open("output/algo_metrics/Congo_AT_finalscores_pickled.txt", "wb") as myFile3:
         pickle.dump(final_scores_allcombos_oceansoda_congo_AT, myFile3) 
         
-    with open("Congo_DIC_fs_pickled.txt", "wb") as myFile4:
+    with open("output/algo_metrics/Congo_DIC_finalscores_pickled.txt", "wb") as myFile4:
         pickle.dump(final_scores_allcombos_oceansoda_congo_DIC, myFile4)
         
     #Shutdown logger

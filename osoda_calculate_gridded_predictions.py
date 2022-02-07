@@ -43,7 +43,7 @@ def main(overallBestAlgosOutputPath, outputPathTemplate, years, regions, regionM
 
 if __name__ == "__main__":
     settings = osoda_global_settings.get_default_settings();
-    lonRes = latRes = 1.0;
+    lonRes = latRes = 1;
     
     #Setup command line parser, and parse arguments.
     description = """Utility for calculating gridded surface DIC and AT time series for the OceanSODA project.
@@ -68,5 +68,6 @@ if __name__ == "__main__":
     regionMaskPath = clArgs.mask_path
     outputPathTemplate = clArgs.output_path_template;
     
+    #this calls the main function which simply calls calculate_gridded_timeseries_all_regions script
     main(overallBestAlgosOutputPath, outputPathTemplate, years, regions, regionMaskPath);
     

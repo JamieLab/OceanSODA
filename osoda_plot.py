@@ -239,20 +239,20 @@ def get_extents(data, lats, lons, pad=2):
 
 #at
 atAmazonNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_amazon_plume", VAR="AT"));
-meanPlumeATAmazon, meanNotPlumeATAmazon, meanAllATAmazon, years, annualMeanPlumeATAmazon, annualMeanNotPlumeATAmazon, annualMeanAllATAmazon = extract_var_means(atAmazonNC, "AT_pred");
+meanPlumeATAmazon, meanNotPlumeATAmazon, meanAllATAmazon, years, annualMeanPlumeATAmazon, annualMeanNotPlumeATAmazon, annualMeanAllATAmazon = extract_var_means(atAmazonNC, "AT");
 dates = get_datetimes(atAmazonNC.variables["time"][:]);
 
 # atMississippiNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_mississippi", VAR="AT"));
-# meanPlumeATMississippi, meanNotPlumeATMississippi, meanAllATMississippi, years, annualMeanPlumeATMississippi, annualMeanNotPlumeATMississippi, annualMeanAllATMississippi = extract_var_means(atMississippiNC, "AT_pred");
+# meanPlumeATMississippi, meanNotPlumeATMississippi, meanAllATMississippi, years, annualMeanPlumeATMississippi, annualMeanNotPlumeATMississippi, annualMeanAllATMississippi = extract_var_means(atMississippiNC, "AT");
 
 atCongoNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_congo", VAR="AT"));
-meanPlumeATCongo, meanNotPlumeATCongo, meanAllATCongo, years, annualMeanPlumeATCongo, annualMeanNotPlumeATCongo, annualMeanAllATCongo = extract_var_means(atCongoNC,"AT_pred");
+meanPlumeATCongo, meanNotPlumeATCongo, meanAllATCongo, years, annualMeanPlumeATCongo, annualMeanNotPlumeATCongo, annualMeanAllATCongo = extract_var_means(atCongoNC,"AT");
 
 # atStLawrenceNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_st_lawrence", VAR="AT"));
-# meanPlumeATStLawrence, meanNotPlumeATStLawrence, meanAllATStLawrence, years, annualMeanPlumeATStLawrence, annualMeanNotPlumeATStLawrence, annualMeanAllATStLawrence = extract_var_means(atStLawrenceNC, "AT_pred");
+# meanPlumeATStLawrence, meanNotPlumeATStLawrence, meanAllATStLawrence, years, annualMeanPlumeATStLawrence, annualMeanNotPlumeATStLawrence, annualMeanAllATStLawrence = extract_var_means(atStLawrenceNC, "AT");
 
 atMediterraneanNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_mediterranean", VAR="AT"));
-meanPlumeATMediterranean, meanNotPlumeATMediterranean, meanAllATMediterranean, years, annualMeanPlumeATMediterranean, annualMeanNotPlumeATMediterranean, annualMeanAllATMediterranean = extract_var_means(atMediterraneanNC, "AT_pred");
+meanPlumeATMediterranean, meanNotPlumeATMediterranean, meanAllATMediterranean, years, annualMeanPlumeATMediterranean, annualMeanNotPlumeATMediterranean, annualMeanAllATMediterranean = extract_var_means(atMediterraneanNC, "AT");
 
 #min and max values for y scale:
 #listAll = [meanPlumeATAmazon, meanNotPlumeATAmazon, meanAllATAmazon, meanPlumeATMississippi, meanNotPlumeATMississippi, meanAllATMississippi, meanPlumeATCongo, meanNotPlumeATCongo, meanAllATCongo, meanPlumeATStLawrence, meanNotPlumeATStLawrence, meanAllATStLawrence,meanPlumeATMediterranean, meanNotPlumeATMediterranean, meanAllATMediterranean];
@@ -263,20 +263,20 @@ maxY = np.nanmax(listAll)*1.05;
 
 #dic
 dicAmazonNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_amazon_plume", VAR="DIC"));
-meanPlumeDICAmazon, meanNotPlumeDICAmazon, meanAllDICAmazon, years, annualMeanPlumeDICAmazon, annualMeanNotPlumeDICAmazon, annualMeanAllDICAmazon= extract_var_means(dicAmazonNC, "DIC_pred");
+meanPlumeDICAmazon, meanNotPlumeDICAmazon, meanAllDICAmazon, years, annualMeanPlumeDICAmazon, annualMeanNotPlumeDICAmazon, annualMeanAllDICAmazon= extract_var_means(dicAmazonNC, "DIC");
 dates = get_datetimes(dicAmazonNC.variables["time"][:]);
 
 # dicMississippiNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_mississippi", VAR="DIC"));
-# meanPlumeDICMississippi, meanNotPlumeDICMississippi, meanAllDICMississippi, years, annualMeanPlumeDICMississippi, annualMeanNotPlumeDICMississippi, annualMeanAllDICMississippi = extract_var_means(dicMississippiNC, "DIC_pred");
+# meanPlumeDICMississippi, meanNotPlumeDICMississippi, meanAllDICMississippi, years, annualMeanPlumeDICMississippi, annualMeanNotPlumeDICMississippi, annualMeanAllDICMississippi = extract_var_means(dicMississippiNC, "DIC");
 
 dicCongoNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_congo", VAR="DIC"));
-meanPlumeDICCongo, meanNotPlumeDICCongo, meanAllDICCongo,years, annualMeanPlumeDICCongo, annualMeanNotPlumeDICCongo, annualMeanAllDICCongo = extract_var_means(dicCongoNC, "DIC_pred");
+meanPlumeDICCongo, meanNotPlumeDICCongo, meanAllDICCongo,years, annualMeanPlumeDICCongo, annualMeanNotPlumeDICCongo, annualMeanAllDICCongo = extract_var_means(dicCongoNC, "DIC");
 
 # dicStLawrenceNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_st_lawrence", VAR="DIC"));
-# meanPlumeDICStLawrence, meanNotPlumeDICStLawrence, meanAllDICStLawrence, years, annualMeanPlumeDICStLawrence, annualMeanNotPlumeDICStLawrence, annualMeanAllDICStLawrence = extract_var_means(dicStLawrenceNC, "DIC_pred");
+# meanPlumeDICStLawrence, meanNotPlumeDICStLawrence, meanAllDICStLawrence, years, annualMeanPlumeDICStLawrence, annualMeanNotPlumeDICStLawrence, annualMeanAllDICStLawrence = extract_var_means(dicStLawrenceNC, "DIC");
 
 dicMediterraneanNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_mediterranean", VAR="DIC"));
-meanPlumeDICMediterranean, meanNotPlumeDICMediterranean, meanAllDICMediterranean, years, annualMeanPlumeDICMediterranean, annualMeanNotPlumeDICMediterranean, annualMeanAllDICMediterranean = extract_var_means(dicMediterraneanNC, "DIC_pred");
+meanPlumeDICMediterranean, meanNotPlumeDICMediterranean, meanAllDICMediterranean, years, annualMeanPlumeDICMediterranean, annualMeanNotPlumeDICMediterranean, annualMeanAllDICMediterranean = extract_var_means(dicMediterraneanNC, "DIC");
 
 #min and max values for y scale:
 #listAll = [meanPlumeDICAmazon, meanNotPlumeDICAmazon, meanAllDICAmazon, meanPlumeDICMississippi, meanNotPlumeDICMississippi, meanAllDICMississippi, meanPlumeDICCongo, meanNotPlumeDICCongo, meanAllDICCongo];
@@ -383,7 +383,7 @@ del atAmazonNC,atCongoNC,atMediterraneanNC,dicAmazonNC,dicCongoNC,dicMediterrane
     #### load data, calculate stats and make tables
 
 regions = ["oceansoda_amazon_plume", "oceansoda_congo", "oceansoda_mediterranean"];#, "oceansoda_st_lawrence"];
-video_vars = ["DIC_pred", "SSS","SST", "pH_free","pCO2", "saturation_aragonite", "saturation_calcite"];
+video_vars = ["DIC", "SSS","SST", "pH_free","pCO2", "saturation_aragonite", "saturation_calcite"];
 create_animations="False";
 
 for region in regions:
@@ -394,44 +394,46 @@ for region in regions:
     
         #### Calculate stats for all key variables
     #DIC
-    meanPlumeDIC, meanNotPlumeDIC, meanAllDIC, _, _, _, _ = extract_var_means(dicNC, "DIC_pred");
-    stdPlumeDIC, stdNotPlumeDIC, stdAllDIC, _, _, _, _ = extract_var_stds(dicNC, "DIC_pred");
-    minPlumeDIC, minNotPlumeDIC, minAllDIC, _, _, _, _ = extract_var_mins(dicNC, "DIC_pred");
-    maxPlumeDIC, maxNotPlumeDIC, maxAllDIC, _, _, _, _ = extract_var_maxs(dicNC, "DIC_pred");
-    meanPlumeDICuncertainty, meanNotPlumeDICuncertainty, meanAllDICuncertainty, _, _, _, _ = extract_var_means(dicNC, "DIC_pred_combined_uncertainty");
+    meanPlumeDIC, meanNotPlumeDIC, meanAllDIC, _, _, _, _ = extract_var_means(dicNC, "DIC");
+    stdPlumeDIC, stdNotPlumeDIC, stdAllDIC, _, _, _, _ = extract_var_stds(dicNC, "DIC");
+    minPlumeDIC, minNotPlumeDIC, minAllDIC, _, _, _, _ = extract_var_mins(dicNC, "DIC");
+    maxPlumeDIC, maxNotPlumeDIC, maxAllDIC, _, _, _, _ = extract_var_maxs(dicNC, "DIC");
+    meanPlumeDICuncertainty, meanNotPlumeDICuncertainty, meanAllDICuncertainty, _, _, _, _ = extract_var_means(dicNC, "DIC_Combined_uncertainty_dueto_RMSD_and_Bias");
+    meanPlumeDICuncertainty_botup, meanNotPlumeDICuncertainty_botup, meanAllDICuncertainty_botup, _, _, _, _ = extract_var_means(dicNC, "DIC_pred_combined_uncertainty");
 
     #AT
-    meanPlumeAT, meanNotPlumeAT, meanAllAT, _, _, _, _ = extract_var_means(atNC, "AT_pred");
-    stdPlumeAT, stdNotPlumeAT, stdAllAT, _, _, _, _ = extract_var_stds(atNC, "AT_pred");
-    minPlumeAT, minNotPlumeAT, minAllAT, _, _, _, _ = extract_var_mins(atNC, "AT_pred");
-    maxPlumeAT, maxNotPlumeAT, maxAllAT, _, _, _, _ = extract_var_maxs(atNC, "AT_pred");
-    meanPlumeATuncertainty, meanNotPlumeATuncertainty, meanAllATuncertainty, _, _, _, _ = extract_var_means(atNC, "AT_pred_combined_uncertainty");
-    
+    meanPlumeAT, meanNotPlumeAT, meanAllAT, _, _, _, _ = extract_var_means(atNC, "AT");
+    stdPlumeAT, stdNotPlumeAT, stdAllAT, _, _, _, _ = extract_var_stds(atNC, "AT");
+    minPlumeAT, minNotPlumeAT, minAllAT, _, _, _, _ = extract_var_mins(atNC, "AT");
+    maxPlumeAT, maxNotPlumeAT, maxAllAT, _, _, _, _ = extract_var_maxs(atNC, "AT");
+    meanPlumeATuncertainty, meanNotPlumeATuncertainty, meanAllATuncertainty, _, _, _, _ = extract_var_means(atNC, "AT_Combined_uncertainty_dueto_RMSD_and_Bias");
+    meanPlumeATuncertainty_botup, meanNotPlumeATuncertainty_botup, meanAllATuncertainty_botup, _, _, _, _ = extract_var_means(atNC, "AT_pred_combined_uncertainty");
+
     #pH
     meanPlumepH_dic, meanNotPlumepH_dic, meanAllpH_dic, _, _, _, _ = extract_var_means(dicNC, "pH");
     stdPlumepH_dic, stdNotPlumepH_dic, stdAllpH_dic, _, _, _, _ = extract_var_stds(dicNC, "pH");
     minPlumepH_dic, minNotPlumepH_dic, minAllpH_dic, _, _, _, _ = extract_var_mins(dicNC, "pH");
     maxPlumepH_dic, maxNotPlumepH_dic, maxAllpH_dic, _, _, _, _ = extract_var_maxs(dicNC, "pH");
-    meanPlumepHuncertainty_dic, meanNotPlumepHuncertainty_dic, meanAllpHuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "u_pH");
+    meanPlumepHuncertainty_dic, meanNotPlumepHuncertainty_dic, meanAllpHuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "pH_uncertainty");
     
     meanPlumepH_at, meanNotPlumepH_at, meanAllpH_at, _, _, _, _ = extract_var_means(atNC, "pH");
     stdPlumepH_at, stdNotPlumepH_at, stdAllpH_at, _, _, _, _ = extract_var_stds(atNC, "pH");
     minPlumepH_at, minNotPlumepH_at, minAllpH_at, _, _, _, _ = extract_var_mins(atNC, "pH");
     maxPlumepH_at, maxNotPlumepH_at, maxAllpH_at, _, _, _, _ = extract_var_maxs(atNC, "pH");
-    meanPlumepHuncertainty_at, meanNotPlumepHuncertainty_at, meanAllpHuncertainty_at, _, _, _, _ = extract_var_means(atNC, "u_pH");
+    meanPlumepHuncertainty_at, meanNotPlumepHuncertainty_at, meanAllpHuncertainty_at, _, _, _, _ = extract_var_means(atNC, "pH_uncertainty");
 
     #hydrogen_free
     meanPlumehydrogen_free_dic, meanNotPlumehydrogen_free_dic, meanAllhydrogen_free_dic, _, _, _, _ = extract_var_means(dicNC, "hydrogen_free");
     stdPlumehydrogen_free_dic, stdNotPlumehydrogen_free_dic, stdAllhydrogen_free_dic, _, _, _, _ = extract_var_stds(dicNC, "hydrogen_free");
     minPlumehydrogen_free_dic, minNotPlumehydrogen_free_dic, minAllhydrogen_free_dic, _, _, _, _ = extract_var_mins(dicNC, "hydrogen_free");
     maxPlumehydrogen_free_dic, maxNotPlumehydrogen_free_dic, maxAllhydrogen_free_dic, _, _, _, _ = extract_var_maxs(dicNC, "hydrogen_free");
-    meanPlumehydrogen_freeuncertainty_dic, meanNotPlumehydrogen_freeuncertainty_dic, meanAllhydrogen_freeuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "u_hydrogen_free");
+    meanPlumehydrogen_freeuncertainty_dic, meanNotPlumehydrogen_freeuncertainty_dic, meanAllhydrogen_freeuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "hydrogen_free_uncertainty");
     
     meanPlumehydrogen_free_at, meanNotPlumehydrogen_free_at, meanAllhydrogen_free_at, _, _, _, _ = extract_var_means(atNC, "hydrogen_free");
     stdPlumehydrogen_free_at, stdNotPlumehydrogen_free_at, stdAllhydrogen_free_at, _, _, _, _ = extract_var_stds(atNC, "hydrogen_free");
     minPlumehydrogen_free_at, minNotPlumehydrogen_free_at, minAllhydrogen_free_at, _, _, _, _ = extract_var_mins(atNC, "hydrogen_free");
     maxPlumehydrogen_free_at, maxNotPlumehydrogen_free_at, maxAllhydrogen_free_at, _, _, _, _ = extract_var_maxs(atNC, "hydrogen_free");
-    meanPlumehydrogen_freeuncertainty_at, meanNotPlumehydrogen_freeuncertainty_at, meanAllhydrogen_freeuncertainty_at, _, _, _, _ = extract_var_means(atNC, "u_hydrogen_free");
+    meanPlumehydrogen_freeuncertainty_at, meanNotPlumehydrogen_freeuncertainty_at, meanAllhydrogen_freeuncertainty_at, _, _, _, _ = extract_var_means(atNC, "hydrogen_free_uncertainty");
 
     #CO3
     meanPlumeCO3_dic, meanNotPlumeCO3_dic, meanAllCO3_dic, _, _, _, _ = extract_var_means(dicNC, "CO3");
@@ -445,39 +447,39 @@ for region in regions:
     stdPlumepco2_dic, stdNotPlumepco2_dic, stdAllpco2_dic, _, _, _, _ = extract_var_stds(dicNC, "pCO2");
     minPlumepco2_dic, minNotPlumepco2_dic, minAllpco2_dic, _, _, _, _ = extract_var_mins(dicNC, "pCO2");
     maxPlumepco2_dic, maxNotPlumepco2_dic, maxAllpco2_dic, _, _, _, _ = extract_var_maxs(dicNC, "pCO2");
-    meanPlumepco2uncertainty_dic, meanNotPlumepco2uncertainty_dic, meanAllpco2uncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "u_pCO2");
+    meanPlumepco2uncertainty_dic, meanNotPlumepco2uncertainty_dic, meanAllpco2uncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "pCO2_uncertainty");
 
     meanPlumepco2_at, meanNotPlumepco2_at, meanAllpco2_at, _, _, _, _ = extract_var_means(atNC, "pCO2");
     stdPlumepco2_at, stdNotPlumepco2_at, stdAllpco2_at, _, _, _, _ = extract_var_stds(atNC, "pCO2");
     minPlumepco2_at, minNotPlumepco2_at, minAllpco2_at, _, _, _, _ = extract_var_mins(atNC, "pCO2");
     maxPlumepco2_at, maxNotPlumepco2_at, maxAllpco2_at, _, _, _, _ = extract_var_maxs(atNC, "pCO2");
-    meanPlumepco2uncertainty_at, meanNotPlumepco2uncertainty_at, meanAllpco2uncertainty_at, _, _, _, _ = extract_var_means(atNC, "u_pCO2");
+    meanPlumepco2uncertainty_at, meanNotPlumepco2uncertainty_at, meanAllpco2uncertainty_at, _, _, _, _ = extract_var_means(atNC, "pCO2_uncertainty");
     
     #Aragonite saturation state
     meanPlumeOmegaAragonite_dic, meanNotPlumeOmegaAragonite_dic, meanAllOmegaAragonite_dic, _, _, _, _ = extract_var_means(dicNC, "saturation_aragonite");
     stdPlumeOmegaAragonite_dic, stdNotPlumeOmegaAragonite_dic, stdAllOmegaAragonite_dic, _, _, _, _ = extract_var_stds(dicNC, "saturation_aragonite");
     minPlumeOmegaAragonite_dic, minNotPlumeOmegaAragonite_dic, minAllOmegaAragonite_dic, _, _, _, _ = extract_var_mins(dicNC, "saturation_aragonite");
     maxPlumeOmegaAragonite_dic, maxNotPlumeOmegaAragonite_dic, maxAllOmegaAragonite_dic, _, _, _, _ = extract_var_maxs(dicNC, "saturation_aragonite");
-    meanPlumeOmegaAragoniteuncertainty_dic, meanNotPlumeOmegaAragoniteuncertainty_dic, meanAllOmegaAragoniteuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "u_saturation_aragonite");
+    meanPlumeOmegaAragoniteuncertainty_dic, meanNotPlumeOmegaAragoniteuncertainty_dic, meanAllOmegaAragoniteuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "saturation_aragonite_uncertainty");
 
     meanPlumeOmegaAragonite_at, meanNotPlumeOmegaAragonite_at, meanAllOmegaAragonite_at, _, _, _, _ = extract_var_means(atNC, "saturation_aragonite");
     stdPlumeOmegaAragonite_at, stdNotPlumeOmegaAragonite_at, stdAllOmegaAragonite_at, _, _, _, _ = extract_var_stds(atNC, "saturation_aragonite");
     minPlumeOmegaAragonite_at, minNotPlumeOmegaAragonite_at, minAllOmegaAragonite_at, _, _, _, _ = extract_var_mins(atNC, "saturation_aragonite");
     maxPlumeOmegaAragonite_at, maxNotPlumeOmegaAragonite_at, maxAllOmegaAragonite_at, _, _, _, _ = extract_var_maxs(atNC, "saturation_aragonite");
-    meanPlumeOmegaAragoniteuncertainty_at, meanNotPlumeOmegaAragoniteuncertainty_at, meanAllOmegaAragoniteuncertainty_at, _, _, _, _ = extract_var_means(atNC, "u_saturation_aragonite");
+    meanPlumeOmegaAragoniteuncertainty_at, meanNotPlumeOmegaAragoniteuncertainty_at, meanAllOmegaAragoniteuncertainty_at, _, _, _, _ = extract_var_means(atNC, "saturation_aragonite_uncertainty");
 
     #Calcite saturation state
     meanPlumeOmegaCalcite_dic, meanNotPlumeOmegaCalcite_dic, meanAllOmegaCalcite_dic, _, _, _, _ = extract_var_means(dicNC, "saturation_calcite");
     stdPlumeOmegaCalcite_dic, stdNotPlumeOmegaCalcite_dic, stdAllOmegaCalcite_dic, _, _, _, _ = extract_var_stds(dicNC, "saturation_calcite");
     minPlumeOmegaCalcite_dic, minNotPlumeOmegaCalcite_dic, minAllOmegaCalcite_dic, _, _, _, _ = extract_var_mins(dicNC, "saturation_calcite");
     maxPlumeOmegaCalcite_dic, maxNotPlumeOmegaCalcite_dic, maxAllOmegaCalcite_dic, _, _, _, _ = extract_var_maxs(dicNC, "saturation_calcite");
-    meanPlumeOmegaCalciteuncertainty_dic, meanNotPlumeOmegaCalciteuncertainty_dic, meanAllOmegaCalciteuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "u_saturation_calcite");
+    meanPlumeOmegaCalciteuncertainty_dic, meanNotPlumeOmegaCalciteuncertainty_dic, meanAllOmegaCalciteuncertainty_dic, _, _, _, _ = extract_var_means(dicNC, "saturation_calcite_uncertainty");
 
     meanPlumeOmegaCalcite_at, meanNotPlumeOmegaCalcite_at, meanAllOmegaCalcite_at, _, _, _, _ = extract_var_means(atNC, "saturation_calcite");
     stdPlumeOmegaCalcite_at, stdNotPlumeOmegaCalcite_at, stdAllOmegaCalcite_at, _, _, _, _ = extract_var_stds(atNC, "saturation_calcite");
     minPlumeOmegaCalcite_at, minNotPlumeOmegaCalcite_at, minAllOmegaCalcite_at, _, _, _, _ = extract_var_mins(atNC, "saturation_calcite");
     maxPlumeOmegaCalcite_at, maxNotPlumeOmegaCalcite_at, maxAllOmegaCalcite_at, _, _, _, _ = extract_var_maxs(atNC, "saturation_calcite");
-    meanPlumeOmegaCalciteuncertainty_at, meanNotPlumeOmegaCalciteuncertainty_at, meanAllOmegaCalciteuncertainty_at, _, _, _, _ = extract_var_means(atNC, "u_saturation_calcite");
+    meanPlumeOmegaCalciteuncertainty_at, meanNotPlumeOmegaCalciteuncertainty_at, meanAllOmegaCalciteuncertainty_at, _, _, _, _ = extract_var_means(atNC, "saturation_calcite_uncertainty");
 
         #### Create summary dictionary for key stats
     summary_dict={
@@ -512,6 +514,12 @@ for region in regions:
                     "TA_uncert_JAS": np.mean(meanAllATuncertainty[number_list_jas]),
                     "TA_uncert_OND": np.mean(meanAllATuncertainty[number_list_ond]),
                     
+                    "TA_uncert_botup": np.mean(meanAllATuncertainty_botup),
+                    "TA_uncert_JFM_botup": np.mean(meanAllATuncertainty_botup[number_list_jfm]),
+                    "TA_uncert_AMJ_botup": np.mean(meanAllATuncertainty_botup[number_list_amj]),
+                    "TA_uncert_JAS_botup": np.mean(meanAllATuncertainty_botup[number_list_jas]),
+                    "TA_uncert_OND_botup": np.mean(meanAllATuncertainty_botup[number_list_ond]),
+                    
                     #### - DIC                 
                     "DIC_mean": np.mean(meanAllDIC),
                     "DIC_mean_JFM": np.mean(meanAllDIC[number_list_jfm]),
@@ -542,6 +550,12 @@ for region in regions:
                     "DIC_uncert_AMJ": np.mean(meanAllDICuncertainty[number_list_amj]),
                     "DIC_uncert_JAS": np.mean(meanAllDICuncertainty[number_list_jas]),
                     "DIC_uncert_OND": np.mean(meanAllDICuncertainty[number_list_ond]),             
+                    
+                    "DIC_uncert_botup": np.mean(meanAllDICuncertainty_botup),
+                    "DIC_uncert_JFM_botup": np.mean(meanAllDICuncertainty_botup[number_list_jfm]),
+                    "DIC_uncert_AMJ_botup": np.mean(meanAllDICuncertainty_botup[number_list_amj]),
+                    "DIC_uncert_JAS_botup": np.mean(meanAllDICuncertainty_botup[number_list_jas]),
+                    "DIC_uncert_OND_botup": np.mean(meanAllDICuncertainty_botup[number_list_ond]),  
                     
                     #### - pH from TA      
                     "pH_mean_SSSSST_from_ta": np.mean(meanAllpH_at),
@@ -865,29 +879,29 @@ for region in regions:
     # f.close()# close file
 
         #### Save summary dictionary for key stats    
-    with open('uncert_summary_{0}.csv'.format(region), 'w') as f:
+    with open('output\\gridded_predictions_min_year_range\\uncert_summary_{0}.csv'.format(region), 'w') as f:
         for key in summary_dict.keys():
             f.write("%s,%s\n"%(key,summary_dict[key]))
 
 
 
         #### Formatted table of summary stats
-    field_names = ['Timeperiod', 'mean', 'std','min','max','uncertainty']
+    field_names = ['Timeperiod', 'mean', 'std','min','max','uncertainty','uncertainty_botup']
     dp_to_round=2;
     TA = [
-    {'Timeperiod':'Annual' , 'mean': np.round(np.mean(meanAllAT),dp_to_round), 'std': np.round(np.std(stdAllAT),dp_to_round), 'min': np.round(np.min(minAllAT),dp_to_round), 'max':np.round( np.max(maxAllAT),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty),dp_to_round)},
-    {'Timeperiod':'JFM', 'mean': np.round(np.mean(meanAllAT[number_list_jfm]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_jfm]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_jfm]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_jfm]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_jfm]),dp_to_round)},
-    {'Timeperiod':'AMJ' , 'mean': np.round(np.mean(meanAllAT[number_list_amj]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_amj]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_amj]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_amj]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_amj]),dp_to_round)},
-    {'Timeperiod':'JAS', 'mean': np.round(np.mean(meanAllAT[number_list_jas]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_jas]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_jas]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_jas]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_jas]),dp_to_round)},
-    {'Timeperiod':'OND' , 'mean': np.round(np.mean(meanAllAT[number_list_ond]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_ond]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_ond]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_ond]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_ond]),dp_to_round)},
+    {'Timeperiod':'Annual' , 'mean': np.round(np.mean(meanAllAT),dp_to_round), 'std': np.round(np.std(stdAllAT),dp_to_round), 'min': np.round(np.min(minAllAT),dp_to_round), 'max':np.round( np.max(maxAllAT),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllATuncertainty_botup),dp_to_round)},
+    {'Timeperiod':'JFM', 'mean': np.round(np.mean(meanAllAT[number_list_jfm]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_jfm]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_jfm]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_jfm]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_jfm]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllATuncertainty_botup[number_list_jfm]),dp_to_round)},
+    {'Timeperiod':'AMJ' , 'mean': np.round(np.mean(meanAllAT[number_list_amj]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_amj]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_amj]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_amj]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_amj]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllATuncertainty_botup[number_list_amj]),dp_to_round)},
+    {'Timeperiod':'JAS', 'mean': np.round(np.mean(meanAllAT[number_list_jas]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_jas]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_jas]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_jas]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_jas]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllATuncertainty_botup[number_list_jas]),dp_to_round)},
+    {'Timeperiod':'OND' , 'mean': np.round(np.mean(meanAllAT[number_list_ond]),dp_to_round), 'std': np.round(np.std(stdAllAT[number_list_ond]),dp_to_round), 'min': np.round(np.min(minAllAT[number_list_ond]),dp_to_round), 'max': np.round(np.max(maxAllAT[number_list_ond]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllATuncertainty[number_list_ond]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllATuncertainty_botup[number_list_ond]),dp_to_round)},
     ]
     
     DIC = [
-    {'Timeperiod':'Annual' , 'mean': np.round(np.mean(meanAllDIC),dp_to_round), 'std': np.round(np.std(stdAllDIC),dp_to_round), 'min': np.round(np.min(minAllDIC),dp_to_round), 'max': np.round(np.max(maxAllDIC),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty),dp_to_round)},
-    {'Timeperiod':'JFM', 'mean': np.round(np.mean(meanAllDIC[number_list_jfm]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_jfm]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_jfm]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_jfm]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_jfm]),dp_to_round)},
-    {'Timeperiod':'AMJ' , 'mean': np.round(np.mean(meanAllDIC[number_list_amj]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_amj]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_amj]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_amj]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_amj]),dp_to_round)},
-    {'Timeperiod':'JAS', 'mean': np.round(np.mean(meanAllDIC[number_list_jas]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_jas]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_jas]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_jas]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_jas]),dp_to_round)},
-    {'Timeperiod':'OND' , 'mean': np.round(np.mean(meanAllDIC[number_list_ond]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_ond]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_ond]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_ond]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_ond]),dp_to_round)},
+    {'Timeperiod':'Annual' , 'mean': np.round(np.mean(meanAllDIC),dp_to_round), 'std': np.round(np.std(stdAllDIC),dp_to_round), 'min': np.round(np.min(minAllDIC),dp_to_round), 'max': np.round(np.max(maxAllDIC),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllDICuncertainty_botup),dp_to_round)},
+    {'Timeperiod':'JFM', 'mean': np.round(np.mean(meanAllDIC[number_list_jfm]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_jfm]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_jfm]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_jfm]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_jfm]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllDICuncertainty_botup[number_list_jfm]),dp_to_round)},
+    {'Timeperiod':'AMJ' , 'mean': np.round(np.mean(meanAllDIC[number_list_amj]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_amj]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_amj]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_amj]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_amj]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllDICuncertainty_botup[number_list_amj]),dp_to_round)},
+    {'Timeperiod':'JAS', 'mean': np.round(np.mean(meanAllDIC[number_list_jas]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_jas]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_jas]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_jas]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_jas]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllDICuncertainty_botup[number_list_jas]),dp_to_round)},
+    {'Timeperiod':'OND' , 'mean': np.round(np.mean(meanAllDIC[number_list_ond]),dp_to_round), 'std': np.round(np.std(stdAllDIC[number_list_ond]),dp_to_round), 'min': np.round(np.min(minAllDIC[number_list_ond]),dp_to_round), 'max': np.round(np.max(maxAllDIC[number_list_ond]),dp_to_round), 'uncertainty': np.round(np.mean(meanAllDICuncertainty[number_list_ond]),dp_to_round), 'uncertainty_botup': np.round(np.mean(meanAllDICuncertainty_botup[number_list_ond]),dp_to_round)},
     ]
     
     pH_AT = [
@@ -988,7 +1002,7 @@ for region in regions:
     ]
     
         #### Save formatted table of sumnmary stats
-    with open('Gridded_data_summary_stats_{0}.csv'.format(region), 'w',newline='') as csvfile:
+    with open('output\\gridded_predictions_min_year_range\\Gridded_data_summary_stats_{0}.csv'.format(region), 'w',newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames = field_names)
         
         csvfile.write('TA ($\mu mol \ kg^{-1}$) \n') #Give your csv text here.
@@ -1092,7 +1106,7 @@ for region in regions:
             
             # arbitary limits
             if region == "oceansoda_amazon_plume":
-                if video_var == "DIC_pred":
+                if video_var == "DIC":
                     maxvar = 2000;
                     minvar = 1400; 
                 elif video_var == "SSS":
@@ -1117,7 +1131,7 @@ for region in regions:
                     pass
                     
             elif region == "oceansoda_congo":
-                if video_var == "DIC_pred":
+                if video_var == "DIC":
                     maxvar = np.nanmax(varALL);
                     minvar = np.nanmin(varALL); 
                 elif video_var == "SSS":
@@ -1141,7 +1155,7 @@ for region in regions:
                 else:
                     pass
             elif region == "oceansoda_mediterranean":
-                if video_var == "DIC_pred":
+                if video_var == "DIC":
                     maxvar = 2300;
                     minvar = 1950; 
                 elif video_var == "SSS":
@@ -1248,8 +1262,8 @@ for region in regions:
                 m.set_clim(minvar, maxvar)
                 cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))
                 
-                if video_var == "DIC_pred":
-                    cb.set_label("DIC $(\mu mol^{-1})$");
+                if video_var == "DIC":
+                    cb.set_label("DIC ($\mu mol \ kg^{-1}$)");
                     plt.title("DIC for {0} {1}".format(date.year, format(date.month, "02d")));  
                 elif video_var == "SSS":
                     cb.set_label("Salinity (PSU)");
@@ -1272,7 +1286,7 @@ for region in regions:
                 else:
                     pass
     
-    
+                #### Save plots for animations
                 plt.savefig(path.join("os_plots\{0}_monthly_plots_for_animation\{0}_{1}_animation_images".format(region,video_var), "{0}_frame.png".format(format(iframe, "03d"))));
                 plt.close();
                 iframe=iframe+1;
@@ -1296,107 +1310,8 @@ for region in regions:
     else:
         pass #don't make animations
     
-    #### Figure 4 - Timeseries plots
     
-    #plotting parameters
-    fontsize = 12;
-    figsizex = 9.0;
-    figsizey = 2.0*5;
-    figsize = (figsizex, figsizey);
-    
-    plt.figure(figsize=figsize);
-    plt.title("carbonate_timeseries_{0}".format(region))
 
-    ax11 = plt.subplot(6,1,1);
-    ax11.plot(time, meanPlumeDIC, 'r--');#, label="plume");
-    ax11.plot(time, meanNotPlumeDIC, 'r:');#, label="non-plume");
-    ax11.plot(time, meanAllDIC, 'r');#, label="whole region");
-    ax11.set_ylabel("DIC\n$(\mu mol \ kg^{-1})$", fontsize=fontsize);
-
-    ax21 = plt.subplot(6,1,2);
-    ax21.plot(time, meanPlumeAT, 'b--', label="plume");
-    ax21.plot(time, meanNotPlumeAT, 'b:', label="non-plume");
-    ax21.plot(time, meanAllAT, 'b', label="whole region");
-    ax21.set_ylabel("TA\n$(\mu mol \ kg^{-1})$", fontsize=fontsize);
-    
-    ax31 = plt.subplot(6,1,3);
-    ax31.plot(time, meanPlumepH_dic, 'r--', label="plume");
-    ax31.plot(time, meanNotPlumepH_dic, 'r:', label="non-plume");
-    ax31.plot(time, meanAllpH_dic, 'r', label="whole region");
-    
-    ax31.plot(time,meanPlumepH_at , 'b--', label="plume");
-    ax31.plot(time,meanNotPlumepH_at, 'b:', label="non-plume");
-    ax31.plot(time,meanAllpH_at , 'b', label="whole region");
-    ax31.set_ylabel("pH", fontsize=fontsize);
-    
-    ax41 = plt.subplot(6,1,4);
-    ax41.plot(time, meanPlumepco2_dic, 'r--', label="plume");
-    ax41.plot(time, meanNotPlumepco2_dic, 'r:', label="non-plume");
-    ax41.plot(time,meanAllpco2_dic , 'r', label="whole region");
-    
-    ax41.plot(time, meanPlumepco2_at , 'b--', label="plume");
-    ax41.plot(time, meanNotPlumepco2_at, 'b:', label="non-plume");
-    ax41.plot(time, meanAllpco2_at, 'b', label="whole region");
-    ax41.set_ylabel("pCO$_{2}$ \n (ppm)", fontsize=fontsize);
-    
-    ax51 = plt.subplot(6,1,5);
-    ax51.plot(time,meanPlumeOmegaAragonite_dic , 'r--', label="plume");
-    ax51.plot(time, meanNotPlumeOmegaAragonite_dic, 'r:', label="non-plume");
-    ax51.plot(time, meanAllOmegaAragonite_dic, 'r', label="whole region");
-    
-    ax51.plot(time,  meanPlumeOmegaAragonite_at, 'b--', label="plume");
-    ax51.plot(time, meanNotPlumeOmegaAragonite_at, 'b:', label="non-plume");
-    ax51.plot(time, meanAllOmegaAragonite_at, 'b', label="whole region");
-    ax51.set_ylabel("Aragonite \n saturation \n state", fontsize=fontsize);
-    
-    ax61 = plt.subplot(6,1,6);
-    ax61.plot(time,meanPlumeOmegaCalcite_dic , 'r--', label="plume");
-    ax61.plot(time, meanNotPlumeOmegaCalcite_dic, 'r:', label="non-plume");
-    ax61.plot(time, meanAllOmegaCalcite_dic, 'r', label="whole region");
-    
-    ax61.plot(time,  meanPlumeOmegaCalcite_at, 'b--', label="plume");
-    ax61.plot(time, meanNotPlumeOmegaCalcite_at, 'b:', label="non-plume");
-    ax61.plot(time, meanAllOmegaCalcite_at, 'b', label="whole region");
-    ax61.set_ylabel("Calcite\n saturation \n state", fontsize=fontsize);
-    ax61.set_xlabel("Time (years)", fontsize=fontsize);
-
-    #legend plotting
-    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'k--', label="Plume");
-    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'k:', label="Non-plume");
-    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'k', label="Whole region");
-    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'rs', label="Using best SST & SSS inputs from DIC algorithm");
-    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'bs', label="Using best SST & SSS inputs from TA algorithm");
-    ax11.legend(loc="center",bbox_to_anchor=(0.5, 1.5), fontsize=fontsize,ncol=2);
-    
-    # plt.legend(bbox_to_anchor=(1.04,0.5), loc="center left", borderaxespad=0)
-
-    plt.savefig("os_plots\\fig4_carbonate_timeseries_{0}.png".format(region));
-    plt.savefig("os_plots\\fig4_carbonate_timeseries_{0}.pdf".format(region));    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     #### Maps of the variables
     for plot_var in video_vars:
         outputPath = "plots/";
@@ -1453,7 +1368,7 @@ for region in regions:
             
             # arbitary limits
             if region == "oceansoda_amazon_plume":
-                if plot_var == "DIC_pred":
+                if plot_var == "DIC":
                     maxvar = 2000;
                     minvar = 1400; 
                 elif plot_var == "SSS":
@@ -1478,7 +1393,7 @@ for region in regions:
                     pass
                     
             elif region == "oceansoda_congo":
-                if plot_var == "DIC_pred":
+                if plot_var == "DIC":
                     maxvar = np.nanmax(varALL);
                     minvar = np.nanmin(varALL); 
                 elif plot_var == "SSS":
@@ -1502,7 +1417,7 @@ for region in regions:
                 else:
                     pass
             elif region == "oceansoda_mediterranean":
-                if plot_var == "DIC_pred":
+                if plot_var == "DIC":
                     maxvar = 2300;
                     minvar = 1950; 
                 elif plot_var == "SSS":
@@ -1565,8 +1480,8 @@ for region in regions:
             m.set_clim(minvar, maxvar)
             cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))   
         
-            if plot_var == "DIC_pred":
-                cb.set_label("DIC $(\mu mol^{-1})$");
+            if plot_var == "DIC":
+                cb.set_label("DIC ($\mu mol \ kg^{-1}$)");
                 f3_ax.set_title("DIC for {0} {1}".format(date.year, format(date.month, "02d")));  
             elif plot_var == "SSS":
                 cb.set_label("Salinity (PSU)");
@@ -1636,7 +1551,10 @@ for region in regions:
 
         dates = [get_datetime(int(timeSecs)) for timeSecs in dicNC.variables["time"][:]];
         varALL = dicNC.variables["{0}".format(plot_var)][:];
-        hasData = np.array([np.any(varALL[t,:,:].mask==False) for t in range(0, varALL.shape[0])]);
+        #Create second variable to get the shorter length where TA and DIC overlap
+        #which we need for plotting
+        varALL_TADIC_overlap = atNC.variables["{0}".format("pCO2")][:];
+        hasData = np.array([np.any(varALL_TADIC_overlap[t,:,:].mask==False) for t in range(0, varALL_TADIC_overlap.shape[0])]);
 
         from pathlib import Path
         Path("os_plots\{0}_seasonal".format(region)).mkdir(parents=True, exist_ok=True)
@@ -1665,7 +1583,7 @@ for region in regions:
             
             # arbitary limits
             if region == "oceansoda_amazon_plume":
-                if plot_var == "DIC_pred":
+                if plot_var == "DIC":
                     maxvar = np.nanmax(varALL);
                     minvar = np.nanmin(varALL); 
                 elif plot_var == "SSS":
@@ -1690,7 +1608,7 @@ for region in regions:
                     pass
                     
             elif region == "oceansoda_congo":
-                if plot_var == "DIC_pred":
+                if plot_var == "DIC":
                     maxvar = np.nanmax(varALL);
                     minvar = np.nanmin(varALL); 
                 elif plot_var == "SSS":
@@ -1714,7 +1632,7 @@ for region in regions:
                 else:
                     pass
             elif region == "oceansoda_mediterranean":
-                if plot_var == "DIC_pred":
+                if plot_var == "DIC":
                     maxvar = np.nanmax(varALL);
                     minvar = np.nanmin(varALL); 
                 elif plot_var == "SSS":
@@ -1772,8 +1690,8 @@ for region in regions:
                 pass
             cb = plt.colorbar(contPlot1)
         
-            if plot_var == "DIC_pred":
-                cb.set_label("DIC $(\mu mol^{-1})$");
+            if plot_var == "DIC":
+                cb.set_label("DIC ($\mu mol \ kg^{-1}$)");
             elif plot_var == "SSS":
                 cb.set_label("Salinity (PSU)");
             elif plot_var == "SST":
@@ -1797,10 +1715,11 @@ for region in regions:
             
         fig41.savefig(path.join("os_plots\{0}_seasonal".format(region,plot_var), "{0}_hov.png".format(plot_var)));
         plt.close();
-    del varALL;        
+        del varALL;        
     
     
-    hovmoll_vars = ["DIC_pred", "AT_pred", "pH_free","pCO2", "saturation_aragonite", "saturation_calcite"];
+    hovmoll_vars = ["DIC", "AT", "pH_free","pCO2", "saturation_aragonite", "saturation_calcite"];
+    
     #### Figure 3 Hovmuller plots combined
     counter_hov=0;
     
@@ -1827,14 +1746,20 @@ for region in regions:
         ymax = max(np.where(np.flipud(mask)==1)[0]);
         pad = 4; #size of xlim/ylim extents
         
-        if plot_var == "AT_pred":
+        if plot_var == "AT":
             dates = [get_datetime(int(timeSecs)) for timeSecs in atNC.variables["time"][:]];
             varALL = atNC.variables["{0}".format(plot_var)][:];
-            hasData = np.array([np.any(varALL[t,:,:].mask==False) for t in range(0, varALL.shape[0])]);
+            #Create second variable to get the shorter length where TA and DIC overlap
+            #which we need for plotting
+            varALL_TADIC_overlap = atNC.variables["{0}".format("pCO2")][:];
+            hasData = np.array([np.any(varALL_TADIC_overlap[t,:,:].mask==False) for t in range(0, varALL_TADIC_overlap.shape[0])]);
         else:
             dates = [get_datetime(int(timeSecs)) for timeSecs in dicNC.variables["time"][:]];
             varALL = dicNC.variables["{0}".format(plot_var)][:];
-            hasData = np.array([np.any(varALL[t,:,:].mask==False) for t in range(0, varALL.shape[0])]);
+            #Create second variable to get the shorter length where TA and DIC overlap
+            #which we need for plotting
+            varALL_TADIC_overlap = atNC.variables["{0}".format("pCO2")][:];
+            hasData = np.array([np.any(varALL_TADIC_overlap[t,:,:].mask==False) for t in range(0, varALL_TADIC_overlap.shape[0])]);
 
 
         from pathlib import Path
@@ -1846,7 +1771,7 @@ for region in regions:
         
 
         if region == "oceansoda_congo": #latitude slice
-            if plot_var == "AT_pred":
+            if plot_var == "AT":
                 data = atNC.variables[plot_var][:, 90+lat_to_slice,: ]; 
                 data=data.T
                 data.filled(np.nan) 
@@ -1855,7 +1780,7 @@ for region in regions:
                 data=data.T
                 data.filled(np.nan) 
         else: #longitude slice
-            if plot_var == "AT_pred":
+            if plot_var == "AT":
                 data = atNC.variables[plot_var][:, :,180-long_to_slice ];
                 data=data.T
                 data.filled(np.nan) 
@@ -1878,79 +1803,85 @@ for region in regions:
         
         # arbitary limits
         if region == "oceansoda_amazon_plume":
-            if plot_var == "DIC_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
-            if plot_var == "AT_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
+            if plot_var == "AT":
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "SSS":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "SST":
-                maxvar = np.nanmax(varALL)-273.15;
-                minvar = np.nanmin(varALL)-273.15; 
+                maxvar = np.nanmax(data)-273.15;
+                minvar = np.nanmin(data)-273.15; 
             elif plot_var == "pH_free": 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "pCO2":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "saturation_aragonite":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "saturation_calcite":                 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             else:
                 pass
                 
         elif region == "oceansoda_congo":
-            if plot_var == "DIC_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data);
+            elif plot_var == "AT":
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data);   
             elif plot_var == "SSS":
-                maxvar = np.nanmax(varALL)-273.15;
-                minvar = np.nanmin(varALL)-273.15; 
+                maxvar = np.nanmax(data)-273.15;
+                minvar = np.nanmin(data)-273.15; 
             elif plot_var == "SST":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "pH_free": 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data);  
             elif plot_var == "pCO2":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "saturation_aragonite":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data);  
             elif plot_var == "saturation_calcite":                 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             else:
                 pass
         elif region == "oceansoda_mediterranean":
-            if plot_var == "DIC_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
+            elif plot_var == "AT":
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "SSS":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data);  
             elif plot_var == "SST":
-                maxvar = np.nanmax(varALL)-273.15;
-                minvar = np.nanmin(varALL)-273.15; 
+                maxvar = np.nanmax(data)-273.15;
+                minvar = np.nanmin(data)-273.15; 
             elif plot_var == "pH_free": 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data);  
             elif plot_var == "pCO2":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "saturation_aragonite":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             elif plot_var == "saturation_calcite":                 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(data);
+                minvar = np.nanmin(data); 
             else:
                 pass
         else:
@@ -1958,22 +1889,24 @@ for region in regions:
         
         
         f3_ax = fig42.add_subplot(gs[counter_hov:counter_hov+1,0:1])
-        
+        plt.xticks(fontsize=24)
+        plt.yticks(fontsize=24)
+
         if region == "oceansoda_congo":
             contPlot1 = f3_ax.pcolor(dates,lons,  data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
-            f3_ax.set_xlabel("Time", fontsize=labelsize);
-            f3_ax.set_ylabel("Longitude($^\circ$E)", fontsize=labelsize);
+            f3_ax.set_xlabel("Time (years)", fontsize=24);
+            f3_ax.set_ylabel("Longitude ($^\circ$E)", fontsize=24);
         else:
             contPlot1 = f3_ax.pcolor(dates,lats,  data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
-            f3_ax.set_xlabel("Time", fontsize=labelsize);
-            f3_ax.set_ylabel("Latitude($^\circ$N)", fontsize=labelsize);
+            f3_ax.set_xlabel("Time (years)", fontsize=24);
+            f3_ax.set_ylabel("Latitude ($^\circ$N)", fontsize=24);
         
-        if region == "oceansoda_mediterranean":
-            f3_ax.set_title("Longitude slice ({0}$^\circ$E)".format(long_to_slice*-1), fontsize=labelsize);
-        elif region == "oceansoda_congo":
-            f3_ax.set_title("Latitude slice ({0}$^\circ$S)".format(lat_to_slice), fontsize=labelsize);
-        else:
-            f3_ax.set_title("Longitude slice ({0}$^\circ$W)".format(long_to_slice), fontsize=labelsize);
+        # if region == "oceansoda_mediterranean":
+        #     f3_ax.set_title("Longitude slice ({0}$^\circ$E)".format(long_to_slice*-1), fontsize=labelsize);
+        # elif region == "oceansoda_congo":
+        #     f3_ax.set_title("Latitude slice ({0}$^\circ$S)".format(lat_to_slice), fontsize=labelsize);
+        # else:
+        #     f3_ax.set_title("Longitude slice ({0}$^\circ$W)".format(long_to_slice), fontsize=labelsize);
 
         
         x=np.where(hasData)[0];
@@ -1981,51 +1914,169 @@ for region in regions:
         lastimeind=x[-1];
 
         if region == "oceansoda_amazon_plume":
-            f3_ax.set_ylim(0, 24);
+            f3_ax.set_ylim(4, 24);
             f3_ax.set_xlim(dates[firsttimeind], dates[lastimeind]);
         elif region == "oceansoda_congo":
-            f3_ax.set_ylim(-3, 12);
+            f3_ax.set_ylim(-2, 12);
             f3_ax.set_xlim(dates[firsttimeind], dates[lastimeind]);
         elif region == "oceansoda_mediterranean":
-            f3_ax.set_ylim(28, 48);
+            f3_ax.set_ylim(32, 36);
             f3_ax.set_xlim(dates[firsttimeind], dates[lastimeind]);
         else:
             pass
         cb = plt.colorbar(contPlot1)
-    
-        if plot_var == "DIC_pred":
-            cb.set_label("DIC $(\mu mol^{-1})$");
-        elif plot_var == "AT_pred":
-            cb.set_label("TA $(\mu mol^{-1})$");
+        cb.ax.tick_params(labelsize=24)
+
+        if plot_var == "DIC":
+            cb.set_label("DIC ($\mu mol \ kg^{-1}$)", fontsize=24);
+        elif plot_var == "AT":
+            cb.set_label("TA ($\mu mol \ kg^{-1}$)", fontsize=24);
         elif plot_var == "SSS":
-            cb.set_label("Salinity (PSU)");
+            cb.set_label("Salinity (PSU)", fontsize=24);
         elif plot_var == "SST":
-            cb.set_label("SST (($^\circ$ C))");
+            cb.set_label("SST (($^\circ$ C))", fontsize=24);
         elif plot_var == "pH_free":
-            cb.set_label("pH");
+            cb.set_label("pH", fontsize=24);
         elif plot_var == "pCO2":
-            cb.set_label("pCO$_{2}$ (ppm)");
+            cb.set_label("pCO$_{2}$ (ppm)", fontsize=24);
         elif plot_var == "saturation_aragonite":
-            cb.set_label("$\Omega$ Aragonite");
+            cb.set_label("$\Omega$ Aragonite", fontsize=24);
         elif plot_var == "saturation_calcite":
-            cb.set_label("$\Omega$ Calcite");
+            cb.set_label("$\Omega$ Calcite", fontsize=24);
         else:
             pass
  
+        if counter_hov==0:
+            f3_ax_txt = f3_ax.text(-0.1, 1.05, '(a)',transform=f3_ax.transAxes, fontsize=24, weight="bold");
+        elif counter_hov==1:
+            f3_ax_txt = f3_ax.text(-0.1, 1.05, '(b)', transform=f3_ax.transAxes,fontsize=24, weight="bold");
+        elif counter_hov==2:
+            f3_ax_txt = f3_ax.text(-0.1, 1.05, '(c)',transform=f3_ax.transAxes,  fontsize=24, weight="bold");
+        elif counter_hov==3:
+            f3_ax_txt = f3_ax.text(-0.1, 1.05, '(d)',transform=f3_ax.transAxes,  fontsize=24, weight="bold");
+        elif counter_hov==4:
+            f3_ax_txt = f3_ax.text(-0.1, 1.05, '(e)',transform=f3_ax.transAxes, fontsize=24, weight="bold");
+        elif counter_hov==5:
+            f3_ax_txt = f3_ax.text(-0.1, 1.05, '(f)',transform=f3_ax.transAxes,  fontsize=24, weight="bold");
+        
         counter_hov=counter_hov+1;
         
         #check that folder exists to save images, otherwise create it
         from pathlib import Path
         Path("os_plots\{0}_seasonal".format(region)).mkdir(parents=True, exist_ok=True)
-            
+    
+    #fig42.tight_layout()
+
     fig42.savefig(path.join("os_plots\{0}_seasonal".format(region), "_hov_multivar_all_vars.png"));
     plt.close();
     del varALL;        
+    #### Figure 4 - Timeseries plots
+    
+    #plotting parameters
+    fontsize = 12;
+    figsizex = 9.0;
+    figsizey = 2.0*5;
+    figsize = (16,24);
+    
+    plt.figure(figsize=figsize);
+    plt.title("carbonate_timeseries_{0}".format(region))
 
+    ax11 = plt.subplot(6,1,1);
+    ax11.plot(time, meanPlumeDIC, 'r--');#, label="plume");
+    ax11.plot(time, meanNotPlumeDIC, 'r:');#, label="non-plume");
+    ax11.plot(time, meanAllDIC, 'r');#, label="whole region");
+    ax11.set_ylabel("DIC\n$(\mu mol \ kg^{-1})$", fontsize=24);
+    ax11.text(-0.12, 1.06, '(a)', transform=ax11.transAxes, fontsize=24, weight="bold");
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+    ax11.set_xlim(dates[firsttimeind], dates[lastimeind]);
+            
+    ax21 = plt.subplot(6,1,2);
+    ax21.plot(time, meanPlumeAT, 'b--', label="plume");
+    ax21.plot(time, meanNotPlumeAT, 'b:', label="non-plume");
+    ax21.plot(time, meanAllAT, 'b', label="whole region");
+    ax21.set_ylabel("TA\n$(\mu mol \ kg^{-1})$", fontsize=24);
+    ax21.text(-0.12, 1.06, '(b)', transform=ax21.transAxes, fontsize=24, weight="bold");
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+    ax21.set_xlim(dates[firsttimeind], dates[lastimeind]);
+
+    ax31 = plt.subplot(6,1,3);
+    ax31.plot(time, meanPlumepH_dic, 'r--', label="plume");
+    ax31.plot(time, meanNotPlumepH_dic, 'r:', label="non-plume");
+    ax31.plot(time, meanAllpH_dic, 'r', label="whole region");
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+
+    ax31.plot(time,meanPlumepH_at , 'b--', label="plume");
+    ax31.plot(time,meanNotPlumepH_at, 'b:', label="non-plume");
+    ax31.plot(time,meanAllpH_at , 'b', label="whole region");
+    ax31.set_ylabel("pH", fontsize=24);
+    ax31.text(-0.12, 1.06, '(c)', transform=ax31.transAxes, fontsize=24, weight="bold");
+    ax31.set_xlim(dates[firsttimeind], dates[lastimeind]);
+
+    ax41 = plt.subplot(6,1,4);
+    ax41.plot(time, meanPlumepco2_dic, 'r--', label="plume");
+    ax41.plot(time, meanNotPlumepco2_dic, 'r:', label="non-plume");
+    ax41.plot(time,meanAllpco2_dic , 'r', label="whole region");
+    
+    ax41.plot(time, meanPlumepco2_at , 'b--', label="plume");
+    ax41.plot(time, meanNotPlumepco2_at, 'b:', label="non-plume");
+    ax41.plot(time, meanAllpco2_at, 'b', label="whole region");
+    ax41.set_ylabel("pCO$_{2}$ \n (ppm)", fontsize=24);
+    ax41.text(-0.12, 1.06, '(d)', transform=ax41.transAxes, fontsize=24, weight="bold");
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+    ax41.set_xlim(dates[firsttimeind], dates[lastimeind]);
+
+    ax51 = plt.subplot(6,1,5);
+    ax51.plot(time,meanPlumeOmegaAragonite_dic , 'r--', label="plume");
+    ax51.plot(time, meanNotPlumeOmegaAragonite_dic, 'r:', label="non-plume");
+    ax51.plot(time, meanAllOmegaAragonite_dic, 'r', label="whole region");
+    
+    ax51.plot(time,  meanPlumeOmegaAragonite_at, 'b--', label="plume");
+    ax51.plot(time, meanNotPlumeOmegaAragonite_at, 'b:', label="non-plume");
+    ax51.plot(time, meanAllOmegaAragonite_at, 'b', label="whole region");
+    ax51.set_ylabel("Aragonite \n saturation \n state", fontsize=24);
+    ax51.text(-0.12, 1.06, '(e)', transform=ax51.transAxes, fontsize=24, weight="bold");
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+    ax51.set_xlim(dates[firsttimeind], dates[lastimeind]);
+
+    ax61 = plt.subplot(6,1,6);
+    ax61.plot(time,meanPlumeOmegaCalcite_dic , 'r--', label="plume");
+    ax61.plot(time, meanNotPlumeOmegaCalcite_dic, 'r:', label="non-plume");
+    ax61.plot(time, meanAllOmegaCalcite_dic, 'r', label="whole region");
+    
+    ax61.plot(time,  meanPlumeOmegaCalcite_at, 'b--', label="plume");
+    ax61.plot(time, meanNotPlumeOmegaCalcite_at, 'b:', label="non-plume");
+    ax61.plot(time, meanAllOmegaCalcite_at, 'b', label="whole region");
+    ax61.set_ylabel("Calcite\n saturation \n state", fontsize=24);
+    ax61.set_xlabel("Time (years)", fontsize=24);
+    ax61.text(-0.12, 1.06, '(f)', transform=ax61.transAxes, fontsize=24, weight="bold");
+    plt.xticks(fontsize=24)
+    plt.yticks(fontsize=24)
+    ax61.set_xlim(dates[firsttimeind], dates[lastimeind]);
+
+    #legend plotting
+    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'k--', label="Plume");
+    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'k:', label="Non-plume");
+    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'k', label="Whole region");
+    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'rs', label="Using best SST & SSS inputs from DIC algorithm");
+    ax11.plot([np.nan, np.nan], [np.nan, np.nan], 'bs', label="Using best SST & SSS inputs from TA algorithm");
+    ax11.legend(loc="center",bbox_to_anchor=(0.5, 1.5), fontsize=24,ncol=2);
+    
+    # plt.legend(bbox_to_anchor=(1.04,0.5), loc="center left", borderaxespad=0)
+    #plt.tight_layout()
+
+    plt.savefig("os_plots\\fig4_carbonate_timeseries_{0}.png".format(region));
+    plt.savefig("os_plots\\fig4_carbonate_timeseries_{0}.pdf".format(region));    
+    
+    
 
     #### DIC and TA in 2015
-    plot_var="DIC_pred"
-    plot_var2="AT_pred"
+    plot_var="DIC"
+    plot_var2="AT"
     outputPath = "plots/";
     maskPath = "C:\\Users\\rps207\\Documents\\Python\\2021-Oceansoda_pre_github\\OceanSODA-master\\aux_data/osoda_region_masks_v2.nc";
     maskNC = Dataset(maskPath, 'r');
@@ -2086,10 +2137,10 @@ for region in regions:
         
         # arbitary limits
         if region == "oceansoda_amazon_plume":
-            if plot_var == "DIC_pred":
+            if plot_var == "DIC":
                 maxvar = 2000;
                 minvar = 1400; 
-            elif plot_var == "AT_pred":
+            elif plot_var == "AT":
                 maxvar = 2200;
                 minvar = 1400; 
             elif plot_var == "SSS":
@@ -2114,7 +2165,7 @@ for region in regions:
                 pass
                 
         elif region == "oceansoda_congo":
-            if plot_var == "DIC_pred":
+            if plot_var == "DIC":
                 maxvar = np.nanmax(varALL);
                 minvar = np.nanmin(varALL); 
             elif plot_var == "SSS":
@@ -2138,7 +2189,7 @@ for region in regions:
             else:
                 pass
         elif region == "oceansoda_mediterranean":
-            if plot_var == "DIC_pred":
+            if plot_var == "DIC":
                 maxvar = 2300;
                 minvar = 1950; 
             elif plot_var == "SSS":
@@ -2205,11 +2256,11 @@ for region in regions:
         cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))  
 
     
-        if plot_var == "DIC_pred":
-            cb.set_label("DIC $(\mu mol^{-1})$");
+        if plot_var == "DIC":
+            cb.set_label("DIC ($\mu mol \ kg^{-1}$)");
             f3_ax.set_title("DIC for {0} {1}".format(date.year, format(date.month, "02d")));  
-        elif plot_var == "AT_pred":
-            cb.set_label("TA $(\mu mol^{-1})$");
+        elif plot_var == "AT":
+            cb.set_label("TA ($\mu mol \ kg^{-1}$)");
             f3_ax.set_title("TA for {0} {1}".format(date.year, format(date.month, "02d")));
         elif plot_var == "SSS":
             cb.set_label("Salinity (PSU)");
@@ -2257,10 +2308,10 @@ for region in regions:
         
         # arbitary limits
         if region == "oceansoda_amazon_plume":
-            if plot_var2 == "DIC_pred":
+            if plot_var2 == "DIC":
                 maxvar = 2100;
                 minvar = 1000; 
-            elif plot_var == "AT_pred":
+            elif plot_var == "AT":
                 maxvar = 2400;
                 minvar = 600; 
             elif plot_var2 == "SSS":
@@ -2285,7 +2336,7 @@ for region in regions:
                 pass
                 
         elif region == "oceansoda_congo":
-            if plot_var2 == "DIC_pred":
+            if plot_var2 == "DIC":
                 maxvar = np.nanmax(varALL);
                 minvar = np.nanmin(varALL); 
             elif plot_var2 == "SSS":
@@ -2309,7 +2360,7 @@ for region in regions:
             else:
                 pass
         elif region == "oceansoda_mediterranean":
-            if plot_var2 == "DIC_pred":
+            if plot_var2 == "DIC":
                 maxvar = 2300;
                 minvar = 1950; 
             elif plot_var2 == "SSS":
@@ -2371,11 +2422,11 @@ for region in regions:
         m.set_array(plot_var2)
         m.set_clim(minvar, maxvar)
         cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))    
-        if plot_var2 == "DIC_pred":
-            cb.set_label("DIC $(\mu mol^{-1})$");
+        if plot_var2 == "DIC":
+            cb.set_label("DIC ($\mu mol \ kg^{-1}$)");
             f3_ax.set_title("DIC for {0} {1}".format(date.year, format(date.month, "02d")));  
-        elif plot_var2 == "AT_pred":
-            cb.set_label("TA $(\mu mol^{-1})$");
+        elif plot_var2 == "AT":
+            cb.set_label("TA ($\mu mol \ kg^{-1}$)");
             f3_ax.set_title("TA for {0} {1}".format(date.year, format(date.month, "02d")));
         elif plot_var2 == "SSS":
             cb.set_label("Salinity (PSU)");
@@ -2410,8 +2461,8 @@ for region in regions:
     
     
     #### Figure 2 - DIC and TA mmm
-    plot_var="DIC_pred"
-    plot_var2="AT_pred"
+    plot_var="DIC"
+    plot_var2="AT"
     outputPath = "plots/";
     maskPath = "C:\\Users\\rps207\\Documents\\Python\\2021-Oceansoda_pre_github\\OceanSODA-master\\aux_data/osoda_region_masks_v2.nc";
     maskNC = Dataset(maskPath, 'r');
@@ -2482,10 +2533,10 @@ for region in regions:
         
         # arbitary limits
         if region == "oceansoda_amazon_plume":
-            if plot_var == "DIC_pred":
+            if plot_var == "DIC":
                 maxvar = 2100;
                 minvar = 1000; 
-            elif plot_var == "AT_pred":
+            elif plot_var == "AT":
                 maxvar = 2400;
                 minvar = 600; 
             elif plot_var == "SSS":
@@ -2510,10 +2561,10 @@ for region in regions:
                 pass
                 
         elif region == "oceansoda_congo":
-            if plot_var == "DIC_pred":
+            if plot_var == "DIC":
                 maxvar = np.nanmax(varALL);
                 minvar = np.nanmin(varALL); 
-            elif plot_var == "AT_pred":
+            elif plot_var == "AT":
                 maxvar = np.nanmax(varALL);
                 minvar = np.nanmin(varALL); 
             elif plot_var == "SSS":
@@ -2537,7 +2588,7 @@ for region in regions:
             else:
                 pass
         elif region == "oceansoda_mediterranean":
-            if plot_var == "DIC_pred":
+            if plot_var == "DIC":
                 maxvar = 2300;
                 minvar = 1950; 
             elif plot_var == "SSS":
@@ -2602,10 +2653,10 @@ for region in regions:
         m.set_clim(minvar, maxvar)
         cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))  
 
-        if plot_var == "DIC_pred":
-            cb.set_label("DIC $(\mu mol^{-1})$");
-        elif plot_var == "AT_pred":
-            cb.set_label("TA $(\mu mol^{-1})$");
+        if plot_var == "DIC":
+            cb.set_label("DIC ($\mu mol \ kg^{-1}$)");
+        elif plot_var == "AT":
+            cb.set_label("TA ($\mu mol \ kg^{-1}$)");
         elif plot_var == "SSS":
             cb.set_label("Salinity (PSU)");
         elif plot_var == "SST":
@@ -2663,10 +2714,10 @@ for region in regions:
         
         # arbitary limits
         if region == "oceansoda_amazon_plume":
-            if plot_var2 == "DIC_pred":
+            if plot_var2 == "DIC":
                 maxvar = 2100;
                 minvar = 1000; 
-            elif plot_var2 == "AT_pred":
+            elif plot_var2 == "AT":
                 maxvar = 2400;
                 minvar = 600; 
             elif plot_var2 == "SSS":
@@ -2691,7 +2742,7 @@ for region in regions:
                 pass
                 
         elif region == "oceansoda_congo":
-            if plot_var2 == "DIC_pred":
+            if plot_var2 == "DIC":
                 maxvar = np.nanmax(varALL);
                 minvar = np.nanmin(varALL); 
             elif plot_var2 == "SSS":
@@ -2715,7 +2766,7 @@ for region in regions:
             else:
                 pass
         elif region == "oceansoda_mediterranean":
-            if plot_var2 == "DIC_pred":
+            if plot_var2 == "DIC":
                 maxvar = 2300;
                 minvar = 1950; 
             elif plot_var2 == "SSS":
@@ -2777,10 +2828,10 @@ for region in regions:
         m.set_array(plot_var2)
         m.set_clim(minvar, maxvar)
         cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))    
-        if plot_var2 == "DIC_pred":
-            cb.set_label("DIC $(\mu mol^{-1})$");
-        elif plot_var2 == "AT_pred":
-            cb.set_label("TA $(\mu mol^{-1})$");
+        if plot_var2 == "DIC":
+            cb.set_label("DIC ($\mu mol \ kg^{-1}$)");
+        elif plot_var2 == "AT":
+            cb.set_label("TA ($\mu mol \ kg^{-1}$)");
         elif plot_var2 == "SSS":
             cb.set_label("Salinity (PSU)");
         elif plot_var2 == "SST":
@@ -2815,7 +2866,7 @@ for region in regions:
     del varALL;           
     
     #### Figure 2a - DIC mmm
-    plot_var="DIC_pred"
+    plot_var="DIC"
     outputPath = "plots/";
     maskPath = "C:\\Users\\rps207\\Documents\\Python\\2021-Oceansoda_pre_github\\OceanSODA-master\\aux_data/osoda_region_masks_v2.nc";
     maskNC = Dataset(maskPath, 'r');
@@ -2834,7 +2885,16 @@ for region in regions:
     ymax = max(np.where(np.flipud(mask)==1)[0]);
     pad = 4; #size of xlim/ylim extents
     
-    fig6 = plt.figure(figsize=(15,10))
+                
+    if region == "oceansoda_amazon_plume":
+        fig6 = plt.figure(figsize=(20,12))
+    elif region == "oceansoda_congo":
+        fig6 = plt.figure(figsize=(20,12))#15,10 IS ALMOST SQUARE 
+    elif region == "oceansoda_mediterranean":
+        fig6 = plt.figure(figsize=(15,10))
+    else:
+        pass
+        
     gs = fig6.add_gridspec(2, 2)
     ticksize = 10;
 
@@ -2845,7 +2905,6 @@ for region in regions:
     dates2 = [get_datetime(int(timeSecs)) for timeSecs in atNC.variables["time"][:]];
     varALL2 = atNC.variables["{0}".format(plot_var2)][:];
     hasData2 = np.array([np.any(varALL2[t,:,:].mask==False) for t in range(0, varALL2.shape[0])]);
-    
     
     from pathlib import Path
     Path("os_plots\{0}_seasonal".format(region)).mkdir(parents=True, exist_ok=True)
@@ -2871,7 +2930,23 @@ for region in regions:
         data[:,mask != 1] = np.nan;
         data= np.nanmean(data, axis=0);
 
-        
+        #find the maximum and minimum of data in the subplots so they are all
+        #standardised and         
+        data1 = dicNC.variables[plot_var][number_list_jfm, :, :];
+        data1[:,mask != 1] = np.nan;
+        data1= np.nanmean(data1, axis=0);
+        data2 = dicNC.variables[plot_var][number_list_amj, :, :];
+        data2[:,mask != 1] = np.nan;
+        data2= np.nanmean(data2, axis=0);
+        data3= dicNC.variables[plot_var][number_list_jas, :, :];
+        data3[:,mask != 1] = np.nan;
+        data3= np.nanmean(data3, axis=0);        
+        data4 = dicNC.variables[plot_var][number_list_ond, :, :];
+        data4[:,mask != 1] = np.nan;
+        data4= np.nanmean(data4, axis=0);
+
+        dataall_subplots=([data1,data2,data3,data4]);
+
         if plot_var == "pCO2":
             cmap_touse = plt.cm.get_cmap('inferno_r');
         else:
@@ -2886,82 +2961,82 @@ for region in regions:
         
         # arbitary limits
         if region == "oceansoda_amazon_plume":
-            if plot_var == "DIC_pred":
-                maxvar = 2100;
-                minvar = 1000; 
-            elif plot_var == "AT_pred":
-                maxvar = 2400;
-                minvar = 600; 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(dataall_subplots);#2100;
+                minvar = np.nanmin(dataall_subplots);#1000; 
+            elif plot_var == "AT":
+                maxvar = np.nanmax(dataall_subplots);#2400;
+                minvar = np.nanmin(dataall_subplots);#600; 
             elif plot_var == "SSS":
-                maxvar = 37;
-                minvar = 32; 
+                maxvar = np.nanmax(dataall_subplots);#37;
+                minvar = np.nanmin(dataall_subplots);#32; 
             elif plot_var == "SST":
-                maxvar = 30;
-                minvar = 22; 
+                maxvar = np.nanmax(dataall_subplots);#30;
+                minvar = np.nanmin(dataall_subplots);#22; 
             elif plot_var == "pH_free": 
-                maxvar = 8.5;
-                minvar = 7.5; 
+                maxvar = np.nanmax(dataall_subplots);#8.5;
+                minvar = np.nanmin(dataall_subplots);#7.5; 
             elif plot_var == "pCO2":
-                maxvar = 3000;
-                minvar = 200; 
+                maxvar = np.nanmax(dataall_subplots);#3000;
+                minvar = np.nanmin(dataall_subplots);#200; 
             elif plot_var == "saturation_aragonite":
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);#0; 
             elif plot_var == "saturation_calcite":                 
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);#0; 
             else:
                 pass
                 
         elif region == "oceansoda_congo":
-            if plot_var == "DIC_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
-            elif plot_var == "AT_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
+            elif plot_var == "AT":
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "SSS":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "SST":
-                maxvar = np.nanmax(varALL)-273.15;
-                minvar = np.nanmin(varALL)-273.15; 
+                maxvar = np.nanmax(dataall_subplots)-273.15;
+                minvar = np.nanmin(dataall_subplots)-273.15; 
             elif plot_var == "pH_free": 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "pCO2":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "saturation_aragonite":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "saturation_calcite":                 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);#
+                minvar = np.nanmin(dataall_subplots);# 
             else:
                 pass
         elif region == "oceansoda_mediterranean":
-            if plot_var == "DIC_pred":
-                maxvar = 2300;
-                minvar = 1950; 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(dataall_subplots);#2300;
+                minvar = np.nanmin(dataall_subplots);# 1950; 
             elif plot_var == "SSS":
-                maxvar = 37;
-                minvar = 32; 
+                maxvar = np.nanmax(dataall_subplots);#37;
+                minvar = np.nanmin(dataall_subplots);# 32; 
             elif plot_var == "SST":
-                maxvar = 25;
-                minvar = 10; 
+                maxvar = np.nanmax(dataall_subplots);#25;
+                minvar = np.nanmin(dataall_subplots);# 10; 
             elif plot_var == "pH_free": 
-                maxvar = 8.2;
-                minvar = 8; 
+                maxvar = np.nanmax(dataall_subplots);#8.2;
+                minvar = np.nanmin(dataall_subplots);# 8; 
             elif plot_var == "pCO2":
-                maxvar = 600;
-                minvar = 200; 
+                maxvar = np.nanmax(dataall_subplots);#600;
+                minvar = np.nanmin(dataall_subplots);# 200; 
             elif plot_var == "saturation_aragonite":
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);# 0; 
             elif plot_var == "saturation_calcite":                 
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);# 0; 
             else:
                 pass
         else:
@@ -2974,29 +3049,26 @@ for region in regions:
         gl.ylabels_right = False;
         gl.xformatter = LONGITUDE_FORMATTER;
         gl.yformatter = LATITUDE_FORMATTER;
-        gl.xlabel_style = {'size': ticksize};
-        gl.ylabel_style = {'size': ticksize};
-        f3_ax.text(-0.14, 0.55, 'Latitude $^({\circ})$', va='bottom', ha='center',
-            rotation='vertical', rotation_mode='anchor',
+        gl.xlabel_style = {'size': 16};
+        gl.ylabel_style = {'size': 16};
+        f3_ax.text(-0.12, 0.55, 'Latitude $(^{\circ})$', va='bottom', ha='center',
+            rotation='vertical', rotation_mode='anchor',fontsize=16,
             transform=f3_ax.transAxes)
-        f3_ax.text(0.5, -0.2, 'Longitude $(^{\circ})$', va='bottom', ha='center',
-            rotation='horizontal', rotation_mode='anchor',
+        f3_ax.text(0.5, -0.13, 'Longitude $(^{\circ})$', va='bottom', ha='center',
+            rotation='horizontal', rotation_mode='anchor',fontsize=16,
             transform=f3_ax.transAxes)
         
         if region == "oceansoda_amazon_plume":
             f3_ax.set_xlim(-74, -30);
             f3_ax.set_ylim(-4, 26);
         elif region == "oceansoda_congo":
-            f3_ax.set_xlim(-4, 16);
-            f3_ax.set_ylim(-12, 6);
+            f3_ax.set_xlim(-3, 18);
+            f3_ax.set_ylim(-11, 5);
         elif region == "oceansoda_mediterranean":
             f3_ax.set_xlim(-6, 40);
             f3_ax.set_ylim(28, 48);
         else:
             pass
-        
-
-        
         
         f3_ax.coastlines();
         resol = '50m'  # use data at this scale
@@ -3008,43 +3080,127 @@ for region in regions:
         m.set_array(plot_var)
         m.set_clim(minvar, maxvar)
         cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))  
-
-        if plot_var == "DIC_pred":
-            cb.set_label("DIC $(\mu mol^{-1})$");
-        elif plot_var == "AT_pred":
-            cb.set_label("TA $(\mu mol^{-1})$");
+        cb.ax.tick_params(labelsize=16)
+        
+        if plot_var == "DIC":
+            cb.ax.set_title("DIC ($\mu mol \ kg^{-1}$)",fontsize=16);
+        elif plot_var == "AT":
+            cb.ax.set_title("TA ($\mu mol \ kg^{-1}$)",fontsize=16);
         elif plot_var == "SSS":
-            cb.set_label("Salinity (PSU)");
+            cb.ax.set_title("Salinity (PSU)",fontsize=16);
         elif plot_var == "SST":
-            cb.set_label("SST (($^\circ$ C))");
+            cb.ax.set_title("SST (($^\circ$ C))",fontsize=16);
         elif plot_var == "pH_free":
-            cb.set_label("pH");
+            cb.ax.set_title("pH",fontsize=16);
         elif plot_var == "pCO2":
-            cb.set_label("pCO$_{2}$ (ppm)");
+            cb.ax.set_title("pCO$_{2}$ (ppm)",fontsize=16);
         elif plot_var == "saturation_aragonite":
-            cb.set_label("$\Omega$ Aragonite");
+            cb.ax.set_title("$\Omega$ Aragonite",fontsize=16);
         elif plot_var == "saturation_calcite":
-            cb.set_label("$\Omega$ Calcite");
+            cb.ax.set_title("$\Omega$ Calcite",fontsize=16);
         else:
             pass
 
+        # #add a marker for the mouth of the Amazon
+        if region == "oceansoda_amazon_plume":
+            # Mark some particular places with a small circle and a name label...
+            # Define some test points with latitude and longitude coordinates.
+            city_data = [('Amazon River mouth', -1.455833,-48.503889 ), 
+                          ('Orinoco River mouth', 8.616667, -62.250000),
+                          ('Maroni River mouth', 5.745833, -53.968333)]
+                            #('Essequibo River mouth', 7.033333, -58.450000)
+            crs_latlon = ccrs.PlateCarree()
+            # Place a single marker point and a text annotation at each place.
+            for name, lat, lon in city_data:
+            
+                plt.plot(lon, lat, marker='o', markersize=7.0, markeredgewidth=2.5,
+                          markerfacecolor='black', markeredgecolor='white',transform=crs_latlon)
+                # NOTE: the "plt.annotate call" does not have a "transform=" keyword,
+                # so for this one we transform the coordinates with a Cartopy call.
+                at_x, at_y = f3_ax.projection.transform_point(lon, lat,src_crs=crs_latlon)
+                if name =="Maroni River mouth":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-150, -40), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                elif name =="Orinoco River mouth":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-100, -30), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                else:
+                # place_labels=plt.text(lon, lat,name,fontsize=15,weight='bold')
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-200, -10), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                    
+        elif region == "oceansoda_congo":
+            # Mark some particular places with a small circle and a name label...
+            # Define some test points with latitude and longitude coordinates.
+            city_data = [('Congo River', -6.060116, 12.494964 ), 
+                          ('Niger Delta', 4.30996655147119, 6.22693906885239),
+                          ('Ogooué River', -1.027200, 8.884800),
+                          ('Sanaga River', 3.559338, 9.652175)]
+            crs_latlon = ccrs.PlateCarree()
+            # Place a single marker point and a text annotation at each place.
+            for name, lat, lon in city_data:
+            
+                plt.plot(lon, lat, marker='o', markersize=7.0, markeredgewidth=2.5,
+                          markerfacecolor='black', markeredgecolor='white',transform=crs_latlon)
+                # NOTE: the "plt.annotate call" does not have a "transform=" keyword,
+                # so for this one we transform the coordinates with a Cartopy call.
+                at_x, at_y = f3_ax.projection.transform_point(lon, lat,src_crs=crs_latlon)
+                if name =="Congo River":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-20, 50), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                elif name =="Niger Delta":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(130, -5), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                elif name =="Ogooué River":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(50, 0), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))   
+                elif name =="Sanaga River":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(50, -40), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5)) 
+                    
+        # # add the slice as a line
+        if region == "oceansoda_amazon_plume":
+            ad_lat, ad_lon = 4, -52
+            liv_lat, liv_lon = 23, -52
+            x1, y1 = f3_ax.projection.transform_point(ad_lon, ad_lat,src_crs=crs_latlon)
+            x2, y2 = f3_ax.projection.transform_point(liv_lon, liv_lat,src_crs=crs_latlon)
+    
+            f3_ax.plot([x1, x2], [y1, y2],
+                      color='black', linewidth=1, marker='s', markersize=3, markerfacecolor='black',linestyle='--',transform=crs_latlon)
+        elif region == "oceansoda_congo":
+            ad_lat, ad_lon = -6, -1.5
+            liv_lat, liv_lon = -6, 11.5
+            x1, y1 = f3_ax.projection.transform_point(ad_lon, ad_lat,src_crs=crs_latlon)
+            x2, y2 = f3_ax.projection.transform_point(liv_lon, liv_lat,src_crs=crs_latlon)
+    
+            f3_ax.plot([x1, x2], [y1, y2],
+                      color='black', linewidth=1, marker='s', markersize=3, markerfacecolor='black',linestyle='--',transform=crs_latlon)
+           
+
         if counter==0:
-            f3_ax.set_title("JFM");
+            f3_ax.set_title("JFM",fontsize=16);
         elif counter==1:
-            f3_ax.set_title("AMJ");
+            f3_ax.set_title("AMJ",fontsize=16);
         elif counter==2:
-            f3_ax.set_title("JAS");
+            f3_ax.set_title("JAS",fontsize=16);
         elif counter==3:
-            f3_ax.set_title("OND");
+            f3_ax.set_title("OND",fontsize=16);
             
         if counter==0:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(a)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(a)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
         elif counter==1:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(b)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(b)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
         elif counter==2:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(c)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(c)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
         elif counter==3:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(d)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(d)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
             
         counter=counter+1;
             
@@ -3058,7 +3214,7 @@ for region in regions:
     del varALL;     
     
     #### Figure 2b - TA mmm
-    plot_var="AT_pred"
+    plot_var="AT"
     outputPath = "plots/";
     maskPath = "C:\\Users\\rps207\\Documents\\Python\\2021-Oceansoda_pre_github\\OceanSODA-master\\aux_data/osoda_region_masks_v2.nc";
     maskNC = Dataset(maskPath, 'r');
@@ -3077,7 +3233,15 @@ for region in regions:
     ymax = max(np.where(np.flipud(mask)==1)[0]);
     pad = 4; #size of xlim/ylim extents
     
-    fig6 = plt.figure(figsize=(15,10))
+    if region == "oceansoda_amazon_plume":
+        fig6 = plt.figure(figsize=(20,12))
+    elif region == "oceansoda_congo":
+        fig6 = plt.figure(figsize=(20,12))
+    elif region == "oceansoda_mediterranean":
+        fig6 = plt.figure(figsize=(15,10))
+    else:
+        pass
+    
     gs = fig6.add_gridspec(2, 2)
     ticksize = 10;
 
@@ -3109,6 +3273,23 @@ for region in regions:
         data[:,mask != 1] = np.nan;
         data= np.nanmean(data, axis=0);
 
+
+        #find the maximum and minimum of data in the subplots so they are all
+        #standardised and         
+        data1 = atNC.variables[plot_var][number_list_jfm, :, :];
+        data1[:,mask != 1] = np.nan;
+        data1= np.nanmean(data1, axis=0);
+        data2 = atNC.variables[plot_var][number_list_amj, :, :];
+        data2[:,mask != 1] = np.nan;
+        data2= np.nanmean(data2, axis=0);
+        data3= atNC.variables[plot_var][number_list_jas, :, :];
+        data3[:,mask != 1] = np.nan;
+        data3= np.nanmean(data3, axis=0);        
+        data4 = atNC.variables[plot_var][number_list_ond, :, :];
+        data4[:,mask != 1] = np.nan;
+        data4= np.nanmean(data4, axis=0);
+
+        dataall_subplots=([data1,data2,data3,data4]);
         
         if plot_var == "pCO2":
             cmap_touse = plt.cm.get_cmap('inferno_r');
@@ -3124,82 +3305,82 @@ for region in regions:
         
         # arbitary limits
         if region == "oceansoda_amazon_plume":
-            if plot_var == "DIC_pred":
-                maxvar = 2100;
-                minvar = 1000; 
-            elif plot_var == "AT_pred":
-                maxvar = 2400;
-                minvar = 600; 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(dataall_subplots);#2100;
+                minvar = np.nanmin(dataall_subplots);#1000; 
+            elif plot_var == "AT":
+                maxvar = np.nanmax(dataall_subplots);#2400;
+                minvar = np.nanmin(dataall_subplots);#600; 
             elif plot_var == "SSS":
-                maxvar = 37;
-                minvar = 32; 
+                maxvar = np.nanmax(dataall_subplots);#37;
+                minvar = np.nanmin(dataall_subplots);#32; 
             elif plot_var == "SST":
-                maxvar = 30;
-                minvar = 22; 
+                maxvar = np.nanmax(dataall_subplots);#30;
+                minvar = np.nanmin(dataall_subplots);#22; 
             elif plot_var == "pH_free": 
-                maxvar = 8.5;
-                minvar = 7.5; 
+                maxvar = np.nanmax(dataall_subplots);#8.5;
+                minvar = np.nanmin(dataall_subplots);#7.5; 
             elif plot_var == "pCO2":
-                maxvar = 3000;
-                minvar = 200; 
+                maxvar = np.nanmax(dataall_subplots);#3000;
+                minvar = np.nanmin(dataall_subplots);#200; 
             elif plot_var == "saturation_aragonite":
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);#0; 
             elif plot_var == "saturation_calcite":                 
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);#0; 
             else:
                 pass
                 
         elif region == "oceansoda_congo":
-            if plot_var == "DIC_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
-            elif plot_var == "AT_pred":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
+            elif plot_var == "AT":
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "SSS":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "SST":
-                maxvar = np.nanmax(varALL)-273.15;
-                minvar = np.nanmin(varALL)-273.15; 
+                maxvar = np.nanmax(dataall_subplots)-273.15;
+                minvar = np.nanmin(dataall_subplots)-273.15; 
             elif plot_var == "pH_free": 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "pCO2":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             elif plot_var == "saturation_aragonite":
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);#
+                minvar = np.nanmin(dataall_subplots);# 
             elif plot_var == "saturation_calcite":                 
-                maxvar = np.nanmax(varALL);
-                minvar = np.nanmin(varALL); 
+                maxvar = np.nanmax(dataall_subplots);
+                minvar = np.nanmin(dataall_subplots); 
             else:
                 pass
         elif region == "oceansoda_mediterranean":
-            if plot_var == "DIC_pred":
-                maxvar = 2300;
-                minvar = 1950; 
+            if plot_var == "DIC":
+                maxvar = np.nanmax(dataall_subplots);#2300;
+                minvar = np.nanmin(dataall_subplots);# 1950; 
             elif plot_var == "SSS":
-                maxvar = 37;
-                minvar = 32; 
+                maxvar = np.nanmax(dataall_subplots);#37;
+                minvar = np.nanmin(dataall_subplots);# 32; 
             elif plot_var == "SST":
-                maxvar = 25;
-                minvar = 10; 
+                maxvar = np.nanmax(dataall_subplots);#25;
+                minvar = np.nanmin(dataall_subplots);# 10; 
             elif plot_var == "pH_free": 
-                maxvar = 8.2;
-                minvar = 8; 
+                maxvar = np.nanmax(dataall_subplots);#8.2;
+                minvar = np.nanmin(dataall_subplots);# 8; 
             elif plot_var == "pCO2":
-                maxvar = 600;
-                minvar = 200; 
+                maxvar = np.nanmax(dataall_subplots);#600;
+                minvar = np.nanmin(dataall_subplots);# 200; 
             elif plot_var == "saturation_aragonite":
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);# 0; 
             elif plot_var == "saturation_calcite":                 
-                maxvar = 10;
-                minvar = 0; 
+                maxvar = np.nanmax(dataall_subplots);#10;
+                minvar = np.nanmin(dataall_subplots);# 0; 
             else:
                 pass
         else:
@@ -3212,21 +3393,21 @@ for region in regions:
         gl.ylabels_right = False;
         gl.xformatter = LONGITUDE_FORMATTER;
         gl.yformatter = LATITUDE_FORMATTER;
-        gl.xlabel_style = {'size': ticksize};
-        gl.ylabel_style = {'size': ticksize};
-        f3_ax.text(-0.14, 0.55, 'Latitude $(^{\circ})$', va='bottom', ha='center',
-            rotation='vertical', rotation_mode='anchor',
+        gl.xlabel_style = {'size': 16};
+        gl.ylabel_style = {'size': 16};
+        f3_ax.text(-0.12, 0.55, 'Latitude $(^{\circ})$', va='bottom', ha='center',
+            rotation='vertical', rotation_mode='anchor',fontsize=16,
             transform=f3_ax.transAxes)
-        f3_ax.text(0.5, -0.2, 'Longitude $(^{\circ})$', va='bottom', ha='center',
-            rotation='horizontal', rotation_mode='anchor',
+        f3_ax.text(0.5, -0.13, 'Longitude $(^{\circ})$', va='bottom', ha='center',
+            rotation='horizontal', rotation_mode='anchor',fontsize=16,
             transform=f3_ax.transAxes)
         
         if region == "oceansoda_amazon_plume":
             f3_ax.set_xlim(-74, -30);
             f3_ax.set_ylim(-4, 26);
         elif region == "oceansoda_congo":
-            f3_ax.set_xlim(-4, 16);
-            f3_ax.set_ylim(-12, 6);
+            f3_ax.set_xlim(-3, 18);
+            f3_ax.set_ylim(-11, 5);
         elif region == "oceansoda_mediterranean":
             f3_ax.set_xlim(-6, 40);
             f3_ax.set_ylim(28, 48);
@@ -3243,43 +3424,131 @@ for region in regions:
         m.set_array(plot_var)
         m.set_clim(minvar, maxvar)
         cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))  
+        cb.ax.tick_params(labelsize=16)
 
-        if plot_var == "DIC_pred":
-            cb.set_label("DIC $(\mu mol^{-1})$");
-        elif plot_var == "AT_pred":
-            cb.set_label("TA $(\mu mol^{-1})$");
+        if plot_var == "DIC":
+            cb.ax.set_title("DIC ($\mu mol \ kg^{-1}$)",fontsize=16);
+        elif plot_var == "AT":
+            cb.ax.set_title("TA ($\mu mol \ kg^{-1}$)",fontsize=16);
         elif plot_var == "SSS":
-            cb.set_label("Salinity (PSU)");
+            cb.ax.set_title("Salinity (PSU)",fontsize=16);
         elif plot_var == "SST":
-            cb.set_label("SST (($^\circ$ C))");
+            cb.ax.set_title("SST (($^\circ$ C))",fontsize=16);
         elif plot_var == "pH_free":
-            cb.set_label("pH");
+            cb.ax.set_title("pH",fontsize=16);
         elif plot_var == "pCO2":
-            cb.set_label("pCO$_{2}$ (ppm)");
+            cb.ax.set_title("pCO$_{2}$ (ppm)",fontsize=16);
         elif plot_var == "saturation_aragonite":
-            cb.set_label("$\Omega$ Aragonite");
+            cb.ax.set_title("$\Omega$ Aragonite",fontsize=16);
         elif plot_var == "saturation_calcite":
-            cb.set_label("$\Omega$ Calcite");
+            cb.ax.set_title("$\Omega$ Calcite",fontsize=16);
         else:
             pass
-
+        
+        # #add a marker for the mouth of the Amazon
+        # Mark some particular places with a small circle and a name label...
+        # Define some test points with latitude and longitude coordinates.
+                # #add a marker for the mouth of the Amazon
+        if region == "oceansoda_amazon_plume":
+            # Mark some particular places with a small circle and a name label...
+            # Define some test points with latitude and longitude coordinates.
+            city_data = [('Amazon River mouth', -1.455833,-48.503889 ), 
+                          ('Orinoco River mouth', 8.616667, -62.250000),
+                          ('Maroni River mouth', 5.745833, -53.968333)]
+                            #('Essequibo River mouth', 7.033333, -58.450000)
+            crs_latlon = ccrs.PlateCarree()
+            # Place a single marker point and a text annotation at each place.
+            for name, lat, lon in city_data:
+            
+                plt.plot(lon, lat, marker='o', markersize=7.0, markeredgewidth=2.5,
+                          markerfacecolor='black', markeredgecolor='white',transform=crs_latlon)
+                # NOTE: the "plt.annotate call" does not have a "transform=" keyword,
+                # so for this one we transform the coordinates with a Cartopy call.
+                at_x, at_y = f3_ax.projection.transform_point(lon, lat,src_crs=crs_latlon)
+                if name =="Maroni River mouth":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-150, -40), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                elif name =="Orinoco River mouth":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-100, -30), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                else:
+                # place_labels=plt.text(lon, lat,name,fontsize=15,weight='bold')
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-200, -10), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+        
+        elif region == "oceansoda_congo":
+            # Mark some particular places with a small circle and a name label...
+            # Define some test points with latitude and longitude coordinates.
+            city_data = [('Congo River', -6.060116, 12.494964 ), 
+                          ('Niger Delta', 4.30996655147119, 6.22693906885239),
+                          ('Ogooué River', -1.027200, 8.884800),
+                          ('Sanaga River', 3.559338, 9.652175)]
+            crs_latlon = ccrs.PlateCarree()
+            # Place a single marker point and a text annotation at each place.
+            for name, lat, lon in city_data:
+            
+                plt.plot(lon, lat, marker='o', markersize=7.0, markeredgewidth=2.5,
+                          markerfacecolor='black', markeredgecolor='white',transform=crs_latlon)
+                # NOTE: the "plt.annotate call" does not have a "transform=" keyword,
+                # so for this one we transform the coordinates with a Cartopy call.
+                at_x, at_y = f3_ax.projection.transform_point(lon, lat,src_crs=crs_latlon)
+                if name =="Congo River":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(-20, 50), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                elif name =="Niger Delta":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(130, -5), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))
+                elif name =="Ogooué River":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(50, 0), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5))   
+                elif name =="Sanaga River":
+                    plt.annotate(name, xy=(at_x, at_y), xytext=(50, -40), textcoords='offset points',
+                        color='black', backgroundcolor='white', size='large',
+                        arrowprops=dict(arrowstyle='->', color='white', linewidth=2.5)) 
+                    
+         
+        # # add the slice as a line
+        if region == "oceansoda_amazon_plume":
+            ad_lat, ad_lon = 4, -52
+            liv_lat, liv_lon = 23, -52
+            x1, y1 = f3_ax.projection.transform_point(ad_lon, ad_lat,src_crs=crs_latlon)
+            x2, y2 = f3_ax.projection.transform_point(liv_lon, liv_lat,src_crs=crs_latlon)
+    
+            f3_ax.plot([x1, x2], [y1, y2],
+                      color='black', linewidth=1, marker='s', markersize=3, markerfacecolor='black',linestyle='--',transform=crs_latlon)
+        elif region == "oceansoda_congo":
+            ad_lat, ad_lon = -6, -1.5
+            liv_lat, liv_lon = -6, 11.5
+            x1, y1 = f3_ax.projection.transform_point(ad_lon, ad_lat,src_crs=crs_latlon)
+            x2, y2 = f3_ax.projection.transform_point(liv_lon, liv_lat,src_crs=crs_latlon)
+    
+            f3_ax.plot([x1, x2], [y1, y2],
+                      color='black', linewidth=1, marker='s', markersize=3, markerfacecolor='black',linestyle='--',transform=crs_latlon)
+           
+        
         if counter==0:
-            f3_ax.set_title("JFM");
+            f3_ax.set_title("JFM",fontsize=16);
         elif counter==1:
-            f3_ax.set_title("AMJ");
+            f3_ax.set_title("AMJ",fontsize=16);
         elif counter==2:
-            f3_ax.set_title("JAS");
+            f3_ax.set_title("JAS",fontsize=16);
         elif counter==3:
-            f3_ax.set_title("OND");
+            f3_ax.set_title("OND",fontsize=16);
             
         if counter==0:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(a)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(a)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
         elif counter==1:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(b)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(b)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
         elif counter==2:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(c)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(c)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
         elif counter==3:
-            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(d)', transform=f3_ax.transAxes, fontsize='x-large', weight="bold");
+            f3_ax_txt = f3_ax.text(-0.03, 1.06, '(d)', transform=f3_ax.transAxes, fontsize=16, weight="bold");
             
         counter=counter+1;
              
@@ -3290,15 +3559,17 @@ for region in regions:
     fig6.savefig(path.join("os_plots\{0}_seasonal".format(region), "{0}_monthly_averages.png".format(plot_var)));
     fig6.tight_layout()
     plt.close();
-    del varALL;     
-#### Figure 1 RMSDe algo comparison
+    del varALL;    
+    
+    
+    #### Figure 1 RMSDe algo comparison
     
 import pickle;
 import pandas as pd
 import numpy as np
 
         #### Load in Amazon TA pickle
-with open("Amazon_AT_fs_pickled.txt", "rb") as myFile:
+with open("output/algo_metrics/Amazon_AT_finalscores_pickled.txt", "rb") as myFile:
     Amazon_at_dict = pickle.load(myFile)
 
 #get a full list of the combinations
@@ -3341,9 +3612,14 @@ for loop2 in np.arange(0, len(unqiuealgos_at_amazon), 1): # for each algorithm
             else:
                 RMSD_matrix_AT_AMAZON[loop2,loop3]=addmatrix;
 
-        #### Load in Amazon DIC pickle 
 
-with open("Amazon_DIC_fs_pickled.txt", "rb") as myFile:
+unqiuealgos_at_amazon2=("(Astor et al. 2017)","(Astor et al. 2017)","(Astor et al. 2017)","(Astor et al. 2017)","(Astor et al. 2017)","(Brewer et al. 1995)","(Cai et al. 2010)","(Cooley et al. 2006)","(Goyet et al. 1998)","(Lee et al. 2006)","(Lefèvre et al. 2010)","(Millero et al. 1998)","(Sasse et al. 2013)","(Sasse et al. 2013)","(Ternon et al. 2000)","(Takahashi et al. 2014)")
+                        
+
+
+#### Load in Amazon DIC pickle 
+
+with open("output/algo_metrics/Amazon_DIC_finalscores_pickled.txt", "rb") as myFile:
     Amazon_DIC_dict = pickle.load(myFile)
 
 #get a full list of the combinations
@@ -3388,8 +3664,11 @@ for loop2 in np.arange(0, len(unqiuealgos_dic_amazon), 1): # for each algorithm
 
 
         #### Load in Congo TA pickle 
-with open("Congo_AT_fs_pickled.txt", "rb") as myFile:
+with open("output/algo_metrics/Congo_AT_finalscores_pickled.txt", "rb") as myFile:
     Congo_at_dict = pickle.load(myFile)
+
+unqiuealgos_dic_amazon2=("(Cooley et al. 2006)","(Lee et al. 2000)","(Lefèvre et al. 2010)","(Lefèvre et al. 2017)","(Ternon et al. 2000)","(Brewer et al. 1995)","(Sasse et al. 2013)","(Sasse et al. 2013)")
+
 
 #get a full list of the combinations
 list_name_Congo_AT=[];
@@ -3435,8 +3714,12 @@ for loop2 in np.arange(0, len(unqiuealgos_at_Congo), 1): # for each algorithm
 
         #### Load in Congo DIC pickle 
 
-with open("CONGO_DIC_fs_pickled.txt", "rb") as myFile:
+with open("output/algo_metrics/CONGO_DIC_finalscores_pickled.txt", "rb") as myFile:
     CONGO_DIC_dict = pickle.load(myFile)
+    
+unqiuealgos_at_Congo2=("(Goyet et al. 1998)","(Lee et al. 2006)","(Takahashi et al. 2014)");
+
+
 
 #get a full list of the combinations
 list_name_Congo_DIC=[];
@@ -3477,93 +3760,397 @@ for loop2 in np.arange(0, len(unqiuealgos_dic_CONGO), 1): # for each algorithm
                 RMSD_matrix_DIC_CONGO[loop2,loop3]=np.NAN;
             else:
                 RMSD_matrix_DIC_CONGO[loop2,loop3]=addmatrix;
-    
-    
-        #### now make the figure
+
+unqiuealgos_dic_CONGO2=("(Bakker et al. 1999)","(Bakker et al. 1999)","(Bakker et al. 1999)","(Lee et al. 2000)","(Vangriesheim et al. 2009)","(Vangriesheim et al. 2009)","(Brewer et al. 1995)")   
+
+
+#### now make the figure
 figsize = (16,24);
 fig1 = plt.figure(figsize=figsize);
 gs = fig1.add_gridspec(46, 50)
 
 f1_ax1 = fig1.add_subplot(gs[0:15, 5:35])
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,0]), 1),RMSD_matrix_AT_AMAZON[:,0],"r|",markersize=10, label=list_name[0]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,1]), 1),RMSD_matrix_AT_AMAZON[:,1],"b|", markersize=10,label=list_name[1]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,2]), 1),RMSD_matrix_AT_AMAZON[:,2],"y|", markersize=10,label=list_name[2]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,3]), 1),RMSD_matrix_AT_AMAZON[:,3],"rx",markersize=10, label=list_name[3]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,4]), 1),RMSD_matrix_AT_AMAZON[:,4],"bx",markersize=10, label=list_name[4]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,5]), 1),RMSD_matrix_AT_AMAZON[:,5],"yx", markersize=10,label=list_name[5]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,6]), 1),RMSD_matrix_AT_AMAZON[:,6],"r^", markersize=10, label=list_name[6]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,7]), 1),RMSD_matrix_AT_AMAZON[:,7],"b^", markersize=10,label=list_name[7]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,8]), 1),RMSD_matrix_AT_AMAZON[:,8],"y^", markersize=10,label=list_name[8]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,9]), 1),RMSD_matrix_AT_AMAZON[:,9],"r_", markersize=10,label=list_name[9]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,10]), 1),RMSD_matrix_AT_AMAZON[:,10],"b_",markersize=10, label=list_name[10]);
-f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,11]), 1),RMSD_matrix_AT_AMAZON[:,11],"y_",markersize=10, label=list_name[11]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,0]), 1),RMSD_matrix_AT_AMAZON[:,0],"r|",markersize=25, label=list_name[0]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,1]), 1),RMSD_matrix_AT_AMAZON[:,1],"b|", markersize=25,label=list_name[1]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,2]), 1),RMSD_matrix_AT_AMAZON[:,2],"k|", markersize=25,label=list_name[2]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,3]), 1),RMSD_matrix_AT_AMAZON[:,3],"rx",markersize=25, label=list_name[3]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,4]), 1),RMSD_matrix_AT_AMAZON[:,4],"bx",markersize=25, label=list_name[4]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,5]), 1),RMSD_matrix_AT_AMAZON[:,5],"kx", markersize=25,label=list_name[5]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,6]), 1),RMSD_matrix_AT_AMAZON[:,6],"r^", markersize=25, label=list_name[6]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,7]), 1),RMSD_matrix_AT_AMAZON[:,7],"b^", markersize=25,label=list_name[7]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,8]), 1),RMSD_matrix_AT_AMAZON[:,8],"k^", markersize=25,label=list_name[8]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,9]), 1),RMSD_matrix_AT_AMAZON[:,9],"r_", markersize=25,label=list_name[9]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,10]), 1),RMSD_matrix_AT_AMAZON[:,10],"b_",markersize=25, label=list_name[10]);
+f1_ax1.plot(np.arange(0, len(RMSD_matrix_AT_AMAZON[:,11]), 1),RMSD_matrix_AT_AMAZON[:,11],"k_",markersize=25, label=list_name[11]);
 f1_ax1.set_xticks(np.arange(0, len(unqiuealgos_at_amazon), 1))
-f1_ax1.set_xticklabels(list(unqiuealgos_at_amazon), rotation=90,fontsize=12)
+f1_ax1.set_xticklabels(list(unqiuealgos_at_amazon), rotation=90,fontsize=24)
 f1_ax1.set_ylim(0, 100);
-f1_ax1.set_ylabel("RMSDe",fontsize=12);
-f1_ax1.set_title('Amazon TA',fontsize=12);
+f1_ax1.set_ylabel("RMSDe",fontsize=24);
+f1_ax1.set_title('Amazon TA',fontsize=24);
 f1_ax1.legend(loc="upper left",ncol=1);
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
 
 f1_ax2 = fig1.add_subplot(gs[23:38, 5:35])
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,0]), 1),RMSD_matrix_DIC_AMAZON[:,0],"r|",markersize=10, label=list_name[0]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,1]), 1),RMSD_matrix_DIC_AMAZON[:,1],"b|", markersize=10,label=list_name[1]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,2]), 1),RMSD_matrix_DIC_AMAZON[:,2],"y|", markersize=10,label=list_name[2]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,3]), 1),RMSD_matrix_DIC_AMAZON[:,3],"rx",markersize=10, label=list_name[3]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,4]), 1),RMSD_matrix_DIC_AMAZON[:,4],"bx",markersize=10, label=list_name[4]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,5]), 1),RMSD_matrix_DIC_AMAZON[:,5],"yx", markersize=10,label=list_name[5]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,6]), 1),RMSD_matrix_DIC_AMAZON[:,6],"r^", markersize=10, label=list_name[6]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,7]), 1),RMSD_matrix_DIC_AMAZON[:,7],"b^", markersize=10,label=list_name[7]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,8]), 1),RMSD_matrix_DIC_AMAZON[:,8],"y^", markersize=10,label=list_name[8]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,9]), 1),RMSD_matrix_DIC_AMAZON[:,9],"r_", markersize=10,label=list_name[9]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,10]), 1),RMSD_matrix_DIC_AMAZON[:,10],"b_",markersize=10, label=list_name[10]);
-f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,11]), 1),RMSD_matrix_DIC_AMAZON[:,11],"y_",markersize=10, label=list_name[11]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,0]), 1),RMSD_matrix_DIC_AMAZON[:,0],"r|",markersize=25, label=list_name[0]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,1]), 1),RMSD_matrix_DIC_AMAZON[:,1],"b|", markersize=25,label=list_name[1]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,2]), 1),RMSD_matrix_DIC_AMAZON[:,2],"k|", markersize=25,label=list_name[2]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,3]), 1),RMSD_matrix_DIC_AMAZON[:,3],"rx",markersize=25, label=list_name[3]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,4]), 1),RMSD_matrix_DIC_AMAZON[:,4],"bx",markersize=25, label=list_name[4]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,5]), 1),RMSD_matrix_DIC_AMAZON[:,5],"kx", markersize=25,label=list_name[5]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,6]), 1),RMSD_matrix_DIC_AMAZON[:,6],"r^", markersize=25, label=list_name[6]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,7]), 1),RMSD_matrix_DIC_AMAZON[:,7],"b^", markersize=25,label=list_name[7]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,8]), 1),RMSD_matrix_DIC_AMAZON[:,8],"k^", markersize=25,label=list_name[8]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,9]), 1),RMSD_matrix_DIC_AMAZON[:,9],"r_", markersize=25,label=list_name[9]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,10]), 1),RMSD_matrix_DIC_AMAZON[:,10],"b_",markersize=25, label=list_name[10]);
+f1_ax2.plot(np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,11]), 1),RMSD_matrix_DIC_AMAZON[:,11],"k_",markersize=25, label=list_name[11]);
 f1_ax2.set_xticks(np.arange(0, len(unqiuealgos_dic_amazon), 1))
-f1_ax2.set_xticklabels(list(unqiuealgos_dic_amazon), rotation=90,fontsize=12)
+f1_ax2.set_xticklabels(list(unqiuealgos_dic_amazon), rotation=90,fontsize=24)
 f1_ax2.set_ylim(0, 100);
-f1_ax2.set_ylabel("RMSDe",fontsize=12);
-f1_ax2.set_title('Amazon DIC',fontsize=12);
-
+f1_ax2.set_ylabel("RMSDe",fontsize=24);
+f1_ax2.set_title('Amazon DIC',fontsize=24);
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
 
 f1_ax3 = fig1.add_subplot(gs[0:15, 40:50])
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,0]), 1),RMSD_matrix_AT_Congo[:,0],"r|",markersize=10, label=list_name_Congo_AT[0]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,1]), 1),RMSD_matrix_AT_Congo[:,1],"b|", markersize=10,label=list_name_Congo_AT[1]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,2]), 1),RMSD_matrix_AT_Congo[:,2],"y|", markersize=10,label=list_name_Congo_AT[2]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,3]), 1),RMSD_matrix_AT_Congo[:,3],"rx",markersize=10, label=list_name_Congo_AT[3]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,4]), 1),RMSD_matrix_AT_Congo[:,4],"bx",markersize=10, label=list_name_Congo_AT[4]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,5]), 1),RMSD_matrix_AT_Congo[:,5],"yx", markersize=10,label=list_name_Congo_AT[5]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,6]), 1),RMSD_matrix_AT_Congo[:,6],"r_", markersize=10,label=list_name_Congo_AT[6]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,7]), 1),RMSD_matrix_AT_Congo[:,7],"b_", markersize=10,label=list_name_Congo_AT[7]);
-f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,8]), 1),RMSD_matrix_AT_Congo[:,8],"y_", markersize=10,label=list_name_Congo_AT[8]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,0]), 1),RMSD_matrix_AT_Congo[:,0],"r|",markersize=25, label=list_name_Congo_AT[0]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,1]), 1),RMSD_matrix_AT_Congo[:,1],"b|", markersize=25,label=list_name_Congo_AT[1]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,2]), 1),RMSD_matrix_AT_Congo[:,2],"k|", markersize=25,label=list_name_Congo_AT[2]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,3]), 1),RMSD_matrix_AT_Congo[:,3],"rx",markersize=25, label=list_name_Congo_AT[3]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,4]), 1),RMSD_matrix_AT_Congo[:,4],"bx",markersize=25, label=list_name_Congo_AT[4]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,5]), 1),RMSD_matrix_AT_Congo[:,5],"kx", markersize=25,label=list_name_Congo_AT[5]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,6]), 1),RMSD_matrix_AT_Congo[:,6],"r_", markersize=25,label=list_name_Congo_AT[6]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,7]), 1),RMSD_matrix_AT_Congo[:,7],"b_", markersize=25,label=list_name_Congo_AT[7]);
+f1_ax3.plot(np.arange(0, len(RMSD_matrix_AT_Congo[:,8]), 1),RMSD_matrix_AT_Congo[:,8],"k_", markersize=25,label=list_name_Congo_AT[8]);
 f1_ax3.set_xticks(np.arange(0, len(unqiuealgos_at_Congo), 1))
-f1_ax3.set_xticklabels(list(unqiuealgos_at_Congo), rotation=90,fontsize=12)
+f1_ax3.set_xticklabels(list(unqiuealgos_at_Congo), rotation=90,fontsize=24)
 f1_ax3.set_ylim(0, 100);
-f1_ax3.set_title('Congo TA',fontsize=12);
-
+f1_ax3.set_title('Congo TA',fontsize=24);
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
 
 f1_ax4 = fig1.add_subplot(gs[23:38, 40:50])
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,0]), 1),RMSD_matrix_DIC_CONGO[:,0],"r|",markersize=10, label=list_name_Congo_AT[0]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,1]), 1),RMSD_matrix_DIC_CONGO[:,1],"b|", markersize=10,label=list_name_Congo_AT[1]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,2]), 1),RMSD_matrix_DIC_CONGO[:,2],"y|", markersize=10,label=list_name_Congo_AT[2]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,3]), 1),RMSD_matrix_DIC_CONGO[:,3],"rx",markersize=10, label=list_name_Congo_AT[3]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,4]), 1),RMSD_matrix_DIC_CONGO[:,4],"bx",markersize=10, label=list_name_Congo_AT[4]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,5]), 1),RMSD_matrix_DIC_CONGO[:,5],"yx", markersize=10,label=list_name_Congo_AT[5]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,6]), 1),RMSD_matrix_DIC_CONGO[:,6],"r_", markersize=10,label=list_name_Congo_AT[6]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,7]), 1),RMSD_matrix_DIC_CONGO[:,7],"b_", markersize=10,label=list_name_Congo_AT[7]);
-f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,8]), 1),RMSD_matrix_DIC_CONGO[:,8],"y_", markersize=10,label=list_name_Congo_AT[8]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,0]), 1),RMSD_matrix_DIC_CONGO[:,0],"r|",markersize=25, label=list_name_Congo_AT[0]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,1]), 1),RMSD_matrix_DIC_CONGO[:,1],"b|", markersize=25,label=list_name_Congo_AT[1]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,2]), 1),RMSD_matrix_DIC_CONGO[:,2],"k|", markersize=25,label=list_name_Congo_AT[2]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,3]), 1),RMSD_matrix_DIC_CONGO[:,3],"rx",markersize=25, label=list_name_Congo_AT[3]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,4]), 1),RMSD_matrix_DIC_CONGO[:,4],"bx",markersize=25, label=list_name_Congo_AT[4]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,5]), 1),RMSD_matrix_DIC_CONGO[:,5],"kx", markersize=25,label=list_name_Congo_AT[5]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,6]), 1),RMSD_matrix_DIC_CONGO[:,6],"r_", markersize=25,label=list_name_Congo_AT[6]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,7]), 1),RMSD_matrix_DIC_CONGO[:,7],"b_", markersize=25,label=list_name_Congo_AT[7]);
+f1_ax4.plot(np.arange(0, len(RMSD_matrix_DIC_CONGO[:,8]), 1),RMSD_matrix_DIC_CONGO[:,8],"k_", markersize=25,label=list_name_Congo_AT[8]);
 f1_ax4.set_xticks(np.arange(0, len(unqiuealgos_dic_CONGO), 1))
-f1_ax4.set_xticklabels(list(unqiuealgos_dic_CONGO), rotation=90,fontsize=12)
+f1_ax4.set_xticklabels(list(unqiuealgos_dic_CONGO), rotation=90,fontsize=24)
 f1_ax4.set_ylim(0, 100);
-f1_ax4.set_title('Congo DIC',fontsize=12);
+f1_ax4.set_title('Congo DIC',fontsize=24);
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
 
-
-plt.savefig("os_plots\\Fig1_RMSDe.png");
-
-
-
-
+fig1.savefig("os_plots\\Fig1_RMSDe.png");
 
 
 
 
 
+list_name_short=("ESACCI_SSS-ESACCI_SST","ESACCI_SSS-CORA","ESACCI_SSS-OISST","CORA-ESACCI_SST","CORA-CORA","CORA-OISST","RSSSMAP-ESACCI_SST","RSSMAP-CORA","RSSSMAP-OISST","ISAS-ESACCI_SST","ISAS-CORA","ISAS-OISST")
 
+color_teal = [18/255,150/255,155/255];
+color_peach = [251/255,111/255,66/255];
+color_firebreak = [178/255,34/255,34/255];
+
+#### now make the figure
+figsize = (24*1.2,26*1.2);
+fig1 = plt.figure(figsize=figsize);
+gs = fig1.add_gridspec(45, 50)
+
+f1_ax1 = fig1.add_subplot(gs[0:16, 10:50])
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,0],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,0]), 1),"|", color =color_firebreak ,markersize=25,mew=10, label=list_name_short[0]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,1],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,1]), 1),"|", color =color_peach, markersize=25,mew=10,label=list_name_short[1]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,2],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,2]), 1),"|", color =color_teal, markersize=25,mew=10,label=list_name_short[2]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,3],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,3]), 1),"x", color =color_firebreak ,markersize=25,mew=6, label=list_name_short[3]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,4],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,4]), 1),"x", color =color_peach,markersize=25,mew=6, label=list_name_short[4]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,5],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,5]), 1),"x", color =color_teal, markersize=25,mew=6,label=list_name_short[5]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,6],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,6]), 1),"^", color =color_firebreak , markersize=25,mew=3, label=list_name_short[6]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,7],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,7]), 1),"^", color =color_peach, markersize=25,mew=3,label=list_name_short[7]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,8],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,8]), 1),"^", color =color_teal, markersize=25,mew=3,label=list_name_short[8]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,9],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,9]), 1),"_", color =color_firebreak , markersize=25,mew=10,label=list_name_short[9]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,10],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,10]), 1),"_", color =color_peach,markersize=25,mew=10, label=list_name_short[10]);
+f1_ax1.plot(RMSD_matrix_AT_AMAZON[:,11],np.arange(0, len(RMSD_matrix_AT_AMAZON[:,11]), 1),"_", color =color_teal,markersize=25,mew=10, label=list_name_short[11]);
+f1_ax1.set_yticks(np.arange(0, len(unqiuealgos_at_amazon), 1))
+f1_ax1.set_xticks([0,10,20,30,40,50,60,70,80,90,100])
+f1_ax1.set_yticklabels(list(unqiuealgos_at_amazon2), fontsize=24)
+f1_ax1.set_xlim(0, 100);
+f1_ax1.set_xlabel("RMSDe ($\mu mol \ kg^{-1}$)",fontsize=24);
+f1_ax1.set_title('Amazon TA',fontsize=24, weight="bold");
+#f1_ax1.legend(loc="upper left",ncol=2);
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
+plt.grid(linestyle="-")
+yyy=f1_ax1.get_ylim()
+plt.ylim(yyy[0]-0.5, yyy[1]+0.5)
+f1_ax1.text(-0.2, 1.06, '(a)', transform=f1_ax1.transAxes, fontsize=24, weight="bold");
+
+f1_ax3 = fig1.add_subplot(gs[20:23, 10:50])
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,0],np.arange(0, len(RMSD_matrix_AT_Congo[:,0]), 1),"|", color =color_firebreak ,markersize=25,mew=10, label=list_name_Congo_AT[0]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,1],np.arange(0, len(RMSD_matrix_AT_Congo[:,1]), 1),"|", color =color_peach, markersize=25,mew=10,label=list_name_Congo_AT[1]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,2],np.arange(0, len(RMSD_matrix_AT_Congo[:,2]), 1),"|", color =color_teal, markersize=25,mew=10,label=list_name_Congo_AT[2]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,3],np.arange(0, len(RMSD_matrix_AT_Congo[:,3]), 1),"x", color =color_firebreak ,markersize=25,mew=6, label=list_name_Congo_AT[3]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,4],np.arange(0, len(RMSD_matrix_AT_Congo[:,4]), 1),"x", color =color_peach,markersize=25,mew=6, label=list_name_Congo_AT[4]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,5],np.arange(0, len(RMSD_matrix_AT_Congo[:,5]), 1),"x", color =color_teal, markersize=25,mew=10,label=list_name_Congo_AT[5]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,6],np.arange(0, len(RMSD_matrix_AT_Congo[:,6]), 1),"_", color =color_firebreak , markersize=25,mew=10,label=list_name_Congo_AT[6]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,7],np.arange(0, len(RMSD_matrix_AT_Congo[:,7]), 1),"_", color =color_peach, markersize=25,mew=10,label=list_name_Congo_AT[7]);
+f1_ax3.plot(RMSD_matrix_AT_Congo[:,8],np.arange(0, len(RMSD_matrix_AT_Congo[:,8]), 1),"_", color =color_teal, markersize=25,mew=10,label=list_name_Congo_AT[8]);
+f1_ax3.set_yticks(np.arange(0, len(unqiuealgos_at_Congo2), 1))
+f1_ax3.set_yticklabels(list(unqiuealgos_at_Congo2),fontsize=24)
+f1_ax3.set_xticks([0,10,20,30,40,50,60,70,80,90,100])
+f1_ax3.set_xlim(0, 100);
+f1_ax3.set_title('Congo TA',fontsize=24, weight="bold");
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
+plt.grid(linestyle="-")
+yyy=f1_ax3.get_ylim()
+plt.ylim(yyy[0]-0.5, yyy[1]+0.5)
+f1_ax3.set_xlabel("RMSDe ($\mu mol \ kg^{-1}$)",fontsize=24);
+f1_ax3.text(-0.2, 1.06, '(b)', transform=f1_ax3.transAxes, fontsize=24, weight="bold");
+
+
+f1_ax2 = fig1.add_subplot(gs[27:35, 10:50])
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,0],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,0]), 1),"|", color =color_firebreak ,markersize=25,mew=10, label=list_name[0]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,1],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,1]), 1),"|", color =color_peach, markersize=25,mew=10,label=list_name[1]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,2],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,2]), 1),"|", color =color_teal, markersize=25,mew=10,label=list_name[2]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,3],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,3]), 1),"x", color =color_firebreak ,markersize=25,mew=6, label=list_name[3]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,4],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,4]), 1),"x", color =color_peach,markersize=25,mew=6, label=list_name[4]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,5],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,5]), 1),"x", color =color_teal, markersize=25,mew=6,label=list_name[5]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,6],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,6]), 1),"^", color =color_firebreak , markersize=25,mew=3, label=list_name[6]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,7],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,7]), 1),"^", color =color_peach, markersize=25,mew=3,label=list_name[7]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,8],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,8]), 1),"^", color =color_teal, markersize=25,mew=3,label=list_name[8]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,9],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,9]), 1),"_", color =color_firebreak , markersize=25,mew=10,label=list_name[9]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,10],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,10]), 1),"_", color =color_peach,markersize=25,mew=10, label=list_name[10]);
+f1_ax2.plot(RMSD_matrix_DIC_AMAZON[:,11],np.arange(0, len(RMSD_matrix_DIC_AMAZON[:,11]), 1),"_", color =color_teal,markersize=25,mew=10, label=list_name[11]);
+f1_ax2.set_yticks(np.arange(0, len(unqiuealgos_dic_amazon), 1))
+f1_ax2.set_yticklabels(list(unqiuealgos_dic_amazon2),fontsize=24)
+f1_ax2.set_xlim(0, 100);
+f1_ax2.set_xlabel("RMSDe ($\mu mol \ kg^{-1}$)",fontsize=24);
+f1_ax2.set_title('Amazon DIC',fontsize=24, weight="bold");
+f1_ax2.set_xticks([0,10,20,30,40,50,60,70,80,90,100])
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
+plt.grid(linestyle="-")
+yyy=f1_ax2.get_ylim()
+plt.ylim(yyy[0]-0.5, yyy[1]+0.5)
+f1_ax2.text(-0.2, 1.06, '(c)', transform=f1_ax2.transAxes, fontsize=24, weight="bold");
+
+
+f1_ax4 = fig1.add_subplot(gs[39:45, 10:50])
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,0],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,0]), 1),"|", color =color_firebreak ,markersize=25,mew=10, label=list_name_Congo_AT[0]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,1],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,1]), 1),"|", color =color_peach, markersize=25,mew=10,label=list_name_Congo_AT[1]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,2],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,2]), 1),"|", color =color_teal, markersize=25,mew=10,label=list_name_Congo_AT[2]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,3],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,3]), 1),"x", color =color_firebreak ,markersize=25,mew=6, label=list_name_Congo_AT[3]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,4],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,4]), 1),"x", color =color_peach,markersize=25,mew=6, label=list_name_Congo_AT[4]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,5],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,5]), 1),"x", color =color_teal, markersize=25,mew=6,label=list_name_Congo_AT[5]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,6],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,6]), 1),"_", color =color_firebreak , markersize=25,mew=10,label=list_name_Congo_AT[6]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,7],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,7]), 1),"_", color =color_peach, markersize=25,mew=10,label=list_name_Congo_AT[7]);
+f1_ax4.plot(RMSD_matrix_DIC_CONGO[:,8],np.arange(0, len(RMSD_matrix_DIC_CONGO[:,8]), 1),"_", color =color_teal,markersize=25,mew=10,label=list_name_Congo_AT[8]);
+f1_ax4.set_yticks(np.arange(0, len(unqiuealgos_dic_CONGO), 1))
+f1_ax4.set_yticklabels(list(unqiuealgos_dic_CONGO2), fontsize=24)
+f1_ax4.set_xlim(0, 100);
+f1_ax4.set_title('Congo DIC',fontsize=24, weight="bold");
+f1_ax4.set_xticks([0,10,20,30,40,50,60,70,80,90,100])
+plt.xticks(fontsize=24);
+plt.yticks(fontsize=24);
+plt.grid(linestyle="--")
+yyy=f1_ax4.get_ylim()
+plt.ylim(yyy[0]-0.5, yyy[1]+0.5)
+f1_ax4.set_xlabel("RMSDe ($\mu mol \ kg^{-1}$)",fontsize=24);
+f1_ax4.text(-0.2, 1.06, '(d)', transform=f1_ax4.transAxes, fontsize=24, weight="bold");
+
+
+#legend plotting
+
+f1_ax1.legend(loc="center",bbox_to_anchor=(0.4, 1.25), fontsize=24,ncol=4);
+
+fig1.savefig("os_plots\\Fig1_RMSDe.png");
+
+
+
+import pickle 
+#### Load in Amazon RADII pickle
+with open("output/Amazon_radii.txt", "rb") as myFile:
+    Radii_masks_dict = pickle.load(myFile)
+    
+atAmazonNC = Dataset(inputTemplate.safe_substitute(REGION="oceansoda_amazon_plume", VAR="AT"));
+lats = atAmazonNC.variables["lat"][:];
+lons = atAmazonNC.variables["lon"][:];  
+  
+import matplotlib.pyplot as plt        
+
+fig3, ax = plt.subplots()
+f3_ax = plt.axes(projection=ccrs.PlateCarree())
+gl = f3_ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='gray', alpha=0.25, linestyle='--');
+gl.xlabels_top = False;
+gl.ylabels_right = False;
+gl.xformatter = LONGITUDE_FORMATTER;
+gl.yformatter = LATITUDE_FORMATTER;
+gl.xlabel_style = {'size': 24};
+gl.ylabel_style = {'size': 24};
+f3_ax.text(-0.2, 0.55, 'Latitude $(^{\circ})$', va='bottom', ha='center',
+    rotation='vertical', rotation_mode='anchor',fontsize=24,
+    transform=f3_ax.transAxes)
+f3_ax.text(0.5, -0.25, 'Longitude $(^{\circ})$', va='bottom', ha='center',
+    rotation='horizontal', rotation_mode='anchor',fontsize=24,
+    transform=f3_ax.transAxes)
+
+   
+f3_ax.set_xlim(-74, -30);
+f3_ax.set_ylim(-4, 26);
+
+f3_ax.coastlines();
+resol = '50m'  # use data at this scale
+land = cfeature.NaturalEarthFeature('physical', 'land', \
+scale=resol, edgecolor='k', facecolor=cfeature.COLORS['land']);
+f3_ax.add_feature(land, facecolor='beige')
+for radii in Radii_masks_dict:   
+
+    z=Radii_masks_dict[radii]
+    z = np.ma.masked_array(z, z < 0.5)
+    from numpy import random
+    color_random=[random.rand()*255,random.rand()*255,random.rand()*255]
+    
+    discrete_colors = [(random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255),
+    (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255), (random.rand()*255,random.rand()*255,random.rand()*255)]
+    discrete_colors = [(r/255., g/255., b/255.) for r, g, b in discrete_colors]         
+
+    my_colormap = colors.ListedColormap(discrete_colors)
+    c = f3_ax.pcolor(lons,lats,z, vmin=0.5, cmap=my_colormap, vmax=1.5,)
+
+
+fig3.tight_layout()
+plt.show()
+
+fig3.savefig("os_plots\\Fig10_Transect_radii.png");
+
+
+#### single plots of SST and SAL for presentation
+regions = ["oceansoda_amazon_plume"];#, "oceansoda_st_lawrence"];
+video_vars = ["SSS","SST"];
+for region in regions:
+        #### Define the two netCDF files for each region
+    dicNC = Dataset(inputTemplate.safe_substitute(REGION=region, VAR="DIC"), 'r');
+    atNC = Dataset(inputTemplate.safe_substitute(REGION=region, VAR="AT"), 'r');
+    time = get_datetimes(dicNC["time"][:]);
+    
+    
+    #Maps of the variables
+    for plot_var in video_vars:
+        outputPath = "plots/";
+        maskPath = "C:\\Users\\rps207\\Documents\\Python\\2021-Oceansoda_pre_github\\OceanSODA-master\\aux_data/osoda_region_masks_v2.nc";
+        maskNC = Dataset(maskPath, 'r');
+        
+        dateToPlot3 = datetime(2015, 7, 1); #Which time slice to plot?
+    
+        datetoplotall=[dateToPlot3]
+        
+        mask = maskNC.variables[region][:];
+        xmin = min(np.where(np.flipud(mask)==1)[1]);
+        xmax = max(np.where(np.flipud(mask)==1)[1]);
+        ymin = min(np.where(np.flipud(mask)==1)[0]);
+        ymax = max(np.where(np.flipud(mask)==1)[0]);
+        pad = 4; #size of xlim/ylim extents
+        
+
+        ticksize = 16;
+
+        dates = [get_datetime(int(timeSecs)) for timeSecs in dicNC.variables["time"][:]];
+        varALL = dicNC.variables["{0}".format(plot_var)][:];
+        hasData = np.array([np.any(varALL[t,:,:].mask==False) for t in range(0, varALL.shape[0])]);
+        
+        from pathlib import Path
+        Path("os_plots\{0}_seasonal".format(region)).mkdir(parents=True, exist_ok=True)
+        
+        lats = dicNC.variables["lat"];
+        lons = dicNC.variables["lon"];
+        
+        counter=0
+        for subplot_loop_no in datetoplotall:
+        
+            timeIndex = get_time_index(datetoplotall[counter], firstIndexSecs = int(dicNC.variables["time"][0]));
+            data = dicNC.variables[plot_var][timeIndex, :, :];
+            data[mask != 1] = np.nan;
+            date = dates[timeIndex]
+
+            if plot_var == "pCO2":
+                cmap_touse = plt.cm.get_cmap('inferno_r');
+            else:
+                cmap_touse = plt.cm.inferno;
+                
+            if plot_var == "SST":
+                data=data-273.15;    
+
+            # arbitary limits
+            if region == "oceansoda_amazon_plume":
+                if plot_var == "DIC":
+                    maxvar = 2000;
+                    minvar = 1400; 
+                elif plot_var == "SSS":
+                    maxvar = np.nanmax(data);
+                    minvar = np.nanmin(data); 
+                elif plot_var == "SST":
+                    maxvar = np.nanmax(data);
+                    minvar = np.nanmin(data); 
+
+                else:
+                    pass
+            fig8, ax = plt.subplots(figsize=(14, 14))
+            f8_ax = plt.axes(projection=ccrs.PlateCarree())           
+            gl = f8_ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True, linewidth=1, color='gray', alpha=0.25, linestyle='--');
+            contPlot1 = f8_ax.pcolormesh(lons, lats, data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
+            gl.xlabels_top = False;
+            gl.ylabels_right = False;
+            gl.xformatter = LONGITUDE_FORMATTER;
+            gl.yformatter = LATITUDE_FORMATTER;
+            gl.xlabel_style = {'size': 24};
+            gl.ylabel_style = {'size': 24};
+            f8_ax.set_xlabel("Longitude($^\circ$)", fontsize=24);
+            f8_ax.set_ylabel("Latitude($^\circ$)", fontsize=24);
+            
+            if region == "oceansoda_amazon_plume":
+                f8_ax.set_xlim(-74, -30);
+                f8_ax.set_ylim(-4, 26);
+            else:
+                pass
+            
+            f8_ax.coastlines();
+            resol = '50m'  # use data at this scale
+            land = cfeature.NaturalEarthFeature('physical', 'land', \
+            scale=resol, edgecolor='k', facecolor=cfeature.COLORS['land']);
+            f8_ax.add_feature(land, facecolor='beige')
+        
+            m = plt.cm.ScalarMappable(cmap=cmap_touse)
+            m.set_array(plot_var)
+            m.set_clim(minvar, maxvar)
+            cb = plt.colorbar(m); #, boundaries=np.linspace(0, 2, 6))   
+            cb.ax.tick_params(labelsize=24)
+            
+            f8_ax.text(-0.05, 2.5, 'Latitude $(^{\circ})$', va='bottom', ha='center',
+                rotation='vertical', rotation_mode='anchor',fontsize=24,
+                transform=f3_ax.transAxes)
+            f8_ax.text(1.5, 1, 'Longitude $(^{\circ})$', va='bottom', ha='center',
+                rotation='horizontal', rotation_mode='anchor',fontsize=24,
+                transform=f3_ax.transAxes)
+            
+            if plot_var == "DIC":
+                cb.set_label("DIC ($\mu mol \ kg^{-1}$)", fontsize=24);
+                #f8_ax.set_title("DIC for {0} {1}".format(date.year, format(date.month, "02d")), fontsize=24);  
+            elif plot_var == "SSS":
+                cb.set_label("Salinity (PSU)", fontsize=24);
+                #f8_ax.set_title("Salinity for {0} {1}".format(date.year, format(date.month, "02d")), fontsize=24);
+            elif plot_var == "SST":
+                cb.set_label("SST ($^\circ$ C)", fontsize=24);
+                #f8_ax.set_title("SST for {0} {1}".format(date.year, format(date.month, "02d")), fontsize=24);
+            else:
+                pass
+
+            plt.show()
+            fig8.savefig(path.join("os_plots\{0}_seasonal".format(region,plot_var), "{0}singlemonth.png".format(plot_var)));
+                
+        

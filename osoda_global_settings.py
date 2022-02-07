@@ -78,6 +78,8 @@ def get_default_settings():
     settings["outputPathMetrics"] = path.join(settings["outputPathRoot"], "algo_metrics"); #Where algorithm metrics outputs are written
     settings["bestGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'best' version of the optimal algorithms
     settings["longGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'long' version of the optimal algorithms
+    settings["longunweightedGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range_unweighted/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the unweighted 'long' version of the optimal algorithms
+
     #other output directories here
     
     settings["logDirectoryRoot"] = path.join(settings["outputPathRoot"], "logs"); #Log files written here
@@ -115,12 +117,29 @@ def get_default_settings():
     settings["insituError"] = {"DIC": 2.5,
                                "AT": 2.5};
     
+    settings["totalinsituuncetainty"] = {"DIC": 10,
+                                         "AT": 10};
     #Nominal 'state-of-the-art' in situ measurement errors as a percentage of the measured value. These are the same as used for PATHFINDERS
     #These are substituted when no other uncertainty data is availablefor DIC and AT in the matchup database.
     settings["insituErrorRatio"] = {"DIC": 0.005, #0.5% nominal 'state-of-the-art' errors: Bockmon, E.E. and Dickson, A.G., 2015. An inter-laboratory comparison assessing the quality of seawater carbon dioxide measurements. Marine Chemistry, 171, pp.36-43.
                                     "AT": 0.005}; #0.5% nominal 'state-of-the-art' errors: Bockmon, E.E. and Dickson, A.G., 2015. An inter-laboratory comparison assessing the quality of seawater carbon dioxide measurements. Marine Chemistry, 171, pp.36-43.
     
+    # Filter Matchupdatabased based on these flags
     
+    settings["MDB_flags"] = {"SST_max": 40,
+                                         "SST_min": -10,
+                                         "SSS_max": 50,
+                                         "SSS_min": 0,
+                                         "DIC_max": 3000,
+                                         "DIC_min": 500,
+                                         "pH_max": 8.5,
+                                         "pH_min": 7,
+                                         "pCO2_max": 800,
+                                         "pCO2_min": 100,
+                                         "TA_max": 3000, 
+                                         "TA_min": 500};
+
+
     ############################
     ### data set definitions ###
     #'Common' names refer to a specific ocean parameter (e.g. SST), for which there may be multiple datasets available (multiple dataset names/specifications).
@@ -129,21 +148,21 @@ def get_default_settings():
     settings["datasetInfoMap"] = {"date": DatasetInfo(commonName="date", datasetName="time", matchupVariableName="time", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "lon": DatasetInfo(commonName="lon", datasetName="lon", matchupVariableName="lon", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "lat": DatasetInfo(commonName="lat", datasetName="lat", matchupVariableName="lat", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
-                                   "SST": [DatasetInfo(commonName="SST", datasetName="SST-ESACCI-OSTIA", matchupVariableName="cci_sst_mean", matchupDatabaseError="cci_sst_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ESACCI_SST_OSTIA/processed/${YYYY}/ESACCI-SST-OSTIA-LT-v02.0-fv01.1_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="sst", predictionDatasetError="sst_err"),
+                                   "SST": [DatasetInfo(commonName="SST", datasetName="SST-ESACCI", matchupVariableName="cci_sst_mean", matchupDatabaseError="cci_sst_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ESACCI_SST_OSTIA/processed/${YYYY}/ESACCI-SST-OSTIA-LT-v02.0-fv01.1_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="sst", predictionDatasetError="sst_err"),
                                            DatasetInfo(commonName="SST", datasetName="SST-CORA", matchupVariableName="cora_temperature_mean", matchupDatabaseError="cora_temperature_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "CORA_SSS_SST/${YYYY}/OA_CORA5.2_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="TEMP", predictionDatasetError="TEMP_err"),
                                            DatasetInfo(commonName="SST", datasetName="SST-OISST", matchupVariableName="noaa_sst_mean", matchupDatabaseError="noaa_sst_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "OISST_SST/processed/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc")), predictionDatasetVariable="sst_mean", predictionDatasetError="sst_stddev"),
                                            ],
-                                   "SSS": [DatasetInfo(commonName="SSS", datasetName="SSS-ESACCI-SMOS", matchupVariableName="cci_sss_mean", matchupDatabaseError="cci_sss_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ESACCI_SSS_SMOS/processed/${YYYY}/ESACCI-SEASURFACESALINITY-L4-CENTRED15Day_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="sss", predictionDatasetError="sss_err"),
+                                   "SSS": [DatasetInfo(commonName="SSS", datasetName="SSS-ESACCI", matchupVariableName="cci_sss_mean", matchupDatabaseError="cci_sss_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ESACCI_SSS/processed/${YYYY}/ESACCI-SEASURFACESALINITY-L4-CENTRED15Day_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="sss", predictionDatasetError="sss_err"),
                                            DatasetInfo(commonName="SSS", datasetName="SSS-CORA", matchupVariableName="cora_salinity_mean", matchupDatabaseError="cora_salinity_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "CORA_SSS_SST/${YYYY}/OA_CORA5.2_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="PSAL", predictionDatasetError="PSAL_err"),
                                            DatasetInfo(commonName="SSS", datasetName="SSS-RSS-SMAP", matchupVariableName="remss_smap_sss_mean", matchupDatabaseError="remss_smap_sss_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "RSS_SMAP_SSS/RSS_smap_SSS_L3_monthly_${YYYY}_${MM}_FNL_v04.0_processed.nc")), predictionDatasetVariable="sss", predictionDatasetError="sss_err"),
                                            DatasetInfo(commonName="SSS", datasetName="SSS-ISAS", matchupVariableName="isas15_salinity_mean", matchupDatabaseError="isas15_salinity_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ISAS_SSS_SST/processed/${YYYY}/ISAS15_DM_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="PSAL", predictionDatasetError="PSAL_err"),
                                            ],
                                    "OC": DatasetInfo(commonName="OC", datasetName="OC-ESACCI", matchupVariableName="cci_oc_chloro-a_mean", matchupDatabaseError="cci_oc_chloro-a_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]), #ocean colour
                                    "chla": DatasetInfo(commonName="chla", datasetName="OC-ESACCI", matchupVariableName="cci_oc_chloro-a_mean", matchupDatabaseError="cci_oc_chloro-a_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
-                                   "DO": DatasetInfo(commonName="DO", datasetName="DO-WOA", matchupVariableName="woa18_oxygen_o_an", matchupDatabaseError="woa18_oxygen_o_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_data_sets/WOA_dissolved_oxygen/woa18_all_o${MM}_processed.nc")), predictionDatasetVariable="o_an", predictionDatasetError="o_uncertainty"),
-                                   "NO3": DatasetInfo(commonName="NO3", datasetName="NO3-WOA", matchupVariableName="woa18_nitrate_n_an", matchupDatabaseError="woa18_nitrate_n_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_data_sets/WOA_nitrate/woa18_all_n${MM}_processed.nc")), predictionDatasetVariable="n_an", predictionDatasetError="n_uncertainty"),
-                                   "PO4": DatasetInfo(commonName="PO4", datasetName="PO4-WOA", matchupVariableName="woa18_phosphate_p_an", matchupDatabaseError="woa18_phosphate_p_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_data_sets/WOA_phosphate/woa18_all_p${MM}_processed.nc")), predictionDatasetVariable="p_an", predictionDatasetError="p_uncertainty"),
-                                   "SiO4":DatasetInfo(commonName="SiO4", datasetName="SiO4-WOA", matchupVariableName="woa18_silicate_i_an", matchupDatabaseError="woa18_silicate_i_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_data_sets/WOA_silicate/woa18_all_i${MM}_processed.nc")), predictionDatasetVariable="i_an", predictionDatasetError="i_uncertainty"),
+                                   "DO": DatasetInfo(commonName="DO", datasetName="DO-WOA", matchupVariableName="woa18_oxygen_o_an", matchupDatabaseError="woa18_oxygen_o_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_dissolved_oxygen/woa18_all_o${MM}_processed.nc")), predictionDatasetVariable="o_an", predictionDatasetError="o_uncertainty"),
+                                   "NO3": DatasetInfo(commonName="NO3", datasetName="NO3-WOA", matchupVariableName="woa18_nitrate_n_an", matchupDatabaseError="woa18_nitrate_n_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_nitrate/woa18_all_n${MM}_processed.nc")), predictionDatasetVariable="n_an", predictionDatasetError="n_uncertainty"),
+                                   "PO4": DatasetInfo(commonName="PO4", datasetName="PO4-WOA", matchupVariableName="woa18_phosphate_p_an", matchupDatabaseError="woa18_phosphate_p_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_phosphate/woa18_all_p${MM}_processed.nc")), predictionDatasetVariable="p_an", predictionDatasetError="p_uncertainty"),
+                                   "SiO4":DatasetInfo(commonName="SiO4", datasetName="SiO4-WOA", matchupVariableName="woa18_silicate_i_an", matchupDatabaseError="woa18_silicate_i_sd", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_silicate/woa18_all_i${MM}_processed.nc")), predictionDatasetVariable="i_an", predictionDatasetError="i_uncertainty"),
                                    "DIC": DatasetInfo(commonName="DIC", datasetName="DIC-matchup", matchupVariableName="region_dic_mean", matchupDatabaseError="region_dic_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "AT": DatasetInfo(commonName="AT", datasetName="AT-matchup", matchupVariableName="region_at_mean", matchupDatabaseError="region_at_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "region_ph_mean": DatasetInfo(commonName="AT", datasetName="pH-matchup", matchupVariableName="region_ph_mean", matchupDatabaseError="region_ph_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
@@ -151,6 +170,7 @@ def get_default_settings():
                                    };
     
     
+
     #######################
     # Defines both the region names and algorithms to use
     import os_algorithms.at_algorithms as at_algorithms;
@@ -255,11 +275,7 @@ def get_default_settings():
     
     
     ##########Refactoring ended here.
-    ### Settings for prediction ###TODO: are these not needed now?
-    #Output location of gridded predicted timeseries
-    settings["griddedPredictionOutputTemplate"] = Template(path.join(projectRoot, "output/gridded_predictions/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc"));
-    settings["griddedPredictionMinYearsOutputTemplate"] = Template(path.join(projectRoot, "output/gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc"));
-    
+
     return settings;
 
 

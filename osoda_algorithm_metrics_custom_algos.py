@@ -135,21 +135,21 @@ if runPairedMetrics == True:
         years = utilities.calculate_years_for_input_combination(settings, combinationMap); #Find the years where there is overlap in the selected input data combinations
         matchupData = utilities.load_matchup_to_dataframe(settings, combinationMap, years=years); #each year is concatinated to create a single dataframe
         
-        # #Rich_edits start_ perform checks on the Matchup databse files to check that they are
+        # perform checks on the Matchup databse files to check that they are
         # #realistic and fall within the expected range
-        
-        SST_max=40;
-        SST_min=-10;
-        SSS_max=50;
-        SSS_min=0;      
-        DIC_max=3000;
-        DIC_min=500; 
-        pH_max=8.5;
-        pH_min=7;
-        pCO2_max=800;
-        pCO2_min=100;
-        TA_max=3000;
-        TA_min=500;
+                  
+        SST_max=settings["MDB_flags"]["SST_max"];
+        SST_min=settings["MDB_flags"]["SST_min"];
+        SSS_max=settings["MDB_flags"]["SSS_max"];
+        SSS_min=settings["MDB_flags"]["SSS_min"];      
+        DIC_max=settings["MDB_flags"]["DIC_max"];
+        DIC_min=settings["MDB_flags"]["DIC_min"]; 
+        pH_max=settings["MDB_flags"]["pH_max"];
+        pH_min=settings["MDB_flags"]["pH_min"];
+        pCO2_max=settings["MDB_flags"]["pCO2_max"];
+        pCO2_min=settings["MDB_flags"]["pCO2_min"];
+        TA_max=settings["MDB_flags"]["TA_max"];
+        TA_min=settings["MDB_flags"]["TA_min"];
         
         #SST
         mdb_SST = matchupData["SST"];
@@ -211,10 +211,8 @@ if runPairedMetrics == True:
         states12=mdb_TA_numeric<TA_min;
         index_TA_below=np.where(states12)[0]        
         
-
-        #these variables could also have bounds placed on them but not applied 
-        #for this iteration
-        # lat long date OC chla DO NO3 PO4 SiO4
+        #note that other variables could also have bounds placed on them but not applied 
+        #for this code iteration e.g. lat long date OC chla DO NO3 PO4 SiO4
         
         # now produce a file with all of the out of bounds data points from the mdb
         
@@ -224,7 +222,6 @@ if runPairedMetrics == True:
 
         mdb_flag_index_list=[index_temp_exceed, index_temp_below, index_sal_exceed, index_sal_below, index_DIC_exceed, index_DIC_below,index_pH_exceed,index_pH_below,index_pco2_exceed,index_pco2_below,index_TA_exceed,index_TA_below]
         
-            
         mdb_flag_limits_list=[SST_max,SST_min,SSS_max,SSS_min,DIC_max, DIC_min,  pH_max, pH_min,pCO2_max, pCO2_min, TA_max,TA_min]  
         
         for idx, g in enumerate(mdb_flag_index_list):
@@ -319,7 +316,6 @@ if runPairedMetrics == True:
             #and applies it to the custom algos as well
             customAlgoData=customAlgoData.loc[subsetData.index,]
             
-            # rich edit 2 start
             # data are loaded in here again, delete rows that are removed by QC
             A=customAlgoData.index#these are the rows in the subset
             B=mdb_ind_rmv#these are the bad rows to removed
@@ -330,9 +326,6 @@ if runPairedMetrics == True:
             C=B[inthesubset]
             #this line then drops the bad rows
             customAlgoData = customAlgoData.drop(customAlgoData.index[inthesubset]); #remove where there is no reference outputVar data
-            
-
-            # rich edit 2 end
        
             ###Subset to remove where model data is NaN
             customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["matchupVariableName"]])]; #remove where there is no model predictions
@@ -554,18 +547,18 @@ if runBasicMetrics == True:
     #Rich_edits start_ perform checks on the Matchup databse files to check that they are
     #realistic and fall within the expected range
     
-    SST_max=40;
-    SST_min=-10;
-    SSS_max=50;
-    SSS_min=0;      
-    DIC_max=3000;
-    DIC_min=500; 
-    pH_max=8.5;
-    pH_min=7;
-    pCO2_max=800;
-    pCO2_min=100;
-    TA_max=3000;
-    TA_min=500;
+    SST_max=settings["MDB_flags"]["SST_max"];
+    SST_min=settings["MDB_flags"]["SST_min"];
+    SSS_max=settings["MDB_flags"]["SSS_max"];
+    SSS_min=settings["MDB_flags"]["SSS_min"];      
+    DIC_max=settings["MDB_flags"]["DIC_max"];
+    DIC_min=settings["MDB_flags"]["DIC_min"]; 
+    pH_max=settings["MDB_flags"]["pH_max"];
+    pH_min=settings["MDB_flags"]["pH_min"];
+    pCO2_max=settings["MDB_flags"]["pCO2_max"];
+    pCO2_min=settings["MDB_flags"]["pCO2_min"];
+    TA_max=settings["MDB_flags"]["TA_max"];
+    TA_min=settings["MDB_flags"]["TA_min"];
     hfree_max=1e-7;
     hfree_min=0;
     
@@ -694,13 +687,10 @@ if runBasicMetrics == True:
         ##### Missing: combined uncertainty, matchupRMSD, matchupBias?
         customAlgoData = utilities.read_matchup_cols(settings["matchupDatasetTemplate"], colsToExtract, years); #returns data frame containing data from the matchup database for each variable in 'cols'
         
-
         ###Subset to remove where model data is NaN
         customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["matchupVariableName"]])]; #remove where there is no model predictions
         customAlgoData = customAlgoData.loc[np.isfinite(customAlgoData[customAlgo["outputVar"]])]; #remove where there is no reference outputVar data
         
-
-        # rich edit 2 start
         # data are loaded in here again, delete rows that are removed by QC
         A=customAlgoData.index#these are the rows in the subset
         B=mdb_ind_rmv#these are the bad rows to removed
@@ -710,7 +700,6 @@ if runBasicMetrics == True:
         inthesubset=B_idx[B_in_A_bool]
         C=B[inthesubset]
         #this line then drops the bad rows
-        # rich edit 2 end
         
         
         D=customAlgoData.index#these are the rows in the subset
@@ -720,10 +709,6 @@ if runBasicMetrics == True:
         inthesubset2=D_idx[D_in_C_bool]
         
         customAlgoData = customAlgoData.drop(customAlgoData.index[inthesubset2]); #remove where there is no reference outputVar data
-
-        
-
-
 
         if customAlgo["name"] == "cmems_pco2": #unit conversion
             customAlgoData["cmems_pco2_mean"] = customAlgoData["cmems_pco2_mean"]*0.00000986923 * 1000000;
