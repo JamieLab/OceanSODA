@@ -73,7 +73,7 @@ def debug_plot(savePath, sss, perimeterMask, plumeMask, dateStr, region, closeAf
 
 
 
-### Calculates DIC outflow from a river using circulate virtual transects for a list of radii.
+# Calculates DIC outflow from a river using circulate virtual transects for a list of radii.
 #carbonateParametersTemplate: Template (REGION, LATRES, LONRES, OUTPUTVAR) containing gridded carbonate parameter time series data
 #outputDirectoryTemplate: Template (region) for root output path (analysis output and plots written here)
 #regionMaskPath: path to OceanSODA region mask definition netCDF file
@@ -118,27 +118,33 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
         #mask data
         regionMask = regionMaskNC.variables[region][:];
 
-        
+    #### create_perimeter_radii_masks
         #Virtual perimeter for measuring plume DIC throughput:
         #Create a circle perimeter that acts as our bondary for counting DIC that 'leaves' the river mouth region
         perimeterMasks = {perimeterRadius: create_perimeter_mask((int(180/latRes), int(360/lonRes)), riverMouthCoords[region], perimeterRadius) for perimeterRadius in perimeterRadii};
         
-        #Time data
+        #Store these dictionaries at pickle txt files for plotting
+        #They contain the final scores data as tables
+        import pickle
+        with open("output/Amazon_radii.txt", "wb") as myFile:
+            pickle.dump(perimeterMasks, myFile)
+        
+    #### Time data
         numTimePoints = len(carbonateParameters.variables["time"]);
         carbonateParamsTimeRange = (datetime(1980, 1, 1) + timedelta(seconds=float(carbonateParameters.variables["time"][0])), datetime(1980, 1, 1) + timedelta(seconds=float(carbonateParameters.variables["time"][-1])));
         carbonateDates = analysis_tools.create_date_month_array(carbonateParamsTimeRange[0], carbonateParamsTimeRange[1]);
         
-        #River discharge data
+    #### River discharge data
         monthlyDischarge = preprocess_discharge_data.load_discharge_data(carbonateDates, region);
         
         
-        ### Create netCDF file to store results - this will be updated with each iteration
+    #### Create netCDF file to store results - this will be updated with each iteration
         outputPathNetCDF = path.join(baseOutputPath, "dic_outflow_"+region+".nc");
         ncout = analysis_tools.create_netCDF_file(outputPathNetCDF, carbonateParameters, numSamples, regionMask, gridAreas);
         
         
         #Create a data frame to contain all the values used in the calculation
-        #River discharge. carbonate data is monthly averages, so calculate monthly means of river discharge.
+    #### River discharge. carbonate data is monthly averages, so calculate monthly means of river discharge.
         monthlyDF = pd.DataFrame();
         monthlyDF["date"] = carbonateDates;
         monthlyDF.index = carbonateDates;
@@ -168,16 +174,16 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
         #monthlyDF["dic_outflow_median_sd"] = np.full((len(carbonateDates)), np.nan, dtype=float);
         
         
-    
-        #Split calculations by time point because memory usage is too large to store many samples for all time points at once
+    #### loop through months - start
+            # Split calculations by time point because memory usage is too large to store many samples for all time points at once
         mostPointsRadii = [];
         for t in range(0, numTimePoints):
             currentDatetime = carbonateDates[t];
             if verbose:
                 print(region, t+1, "of", numTimePoints, "("+str(currentDatetime)+")");
             
-            #extract data for this time point #SSS in PSU, DIC in umol kg-1
-            dic, dic_err, sss, sss_err = analysis_tools.extract_data(carbonateParameters, regionMask, t=t);
+            #### extract data for this time point #SSS in PSU, DIC in umol kg-1
+            dic, DIC_Combined_uncertainty_dueto_RMSD_and_Bias, sss, SSS_uncertainty = analysis_tools.extract_data(carbonateParameters, regionMask, t=t);
             
             #Don't perform computations if everything is nan
             if np.all(np.isfinite(dic)==False):
@@ -185,39 +191,39 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
             
             
             #Generate DIC and SSS samplestime point
-            sssSamples = np.random.normal(sss, sss_err, size=(numSamples,)+sss.shape);
-            dicSamples = np.random.normal(dic, dic_err, size=(numSamples,)+dic.shape);
+            sssSamples = np.random.normal(sss, SSS_uncertainty, size=(numSamples,)+sss.shape);
+            dicSamples = np.random.normal(dic, DIC_Combined_uncertainty_dueto_RMSD_and_Bias, size=(numSamples,)+dic.shape);
             
 
-            #Calculate plume masks (1==inside plume)
+            #### Calculate plume masks (1==inside plume)
             plumeMask = analysis_tools.calculate_plume_mask(sss, plumeSalinityThreshold=plumeSalinityThreshold);
             plumeMaskSamples = analysis_tools.calculate_plume_mask(sssSamples, plumeSalinityThreshold=plumeSalinityThreshold);
                 
             if np.sum(plumeMask) == 0:
                 zeroPlumes.append(carbonateDates[t]);
             
-            #Calculate plume surface area (m^2)
+            #### Calculate plume surface area (m^2)
             surfaceArea, griddedSurfaceArea = analysis_tools.calculate_plume_surface_area(plumeMask, gridAreas); #surfaceArea in m^2
             surfaceAreaSamples, griddedSurfaceAreaSamples = analysis_tools.calculate_plume_surface_area(plumeMaskSamples, gridAreas, calculateForSamples=True);
             monthlyDF.loc[currentDatetime, "plume_surface_area"] = surfaceArea;
             monthlyDF.loc[currentDatetime, "plume_surface_area_sd"] = np.std(surfaceAreaSamples);
             
             
-            #Calculate plume thickness(m)
+            #### Calculate plume thickness(m)
             meanPlumeThickness, griddedPlumeThickness = analysis_tools.plume_thickness_coles2013(sss, plumeMask, useModelled=False, sampleUncertainty=False); #thickness in metres (m)
             meanPlumeThicknessSamples, griddedPlumeThicknessSamples = analysis_tools.plume_thickness_coles2013(sssSamples, plumeMaskSamples, useModelled=False, sampleUncertainty=True);
             monthlyDF.loc[currentDatetime, "plume_mean_thickness"] = meanPlumeThickness;
             monthlyDF.loc[currentDatetime, "plume_mean_thickness_sd"] = np.std(meanPlumeThicknessSamples);
             
             
-            #Calculate plume volume (m^3)
+            #### Calculate plume volume (m^3)
             plumeVolume, griddedPlumeVolume = analysis_tools.calculate_plume_volume(griddedSurfaceArea, griddedPlumeThickness, calculateForSamples=False); #volumes in m^3
             plumeVolumeSamples, griddedPlumeVolumeSamples = analysis_tools.calculate_plume_volume(griddedSurfaceAreaSamples, griddedPlumeThicknessSamples, calculateForSamples=True);
             monthlyDF.loc[currentDatetime, "plume_volume"] = plumeVolume;
             monthlyDF.loc[currentDatetime, "plume_volume_sd"] = np.std(plumeVolumeSamples);
             
             
-            #Calculate gridded mean plume DIC, in the process also calculate meanplume salinity (umol kg-1)
+            #### Calculate gridded mean plume DIC, in the process also calculate meanplume salinity (umol kg-1)
             #This uses relationship between mean plume salinity and sss in Hu 2004 (PS = 0.881*SSS+4.352, see section 3.4 of https://doi.org/10.1016/j.dsr2.2004.04.001)
             #and assumes DIC is perfectly conservative with salinity
             #I.e. the proportion mean plume salinity to surface salinity is assumed to equal mean plume DIC / surface DIC, thus rearranging gives:
@@ -227,14 +233,14 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
             griddedMeanDICConcSamples, griddedMeanSSSSamples = analysis_tools.calculate_mean_dic_sss(sssSamples, dicSamples, plumeMaskSamples, interceptUncertaintyRatio=0.1, slopeUncertaintyRatio=0.1, calculateForSamples=True);
             
             
-            #calculate total plume DIC (mols C)
+            #### calculate total plume DIC (mols C)
             totalDIC, griddedTotalDIC = analysis_tools.calculate_total_plume_dic(griddedMeanDICConc, griddedPlumeVolume, calculateForSamples=False); #DIC in mol
             totalDICSamples, griddedTotalDICSamples = analysis_tools.calculate_total_plume_dic(griddedMeanDICConcSamples, griddedPlumeVolumeSamples, calculateForSamples=True);
             monthlyDF.loc[currentDatetime, "plume_total_dic"] = totalDIC;
             monthlyDF.loc[currentDatetime, "plume_total_dic_sd"] = np.std(totalDICSamples);
             
             
-            #calculate river originating DIC estimate within the plume (mols C)
+            #### calculate river originating DIC estimate within the plume (mols C)
             #Assumes a linear interpolation between mean salinity of 0 (100% of DIC originates from river) to salinity 35 (0% DIC from river)
             totalRiverineDIC, griddedTotalRiverineDIC = analysis_tools.interpolate_riverine_dic(griddedTotalDIC, griddedMeanSSS, calculateForSamples=False); #mols
             totalRiverineDICSamples, griddedTotalRiverineDICSamples = analysis_tools.interpolate_riverine_dic(griddedTotalDICSamples, griddedMeanSSSSamples, calculateForSamples=True); #mols
@@ -242,7 +248,7 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
             monthlyDF.loc[currentDatetime, "plume_total_riverine_dic_sd"] = np.std(totalRiverineDICSamples);
             
             
-            #loop over each perimeter radius and create a composite estimate
+            #### loop over each perimeter radius and create a composite estimate
             dicOutflowEstimates = []; #one for each perimeter radius
             dicOutflowSDEstimates = []; #one for each perimeter radius
             mostPoints = 0;
@@ -262,7 +268,7 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
                 totalPerimeterDICSamples = np.bincount(sampleGroups, weights=griddedTotalDICSamples[plumeOnPerimeterMaskSamples==1]); #sum within SSS sample groups. Equivalent to nansum(a, axis=0) but we couldn't use that because we indexed with np.where which resulted in a 1d array
                 
                 
-                ###get perimeter DIC concentrations
+                #### get perimeter DIC concentrations
                 perimeterDICConc = np.full(sss.shape, np.nan, dtype=float);
                 perimeterDICConc[plumeOnPerimeterMask==1] = griddedMeanDICConc[plumeOnPerimeterMask==1]; #umol kg-1
                 #get just the riverine concentration
@@ -276,7 +282,7 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
                 sumTotalRiverinePerimeterDICConcSamples, riverinePerimeterDICConcSamples = analysis_tools.interpolate_riverine_dic(perimeterDICConcSamples, griddedMeanSSSSamples, calculateForSamples=True);
                 
                 
-                ###Calculate the DIC otuflow from the river
+                #### Calculate the DIC otuflow from the river
                 monthlyDischargeKg = monthlyDischarge.loc[currentDatetime]["monthly_discharge"] * 1000; #Convert discharge from m^3 month-1 to kg month-1
                 dicOutflow = sumTotalRiverinePerimeterDICConc * monthlyDischargeKg; #concentration: umol month-1
                 dicOutflowMol = dicOutflow/1000000; #umol month-1 to mol month-1
@@ -287,7 +293,7 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
                 dicOutflowMolSamples = dicOutflowSamples/1000000; #umol month-1 to mol month-1
                 dicOutflowTGramsSamples = analysis_tools.mol_to_TgC(dicOutflowMolSamples);
                 
-                #Store the estimates for this perimeter radius
+                #### Store the estimates for this perimeter radius
                 monthlyDF.loc[currentDatetime, "dic_outflow_radius"+str(perimeterRadius)] = dicOutflowTGrams;
                 monthlyDF.loc[currentDatetime, "dic_outflow_sd_radius"+str(perimeterRadius)] = np.std(dicOutflowTGramsSamples);
                 dicOutflowEstimates.append(dicOutflowTGrams);
@@ -301,7 +307,7 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
     
 
             
-            #Calculate a composite permeter radius
+            #### Calculate a composite permeter radius
             #remove any 0s
             dicOutflowEstimates = np.array([val for val in dicOutflowEstimates if (val != 0) and (np.isfinite(val))]);
             dicOutflowSDEstimates = np.array([val for val in dicOutflowSDEstimates if (val != 0) and (np.isfinite(val))]);
@@ -317,21 +323,21 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
             mostPointsRadii.append(mostPointsRadius);
             
             
-            #Update output netCDF file for this time point
+            #### Update output netCDF file for this time point
             griddedPlumeVolumeSD = np.nanstd(griddedPlumeVolumeSamples, axis=0);
             griddedTotalDICSD = np.nanstd(griddedTotalDICSamples, axis=0);
             analysis_tools.update_gridded_time_point_netCDF(ncout, t, griddedPlumeVolume, griddedPlumeVolumeSD, griddedTotalDIC, griddedTotalDICSD, plumeMask);
     
         
-    
-        #Calculate inter-annual values for each month        
+            
+        #### Calculate inter-annual values for each month        
         interyearDF = analysis_tools.calculate_inter_year_monthly_means(monthlyDF);
         
-        #calculate mean annual values
+        #### calculate mean annual values
         annualDF = analysis_tools.calculate_annual_values(interyearDF);
         
         
-        #Write time series to netCDF file
+        #### Write time series to netCDF file
         analysis_tools.write_timeseries_to_netCDF(ncout, monthlyDF["plume_volume"].values, monthlyDF["plume_volume_sd"].values,
                                    monthlyDF["plume_total_dic"].values, monthlyDF["plume_total_dic_sd"].values,
                                    monthlyDF["plume_total_riverine_dic"].values, monthlyDF["plume_total_riverine_dic_sd"].values,
@@ -355,7 +361,7 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
         print("Written csv file output to:" + baseOutputPath);
     
         
-        #plotting
+        #### plotting
         if makePlots == True:
             #Visualise plume volume area over time
             outputPath = path.join(basePlotPath, "monthly_plume_volume.pdf");
