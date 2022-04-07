@@ -159,11 +159,9 @@ def create_gridded_timeseries_output_netCDF_file(outputPath, algoInfo, datasetIn
     
     var = ncout.createVariable("time", int, ("time",));
     var.long_name = "Time";
-    var.calendar = "standard" ;
-    var.units = "months since 1957-01-01 00:00:00";
-    var[:] = [int((datetime(year, imonth+1, 1)-datetime(1957, 1, 1)).total_seconds()) for year in years for imonth in range(0, 12)];
+    var.units = "seconds since 1980-01-01";
+    var[:] = [int((datetime(year, imonth+1, 1)-datetime(1980, 1, 1)).total_seconds()) for year in years for imonth in range(0, 12)];
 
-    
 
     var = ncout.createVariable(outputVar, float, ("time", "lat", "lon"), zlib=True);
     var.units = "umol kg-1";
@@ -173,7 +171,7 @@ def create_gridded_timeseries_output_netCDF_file(outputPath, algoInfo, datasetIn
     var.units = "umol kg-1";
     var.long_name = outputVar_other_longname+" extracted from "+ outputVar_other+ " netCDF dataset";
     
-    #these uncertainties use the RMSDe and bias generated during the Algo evaluation 
+    #these uncertainties use the wRMSD/RMSDe and wbias generated during the Algo evaluation 
     #to create an end to end uncertainty analysis estimate
     #uncomment this to define extra TA/DIC Uncertainties
 
@@ -190,7 +188,7 @@ def create_gridded_timeseries_output_netCDF_file(outputPath, algoInfo, datasetIn
     #Combined
     var = ncout.createVariable(outputVar+"_uncertainty", float, ("time", "lat", "lon"), zlib=True);
     var.units = "umol kg-1";
-    var.long_name = "Combined standard uncertainty in "+outputVar+", combining measurement bias and RMSD from algorithm evaluation ('"+algoName+"')";
+    var.long_name = "Combined standard uncertainty in "+outputVar+", combining measurement wbias and wRMSD from algorithm evaluation ('"+algoName+"')";
 
 
     var = ncout.createVariable(outputVar_other+"_uncertainty", float, ("time", "lat", "lon"), zlib=True);
@@ -254,7 +252,7 @@ def create_gridded_timeseries_output_netCDF_file(outputPath, algoInfo, datasetIn
     var.units = "umol kg-1";
     var.long_name = "Phosphate (PO4) content. The dataset reference is"+PO4_ref+". The dataset was accessed on "+DatasetAccessTime;
     if datasetInfoMap["PO4"].predictionDatasetError is not None:
-        var = ncout.createVariable("PO4_err", float, ("time", "lat", "lon"), zlib=True);
+        var = ncout.createVariable("PO4_uncertainty", float, ("time", "lat", "lon"), zlib=True);
         var.units = "umol kg-1";
         var.long_name = "Uncertainty in phosphate (PO4) content. The dataset reference is"+PO4_ref+". The dataset was accessed on "+DatasetAccessTime;
     
@@ -263,7 +261,7 @@ def create_gridded_timeseries_output_netCDF_file(outputPath, algoInfo, datasetIn
     var.units = "umol kg-1";
     var.long_name = "Silicate(SiO4) content. The dataset reference is"+SiO4_ref+". The dataset was accessed on "+DatasetAccessTime;
     if datasetInfoMap["SiO4"].predictionDatasetError is not None:
-        var = ncout.createVariable("SiO4_err", float, ("time", "lat", "lon"), zlib=True);
+        var = ncout.createVariable("SiO4_uncertainty", float, ("time", "lat", "lon"), zlib=True);
         var.units = "umol kg-1";
         var.long_name = "Uncertainty in silicate (SiO4) content.The dataset reference is"+SiO4_ref+". The dataset was accessed on "+DatasetAccessTime;
 
@@ -499,8 +497,7 @@ def calculate_gridded_output_from_inputs(AlgorithmClass,AlgoInfo, inputVariables
 
         # df[algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty"] = pd.Series(propagatedInputUncertainty, index=modelOutput.index);
         # df[algorithm.output_name()+"_pred_uncertainty_due_to_algorithm"] = pd.Series(rmsd, index=modelOutput.index);
-        # df[algorithm.output_name()+"_pred_combined_uncertainty"] = pd.Series(combinedUncertainty, index=modelOutput.index);
-    
+        #df[algorithm.output_name()+"_pred_combined_uncertainty"] = pd.Series(combinedUncertainty, index=modelOutput.index);
         # df[algorithm.output_name()+"_RMSD"] = pd.Series(algoRMSD, index=modelOutput.index);
         # df[algorithm.output_name()+"_Bias"] = pd.Series(algoBias, index=modelOutput.index);
         df[algorithm.output_name()+"_uncertainty"] = pd.Series(algouncendtoend, index=modelOutput.index);
@@ -516,10 +513,12 @@ def calculate_gridded_output_from_inputs(AlgorithmClass,AlgoInfo, inputVariables
 
         # df[algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty"] = [np.nan]*len(df);
         # df[algorithm.output_name()+"_pred_uncertainty_due_to_algorithm"] = [np.nan]*len(df);
-        # df[algorithm.output_name()+"_pred_combined_uncertainty"] = [np.nan]*len(df);
+        #df[algorithm.output_name()+"_pred_combined_uncertainty"] = [np.nan]*len(df);
     
         # df[algorithm.output_name()+"_RMSD"] = [np.nan]*len(df);
         # df[algorithm.output_name()+"_Bias"] = [np.nan]*len(df);
+        
+        
         df[algorithm.output_name()+"_uncertainty"] = [np.nan]*len(df);
     
     def centre_df_data_to_grid(df, varCol, latCol="lat", lonCol="lon"):
@@ -543,7 +542,7 @@ def calculate_gridded_output_from_inputs(AlgorithmClass,AlgoInfo, inputVariables
     griddedOutput = centre_df_data_to_grid(df, algorithm.output_name());
     # griddedRMSD = centre_df_data_to_grid(df, algorithm.output_name()+"_pred_uncertainty_due_to_algorithm");
     # griddedInputUncertainty = centre_df_data_to_grid(df, algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty");
-    # griddedCombinedUncertainty = centre_df_data_to_grid(df, algorithm.output_name()+"_pred_combined_uncertainty");
+    #griddedCombinedUncertainty = centre_df_data_to_grid(df, algorithm.output_name()+"_pred_combined_uncertainty");
     
     # griddedRMSD = centre_df_data_to_grid(df, algorithm.output_name()+"_RMSD");
     # griddedBias = centre_df_data_to_grid(df, algorithm.output_name()+"_Bias");
@@ -552,23 +551,25 @@ def calculate_gridded_output_from_inputs(AlgorithmClass,AlgoInfo, inputVariables
     
         
     
-#    griddedRMSD = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_uncertainty_due_to_algorithm"); #unstack into a grid again
-#    griddedRMSD = np.array(griddedRMSD);
-#    griddedInputUncertainty = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty"); #unstack into a grid again
-#    griddedInputUncertainty = np.array(griddedInputUncertainty);
-#    griddedCombinedUncertainty = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_combined_uncertainty"); #unstack into a grid again
-#    griddedCombinedUncertainty = np.array(griddedCombinedUncertainty);
+    # griddedRMSD = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_uncertainty_due_to_algorithm"); #unstack into a grid again
+    # griddedRMSD = np.array(griddedRMSD);
+    # griddedInputUncertainty = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_uncertainty_due_to_input_uncertainty"); #unstack into a grid again
+    # griddedInputUncertainty = np.array(griddedInputUncertainty);
+    #griddedCombinedUncertainty = df.pivot(index="lat", columns="lon", values=algorithm.output_name()+"_pred_combined_uncertainty"); #unstack into a grid again
+    #griddedCombinedUncertainty = np.array(griddedCombinedUncertainty);
     
     #Only return data with both model output and combined uncertainty 
     inconsistentCells = np.where(np.isnan(griddedOutput) | np.isnan(gridded_uncertainty));
     griddedOutput[inconsistentCells] = np.nan;
     # griddedRMSD[inconsistentCells] = np.nan;
     # griddedInputUncertainty[inconsistentCells] = np.nan;
-    # griddedCombinedUncertainty[inconsistentCells] = np.nan;
+    #griddedCombinedUncertainty[inconsistentCells] = np.nan;
     # griddedRMSD[inconsistentCells] = np.nan;
     # griddedBias[inconsistentCells] = np.nan;
     gridded_uncertainty[inconsistentCells] = np.nan;
     return griddedOutput, gridded_uncertainty, df; #return the gridded output and the dataframe that was used by the algorithm to make the predictions
+    
+
 
 
 
@@ -594,8 +595,7 @@ def write_outputvars_to_netCDF(ncFileHandle, iyear, imonth, outputVar,griddedMod
 
     # if griddedRMSD is not None: ncFileHandle.variables[outputVar+"_pred_uncertainty_due_to_algorithm"][(iyear*12)+imonth, :, :] = griddedRMSD;
     # if griddedInputUncertainty is not None: ncFileHandle.variables[outputVar+"_pred_uncertainty_due_to_input_uncertainty"][(iyear*12)+imonth, :, :] = griddedInputUncertainty;
-    # if griddedCombinedUncertainty is not None: ncFileHandle.variables[outputVar+"_pred_combined_uncertainty"][(iyear*12)+imonth, :, :] = griddedCombinedUncertainty;
-    
+    #if griddedCombinedUncertainty is not None: ncFileHandle.variables[outputVar+"_pred_combined_uncertainty"][(iyear*12)+imonth, :, :] = griddedCombinedUncertainty;
     # if griddedRMSD is not None: ncFileHandle.variables[outputVar+"_RMSD"][(iyear*12)+imonth, :, :] = griddedRMSD;
     # if griddedBias is not None: ncFileHandle.variables[outputVar+"_Bias"][(iyear*12)+imonth, :, :] = griddedBias;
     
@@ -612,6 +612,13 @@ def write_outputvars_to_netCDF(ncFileHandle, iyear, imonth, outputVar,griddedMod
             ncFileHandle.variables["SST_uncertainty"][(iyear*12)+imonth, :, :] = loadedInputData[variableName];
         elif variableName=="SSS_err":
             ncFileHandle.variables["SSS_uncertainty"][(iyear*12)+imonth, :, :] = loadedInputData[variableName];
+        elif variableName=="SiO4_err":
+            ncFileHandle.variables["SiO4_uncertainty"][(iyear*12)+imonth, :, :] = loadedInputData[variableName];
+        elif variableName=="PO4_err":
+            ncFileHandle.variables["PO4_uncertainty"][(iyear*12)+imonth, :, :] = loadedInputData[variableName];
+        
+        
+        
         else:
             ncFileHandle.variables[variableName][(iyear*12)+imonth, :, :] = loadedInputData[variableName];
 
@@ -705,7 +712,7 @@ def convert_dataframe_to_gridded_list(df, latColName, lonColName):
             output[variable] = np.array(centredGriddedOutput);
     return output;
 
-def calculate_gridded_timeseries_single_region(outputPathAT, outputPathDIC, atAlgo, atAlgoInfo, dicAlgo, dicAlgoInfo, settings, years, region, regionMaskNC, latRes=1.0, lonRes=1.0, verbose=False):
+def calculate_gridded_timeseries_single_region(outputPathAT, outputPathDIC, atAlgo, atAlgoInfo, dicAlgo, dicAlgoInfo, settings, years, region, regionMaskNC, latRes=1, lonRes=1, verbose=False):
     if (atAlgo is None) and (dicAlgo is None):
         return;
     
@@ -857,7 +864,7 @@ def calculate_gridded_timeseries_all_regions(tablePath, outputPathTemplate, year
     
     bestAlgoTable = pd.read_csv(tablePath);
     
-    latRes = lonRes = 1.0;
+    latRes = lonRes = 1;
     
     if isinstance(outputPathTemplate, str):
         outputPathTemplate = Template(outputPathTemplate);
