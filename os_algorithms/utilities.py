@@ -358,7 +358,7 @@ def find_best_algorithm(n_threshold,metricsRootDirectory, region, outputVars=["A
         #Now we know there is at least one non-NaN value, find the best algorithm and store its name
         ibestAlgo = np.nanargmin(finalScores[rmsdeCol]);
 
-        bestAlgobias = finalScores["bias"][ibestAlgo];
+        bestAlgobias = finalScores["wbias"][ibestAlgo];
         bestAlgo_unc_end_end = finalScores["unc_end_end"][ibestAlgo];
         bestAlgo_RMSD = finalScores["final_rmsd"][ibestAlgo];
 

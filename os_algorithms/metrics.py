@@ -109,15 +109,16 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
     absPredictionError = abs(predictionErrors);
     
     #Metrics of ability of the algorithm to reproduce measured values
-    predictionRmsd = np.sqrt(predictionErrorsSquared.mean()); #rmse
+    predictionRmsd = np.sqrt(predictionErrorsSquared.mean()); #rmsd
     predictionMad = absPredictionError.mean(); #mean absolute difference
     if hasWeights:
         wpredictionRmsd = np.sqrt(np.nansum(weights*predictionErrorsSquared)); #weighted sum of the squared prediction error. Note sum not mean because the weights are normalised to sum to 1.
         wpredictionMad = (np.nansum(weights*absPredictionError)); #weighted mean absolute difference. Note sum is used, not mean, as weights are already normalised to sum to 1
+        wpredictionBias = (np.nansum(weights*predictionErrors))/(np.nansum(weights)); #weighted mean absolute difference. Note sum is used, not mean, as weights are already normalised to sum to 1
     else:
         wpredictionRmsd = np.nan;
         wpredictionMad = np.nan;
-    
+        wpredictionBias = np.nan;
     
 
     
@@ -190,6 +191,7 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
                     "weights": weights, #values used for weighted metrics
                     "n": len(dataUsed), #number of matchup rows
                     "bias": bias, #bias = mean difference: mean(model-reference)
+                    "wbias": wpredictionBias, #bias = mean difference: mean(model-reference)
                     };
     
     return basicMetrics;
@@ -307,7 +309,7 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings, outputVar):
     #finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     #finalScores["w_algos_compared"] = [np.sum(np.isfinite(pairedWScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     finalScores["n"] = [basicMetric["n"] for basicMetric in basicMetrics];
-    finalScores["bias"] = [basicMetric["bias"] for basicMetric in basicMetrics];
+    finalScores["wbias"] = [basicMetric["wbias"] for basicMetric in basicMetrics];
 
     #Calculate representative RMSD
     nArray = np.array([metrics["n"] for metrics in basicMetrics], dtype=float);
@@ -325,7 +327,7 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings, outputVar):
     
     uncendtoend=[]; # this is the combined uncertainty between RMSD and measurement uncertainty.
     for i in range(len(algorithmOutputList)):
-         x= np.sqrt( settings["totalinsituuncetainty"][outputVar]**2 + finalScores["final_rmsd"][i]**2 )
+         x= np.sqrt( finalScores["wbias"][i]**2 + finalScores["final_wrmsd"][i]**2 )
          uncendtoend.append(x)
     finalScores["unc_end_end"]=uncendtoend
     
