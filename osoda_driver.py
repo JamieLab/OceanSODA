@@ -19,38 +19,36 @@ pd.set_option("mode.chained_assignment", None);
 
 settings = osoda_global_settings.get_default_settings();
 
+
+
 #########
 # Compare algorithm performance using matchup data set 
-# Compute all metrics and determine the 'best' and 'long' optimal algorithm
-#    for DIC and AT
+# Compute all metrics and determine the 'best' and 'long' optimal algorithm for DIC and AT
 
-# import osoda_algorithm_comparison;
+import osoda_algorithm_comparison;
+osoda_algorithm_comparison.main(settings);
 
 
-# ##########
-# Download all prediction data sets and calculate gridded time series predictions
+# # ##########
+# # Download all prediction data sets and calculate gridded time series predictions
+
 import osoda_calculate_gridded_predictions;
 years = settings["years"];
 regions = settings["regions"];
 regionMaskPath= settings["regionMasksPath"];
 
-#Run for "Best algorithms allowing for reduced temporal overlap and validation matchups" - (aka weighted with no time or restriction on the number of matchups)
-optAlgoTableBest = "output/algo_metrics/overall_best_algos.csv";
-griddedTimeSeriesOutputPathBest = settings["bestGriddedTimeSeriesPathTemplate"];
-osoda_calculate_gridded_predictions.main(optAlgoTableBest, griddedTimeSeriesOutputPathBest, years, regions, regionMaskPath);
+# #Run for "Best algorithms allowing for reduced temporal overlap and validation matchups" - (aka weighted with no time or restriction on the number of matchups)
+# optAlgoTableBest = "output/algo_metrics/overall_best_algos.csv";
+# griddedTimeSeriesOutputPathBest = settings["bestGriddedTimeSeriesPathTemplate"];
+# osoda_calculate_gridded_predictions.main(optAlgoTableBest, griddedTimeSeriesOutputPathBest, years, regions, regionMaskPath);
 
-# #Run for the 'optimal algorithms' (aka min 8 year time series and n=30 matchups) - this is main dataset run. 
+# # # # #Run for the 'optimal algorithms' (aka min 8 year time series and n=30 matchups) - this is main dataset run. 
 optAlgoTableLong = "output/algo_metrics/overall_best_algos_min_years=8.csv";
 griddedTimeSeriesOutputPathLong = settings["longGriddedTimeSeriesPathTemplate"];
 osoda_calculate_gridded_predictions.main(optAlgoTableLong, griddedTimeSeriesOutputPathLong, years, regions, regionMaskPath);
 
-# #Run for the 'Best  unweighted algorithms' note still with (min 8 year time series and n=30 matchups) -  
-optAlgoTableLongunweighted = "output/algo_metrics/overall_best_algos_unweighted_min_years=8.csv";
-griddedTimeSeriesOutputPathLongunweighted = settings["longunweightedGriddedTimeSeriesPathTemplate"];
-osoda_calculate_gridded_predictions.main(optAlgoTableLongunweighted, griddedTimeSeriesOutputPathLongunweighted, years, regions, regionMaskPath);
 
-
-# ##########
+##########
 # # Calculate DIC outflow for the Amazon (case study 1)
 # import osoda_dic_outflow;
 # osodaMasksPath = settings["regionMasksPath"];
@@ -68,7 +66,7 @@ osoda_calculate_gridded_predictions.main(optAlgoTableLongunweighted, griddedTime
 # outputDirLong = path.join(settings["outputPathRoot"], "dic_outflow_amazon_long");
 # osoda_dic_outflow.main(carbonateParametersTemplateLong, outputDirLong, regions, osodaMasksPath, precomputedGridAreaPath);
 
-# ##########
+##########
 # # Assess and identify vulneral reefs (case study 2)
 # import osoda_reef_vulnerability;
 # osoda_reef_vulnerability.main(settings, useDistanceToLandMask=False);

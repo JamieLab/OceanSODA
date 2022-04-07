@@ -310,7 +310,7 @@ def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0, minMatchup
             regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared","DIC_bias","DIC_uncendtoend","DIC_RMSD","AT_RMSDe"], ascending=[True, False, False,True,True,True, True]);
             overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"],regionTable.iloc[0]["DIC_bias"],regionTable.iloc[0]["DIC_uncendtoend"],regionTable.iloc[0]["DIC_RMSD"],  regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
         else: #no entries, so insert nans
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan, 0, 0, 0];
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan, 0, 0, 0];
         
     return overallBestAlgos;
 
@@ -521,9 +521,14 @@ def main(settings, extraAlgosToTest=[]):
                         logger.info("No matchup data left after subsettings (region:"+region+", algo: "+algorithm.__class__.__name__+")");
                         continue;
                     
-                    #Store the data/objects which we'll used later
-                    algorithmOutputList.append(algorithmOutput);
                     
+                    #filter here the algorithms below our n threshold
+                    if len(algorithmOutput["dataUsedIndices"])<30:
+                        print("number of matchups less than n. Dont include this algorithm in paired calculations")
+                    else:
+                        #Store the data/objects which we'll used later
+                        algorithmOutputList.append(algorithmOutput);
+  
                     ######################
                     ### Diagnostic plots #
                     #Diagnostic plot to compare model and reference output
@@ -538,8 +543,8 @@ def main(settings, extraAlgosToTest=[]):
                 #######################################
                 ### Calculate metrics for each region #
                 if len(algorithmOutputList) == 0:
-                    print("*** WARNING: No algorithms were executed for region", region, " possibly because there was no matchup data in this region.");
-                    logger.error("No algorithms were executed for region '"+region+"' possibly because there was no matchup data in this region.");
+                    print("*** WARNING: No algorithms were executed for region", region, " possibly because there was no matchup data in this region.Or the number of matchups n was less then specified in settings file.");
+                    logger.error("No algorithms were executed for region '"+region+"' possibly because there was no matchup data in this region. Or the number of matchups n was less then specified in settings file.");
                     continue; #Skip calculating metrics for this region
                 
                 #Only compare algorithms which predict the same output variable, so we need a list of all the output variables
@@ -548,6 +553,7 @@ def main(settings, extraAlgosToTest=[]):
                     #filter algorithm list, output list etc. by the current output variable (in order to compare like-for-like)
                     algosMatchingCurrentOutputVar = [i for i in range(len(algorithmOutputList)) if algorithmOutputList[i]["instance"].output_name()==currentOutputVar];
                     currentAlgorithmOutputs = [algorithmOutputList[i] for i in algosMatchingCurrentOutputVar];
+                    
                     
                     basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
                         metrics.calc_all_metrics(currentAlgorithmOutputs, matchupData, settings,currentOutputVar);

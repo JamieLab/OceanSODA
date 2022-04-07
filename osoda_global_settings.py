@@ -76,9 +76,10 @@ def get_default_settings():
     
     settings["outputPathRoot"] = path.join(projectRoot, "output"); #Root directory to write outputs
     settings["outputPathMetrics"] = path.join(settings["outputPathRoot"], "algo_metrics"); #Where algorithm metrics outputs are written
-    settings["bestGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'best' version of the optimal algorithms
-    settings["longGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'long' version of the optimal algorithms
-    settings["longunweightedGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range_unweighted/gridded_${REGION}_${LATRES}x${LONRES}_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the unweighted 'long' version of the optimal algorithms
+    
+    settings["bestGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions/gridded_${REGION}_${LATRES}degx${LONRES}deg_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'best' version of the optimal algorithms
+    settings["longGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}degx${LONRES}deg_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'long' version of the optimal algorithms
+    settings["longunweightedGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range_unweighted/gridded_${REGION}_${LATRES}degx${LONRES}deg_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the unweighted 'long' version of the optimal algorithms
 
     #other output directories here
     
@@ -133,8 +134,8 @@ def get_default_settings():
                                          "DIC_max": 3000,
                                          "DIC_min": 500,
                                          "pH_max": 8.5,
-                                         "pH_min": 7,
-                                         "pCO2_max": 800,
+                                         "pH_min": 6,
+                                         "pCO2_max": 3000,
                                          "pCO2_min": 100,
                                          "TA_max": 3000, 
                                          "TA_min": 500};
@@ -148,7 +149,7 @@ def get_default_settings():
     settings["datasetInfoMap"] = {"date": DatasetInfo(commonName="date", datasetName="time", matchupVariableName="time", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "lon": DatasetInfo(commonName="lon", datasetName="lon", matchupVariableName="lon", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                    "lat": DatasetInfo(commonName="lat", datasetName="lat", matchupVariableName="lat", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
-                                   "SST": [DatasetInfo(commonName="SST", datasetName="SST-ESACCI", matchupVariableName="cci_sst_mean", matchupDatabaseError="cci_sst_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ESACCI_SST_OSTIA/processed/${YYYY}/ESACCI-SST-OSTIA-LT-v02.0-fv01.1_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="sst", predictionDatasetError="sst_err"),
+                                   "SST": [DatasetInfo(commonName="SST", datasetName="SST-ESACCI", matchupVariableName="cci_sst_mean", matchupDatabaseError="cci_sst_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ESACCI_SST/processed/${YYYY}/ESACCI-SST-OSTIA-LT-v02.0-fv01.1_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="sst", predictionDatasetError="sst_err"),
                                            DatasetInfo(commonName="SST", datasetName="SST-CORA", matchupVariableName="cora_temperature_mean", matchupDatabaseError="cora_temperature_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "CORA_SSS_SST/${YYYY}/OA_CORA5.2_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="TEMP", predictionDatasetError="TEMP_err"),
                                            DatasetInfo(commonName="SST", datasetName="SST-OISST", matchupVariableName="noaa_sst_mean", matchupDatabaseError="noaa_sst_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "OISST_SST/processed/${YYYY}/${YYYY}${MM}01_OCF-SST-GLO-1M-100-REYNOLDS_1.0x1.0.nc")), predictionDatasetVariable="sst_mean", predictionDatasetError="sst_stddev"),
                                            ],
@@ -179,7 +180,7 @@ def get_default_settings():
                                              "oceansoda_amazon_plume": [at_algorithms.Astor2017a_at,
                                                                       at_algorithms.Astor2017d_at,
                                                                       at_algorithms.Astor2017b_at,
-                                                                      at_algorithms.Astor2017e_at,
+                                                                      #at_algorithms.Astor2017e_at,
                                                                       at_algorithms.Astor2017c_at,
                                                                       at_algorithms.Brewer1995_at,
                                                                       at_algorithms.Cai2010a_at,
@@ -191,7 +192,7 @@ def get_default_settings():
                                                                       at_algorithms.Sasse2013_at,
                                                                       at_algorithms.Sasse2013_global_at,
                                                                       at_algorithms.Ternon2000_at,
-                                                                      at_algorithms.Takahashi2013_at,
+                                                                      #at_algorithms.Takahashi2013_at,
                                                                       dic_algorithms.Brewer1995_dic,
                                                                       dic_algorithms.Cooley2006a_dic,
                                                                       dic_algorithms.Lee2000_dic,
