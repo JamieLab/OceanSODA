@@ -33,6 +33,7 @@ def calc_insitu_uncertainty(insituData, variable, settings):
 #   outputVar: name of the output variable (i.e. 'AT' or 'DIC')
 #   settings: the global settings dictionary
 def calc_reference_uncertainty(dataUsed, outputVar, settings):
+    
     uncertainties = dataUsed[outputVar+"_err"]; #type A uncertainties
     
     missingTypeA = np.isfinite(uncertainties) == False; #Which rows are missing type A uncertainty
@@ -108,14 +109,18 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
     absPredictionError = abs(predictionErrors);
     
     #Metrics of ability of the algorithm to reproduce measured values
-    predictionRmsd = np.sqrt(predictionErrorsSquared.mean()); #rmse
+    predictionRmsd = np.sqrt(predictionErrorsSquared.mean()); #rmsd
     predictionMad = absPredictionError.mean(); #mean absolute difference
     if hasWeights:
         wpredictionRmsd = np.sqrt(np.nansum(weights*predictionErrorsSquared)); #weighted sum of the squared prediction error. Note sum not mean because the weights are normalised to sum to 1.
         wpredictionMad = (np.nansum(weights*absPredictionError)); #weighted mean absolute difference. Note sum is used, not mean, as weights are already normalised to sum to 1
+        wpredictionBias = (np.nansum(weights*predictionErrors))/(np.nansum(weights)); #weighted mean absolute difference. Note sum is used, not mean, as weights are already normalised to sum to 1
     else:
         wpredictionRmsd = np.nan;
         wpredictionMad = np.nan;
+        wpredictionBias = np.nan;
+    
+
     
     #Calculates means of model and reference values (unweighted and weighted)
     meanModelOutput = algorithmOutput["modelOutput"].mean();
@@ -186,6 +191,7 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
                     "weights": weights, #values used for weighted metrics
                     "n": len(dataUsed), #number of matchup rows
                     "bias": bias, #bias = mean difference: mean(model-reference)
+                    "wbias": wpredictionBias, #bias = mean difference: mean(model-reference)
                     };
     
     return basicMetrics;
@@ -201,7 +207,7 @@ def calc_basic_metrics(algorithmOutput, dataUsed, settings):
 #   matchupRowsUsedList: Defines the subset of the matchup database used by the algorithm
 #   matchupData: pandas dataframe containing all the matchup data
 #   settings: the global settings dictionary
-def calc_all_metrics(algorithmOutputList, matchupData, settings):
+def calc_all_metrics(algorithmOutputList, matchupData, settings, outputVar):
     #Create some space for storing metrics (pairwise metrics are stored as matrices.)
     basicMetrics = []; #Stores simple non-paired metrics like mean, standard deviation, RMSD and MAD
 #    nIntersectMatrix = np.ma.masked_all((len(algorithmFunctorList), len(algorithmFunctorList)), dtype=int); #Symetrical
@@ -303,7 +309,8 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings):
     #finalScores["algos_compared"] = [np.sum(np.isfinite(pairedScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     #finalScores["w_algos_compared"] = [np.sum(np.isfinite(pairedWScoreMatrix[i,:])) for i in range(0, len(algorithmFunctorList))];
     finalScores["n"] = [basicMetric["n"] for basicMetric in basicMetrics];
-    
+    finalScores["wbias"] = [basicMetric["wbias"] for basicMetric in basicMetrics];
+
     #Calculate representative RMSD
     nArray = np.array([metrics["n"] for metrics in basicMetrics], dtype=float);
     nArray[nArray==0] = np.nan;
@@ -318,7 +325,11 @@ def calc_all_metrics(algorithmOutputList, matchupData, settings):
     wfinalRMSDs = [wRMSDrep*finalWScoreArray[i]/finalWScoreArray[wiRMSDrep] for i in range(len(algorithmOutputList))];
     finalScores["final_wrmsd"] = wfinalRMSDs;
     
-    
+    uncendtoend=[]; # this is the combined uncertainty between RMSD and measurement uncertainty.
+    for i in range(len(algorithmOutputList)):
+         x= np.sqrt( finalScores["wbias"][i]**2 + finalScores["final_wrmsd"][i]**2 )
+         uncendtoend.append(x)
+    finalScores["unc_end_end"]=uncendtoend
     
     return basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores;
     

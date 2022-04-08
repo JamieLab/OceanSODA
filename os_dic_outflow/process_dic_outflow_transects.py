@@ -19,24 +19,25 @@ from .preprocess_discharge_data import load_discharge_data;
 def g_to_Tg(val):
     return val / (10.0**12);
 
-#returns river discharge in kg month-1 for a specific month in a specific year
 def get_discharge_at_month_year(df, year, month):
+    #### returns river discharge in kg month-1 for a specific month in a specific year
     row = df.loc[(df["date"] == datetime.datetime(year, month, 1))].iloc[0];
     discharge = row["monthly_discharge"]; #in m^3 month-1
     dischargeKg = discharge*1000.0; #in kg month-1: 1000 kg in 1 m^3 fresh water
     return dischargeKg;
 
-#returns the number of radii included in a radiiData dataset
-#Assumes radii start from 1 in increment by 1 to n. Returns n.
+
 def get_num_radii(radiiData):
+    #### returns the number of radii included in a radiiData dataset
+    #Assumes radii start from 1 in increment by 1 to n. Returns n.
     numRadii = 0;
     for key in radiiData.keys():
         if "dic_outflow_radius" in key:
             numRadii+=1;
     return numRadii;
 
-#returns the mean DIC outflow using a set of radii (the set is assumed to include 1:numRadii inclusive)
 def calculate_mean_of_radii_data_dic_outflow(radiiData, numRadii):
+    #### returns the mean DIC outflow using a set of radii (the set is assumed to include 1:numRadii inclusive)
     radii = range(1, numRadii+1);
     colNames = ["dic_outflow_radius"+str(radius) for radius in radii];
     colNamesSD = ["dic_outflow_sd_radius"+str(radius) for radius in radii];
@@ -92,6 +93,7 @@ def determine_num_radii_with_correlation(dischargeData, radiiDataSeasonal):
         radiiSetMeanSeasonalDischarge, radiiSetSDSeasonalDischarge = calculate_mean_of_radii_data_dic_outflow(radiiDataSeasonal, numRadii);
         
         #calculate correlation coefficient
+        
         newCorrelationCoefficient, p = pearsonr(meanSeasonalDischarge, radiiSetSDSeasonalDischarge);
         #print(newCorrelationCoefficient, bestCorrelationCoefficient);
         
@@ -115,19 +117,30 @@ def peak_align_diagnostic_plot(region, dischargeDataMonths, radiiData, numRadii_
     dicOutflowMean_amp /= np.nanmax(dicOutflowMean_amp);
     dicOutflowMean_corr /= np.nanmax(dicOutflowMean_corr)
     #plot
-    plt.figure(figsize=(10,10));
-    plt.subplot(2,1,1);
-    plt.title(region+" peak alignment diagnostic plot");
-    plt.plot(meanDischarge, 'k', label="discharge (normalised)");
-    plt.plot(dicOutflowMean_amp, 'r', label="CT outflow (normalised, peak amplitude)\nUsing {0} radii, peak offset = {1}".format(numRadii_amp, offset));
-    plt.legend(loc=0);
-    plt.subplot(2,1,2);
-    plt.plot(meanDischarge, 'k', label="discharge (normalised)");
-    plt.plot(dicOutflowMean_corr, 'r', label="CT outflow (normalised, correlation)\nUsing {0} radii, correlation coefficient = {1}".format(numRadii_corr, correlationCoefficient));
-    plt.legend(loc=0);
+    # plt.figure(figsize=(10,10));
+    # plt.subplot(2,1,1);
+    # plt.title(region+" peak alignment diagnostic plot");
+    # plt.plot(meanDischarge, 'k', label="discharge (normalised)");
+    # plt.plot(dicOutflowMean_amp, 'r', label="DIC outflow (normalised, peak amplitude)\nUsing {0} radii, peak offset = {1}".format(numRadii_amp, offset));
+    # plt.legend(loc=0);
+    # plt.subplot(2,1,2);
+    # plt.plot(meanDischarge, 'k', label="discharge (normalised)");
+    # plt.plot(dicOutflowMean_corr, 'r', label="DIC outflow (normalised, correlation)\nUsing {0} radii, correlation coefficient = {1}".format(numRadii_corr, correlationCoefficient));
+    # plt.legend(loc=0);
+    # plt.tight_layout();
+
+    plt.figure(figsize=(28,20));
+    # plt.subplot(2,1,1);
+    # plt.title(region+" peak alignment diagnostic plot");
+    # plt.plot(meanDischarge, 'k', label="discharge (normalised)");
+    # plt.plot(dicOutflowMean_amp, 'r', label="DIC outflow (normalised, peak amplitude)\nUsing {0} radii, peak offset = {1}".format(numRadii_amp, offset));
+    # plt.legend(loc=0);
+    # plt.subplot(2,1,2);
+    plt.plot(radiiData["month_name"],meanDischarge, 'k', label="discharge (normalised)",linewidth=10);
+    plt.plot(radiiData["month_name"],dicOutflowMean_corr, 'r', label="DIC outflow (normalised, correlation)\nUsing {0} radii, correlation coefficient = {1}".format(numRadii_corr, correlationCoefficient),linewidth=10);
+    plt.legend(loc=0, fontsize=40);
+    plt.tick_params(labelsize=40)
     plt.tight_layout();
-
-
 
 #inputDataRootTemplate: Template (REGION) defining the directory containing the monthly and interyear time series for each radii
 def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirectory):
@@ -147,7 +160,7 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
     for region in regions:
         print("Processing DIC outflow for "+region+"...");
         
-        #Load previously calculated DIC outflow data for each transect
+        #### Load previously calculated DIC outflow data for each transect
         radiiDataMonthsPath = path.join(inputDataRootTemplate.safe_substitute(REGION=region), "monthly_timeseries_"+region+".csv");
         radiiDataMonths = pd.read_csv(radiiDataMonthsPath, parse_dates=["date"]);
         radiiDataSeasonalPath = path.join(inputDataRootTemplate.safe_substitute(REGION=region), "interyear_timeseries_"+region+".csv");
@@ -158,7 +171,7 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
         dischargeSeasonal = dischargeMonths.groupby([dischargeMonths.date.dt.month])["monthly_discharge"].mean().values; #discharge in m^3 month-1
         
         
-        #Run using the discharge and DIC outflow peak amplitude matching to choose number of radii to use
+        #### Run using the discharge and DIC outflow peak amplitude matching to choose number of radii to use
         numRadii_amp, distanceBetweenPeaks = determine_num_radii_with_peak_alignment(dischargeMonths, radiiDataSeasonal);
         print("\tnumRadii (peak  applitude):", numRadii_amp, "distanceBeterrnPeaks:", distanceBetweenPeaks);
         radiiSetMean_amp, radiiSetSD_amp = calculate_mean_of_radii_data_dic_outflow(radiiDataMonths, numRadii_amp);
@@ -166,7 +179,7 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
         summaryData[region+"_num_radii_amp"] = numRadii_amp;
         summaryData[region+"_distance_between_peaks"] = distanceBetweenPeaks;
         
-        #Run using the discharge and DIC outflow maximum correlation to choose number of radii to use
+        #### Run using the discharge and DIC outflow maximum correlation to choose number of radii to use
         numRadii_corr, correlationCoefficient = determine_num_radii_with_correlation(dischargeMonths, radiiDataSeasonal);
         print("\tnumRadii (correlation):", numRadii_corr, "correlationCoefficient:", correlationCoefficient);
         radiiSetMean_corr, radiiSetSD_corr = calculate_mean_of_radii_data_dic_outflow(radiiDataMonths, numRadii_corr);
@@ -174,20 +187,20 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
         summaryData[region+"_num_radii_corr"] = numRadii_corr;
         summaryData[region+"_correlation_coefficient"] = correlationCoefficient;
         
-        #Diagnostic plot (useful to check that the method worked)
+        #### Diagnostic plot (useful to check that the method worked)
         if (distanceBetweenPeaks != 0):
             print("\n*** WARNING: When selecting num radii using peak alignment the distance between discharge and DIC outflow peak could not be reduced to 0. Minimum distances was {0}.".format(distanceBetweenPeaks));
         peak_align_diagnostic_plot(region, dischargeMonths, radiiDataSeasonal, numRadii_amp, numRadii_corr, distanceBetweenPeaks, correlationCoefficient);
         plt.savefig(path.join(plotOutputPath, region+"_peak_diagnostic.png"));
         
         
-        ##################Annual values
+        #### Annual values
         summaryData[region+"_annual_DIC_outflow_amp"] = np.sum(radiiSetSeasonalMean_amp); #Tg C yr-1
         summaryData[region+"_annual_DIC_outflow_uncert_amp"] = np.sqrt(np.sum(radiiSetSeasonalSD_amp**2)); #Tg C yr-1
         summaryData[region+"_annual_DIC_outflow_corr"] = np.sum(radiiSetSeasonalMean_corr); #Tg C yr-1
         summaryData[region+"_annual_DIC_outflow_uncert_corr"] = np.sqrt(np.sum(radiiSetSeasonalSD_corr**2)); #Tg C yr-1
         
-        ##################Interannual variation
+        #### Interannual variation
         radiiDataYears = radiiDataMonths.groupby(radiiDataMonths.date.dt.year).sum();
         radiiDataYearsMean_amp, radiiDataYearsSD_amp = calculate_mean_of_radii_data_dic_outflow(radiiDataYears, numRadii_amp);
         summaryData[region+"_annual_DIC_outflow_SD_amp"] = np.nanstd(radiiDataYearsMean_amp);
@@ -197,16 +210,19 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
         summaryData[region+"_annual_DIC_outflow_CoV_corr"] = np.nanstd(radiiDataYearsMean_corr) / np.nanmean(radiiDataYearsMean_corr);
         
         
-        ##################Plot seasonal values
-        plt.figure(figsize=figureSize);
-        plt.fill_between(radiiDataSeasonal["month_name"], radiiSetSeasonalMean_amp-radiiSetSeasonalSD_amp, radiiSetSeasonalMean_amp+radiiSetSeasonalSD_amp, color='r', alpha=0.4, linewidth=0);
-        plt.plot(radiiSetSeasonalMean_amp, 'r', linewidth=2, label="peak alignment method, $n_r={0}$".format(numRadii_amp));
+    #### Plot seasonal values
+        figsize = (28,20);
+        plt.figure(figsize=figsize);        
+        #plt.fill_between(radiiDataSeasonal["month_name"], radiiSetSeasonalMean_amp-radiiSetSeasonalSD_amp, radiiSetSeasonalMean_amp+radiiSetSeasonalSD_amp, color='r', alpha=0.4, linewidth=0);
+        #plt.plot(radiiSetSeasonalMean_amp, 'r', linewidth=2, label="peak alignment method, $selected radii={0}$".format(numRadii_amp));
+        
         plt.fill_between(radiiDataSeasonal["month_name"], radiiSetSeasonalMean_corr-radiiSetSeasonalSD_corr, radiiSetSeasonalMean_corr+radiiSetSeasonalSD_corr, color='b', alpha=0.4, linewidth=0);
-        plt.plot(radiiSetSeasonalMean_corr, 'b', linewidth=2, label="correlation method, $n_r={0}$".format( numRadii_corr));
-        plt.ylabel("CT outflow (Tg C month$^{-1}$)", fontsize=fontSize);
+        plt.plot(radiiSetSeasonalMean_corr, 'b', linewidth=2, label="correlation method, selected radii=${0}$".format( numRadii_corr));
+        
+        plt.ylabel("DIC outflow (Tg C month$^{-1}$)", fontsize=40);
         
         
-        #Add comparative estimates to the plots based on region
+        #### Add comparative estimates to the plots based on region
         if region == "oceansoda_amazon_plume":
             ###Add Richey et al 1990 and 1991 eestimates
             richeyDICConcentration1 = 500.0; #umol kg-1, two values to span the range quoted in Richey et al 1991
@@ -219,8 +235,8 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
             #discharge = np.array([get_discharge_at_month_year(dischargeMonths, d.year, d.month) for d in dates]).reshape(3, 12).T;
             dicOutflow1 = g_to_Tg(dischargeSeasonal*richeyDICConcentration1grams); #Tg C month-1
             dicOutflow2 = g_to_Tg(dischargeSeasonal*richeyDICConcentration2grams); #Tg C month-1
-            plt.plot(range(0,12), dicOutflow2, label="Richey et al (2000) (upper)");
-            plt.plot(range(0,12), dicOutflow1, label="Richey et al (2000) (lower)");
+            plt.plot(range(0,12), dicOutflow2,c="r" ,linewidth=10,  label="Richey et al (2000) (upper)");
+            plt.plot(range(0,12), dicOutflow1,c="orange",linewidth=10,   label="Richey et al (2000) (lower)");
             
             ###Add druffel et al 2005 results (single cruise, riverine end-member extrapolation from salinity relationship)
             druffelDICConcentration = 363.0; #umol kg-1, see section 4.1
@@ -233,31 +249,34 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
             #discharge = get_discharge(dfAllDischarge, 1991, 12); #kg month-1
             dicOutflowDec = g_to_Tg(dischargeSeasonal[12-1]*druffelDICConcentrationGrams); #Tg C month-1
             #plot
-            plt.scatter([11-1, 12-1], [dicOutflowNov, dicOutflowDec], label="Druffel et al 2005");
+            plt.scatter([11-1, 12-1],  [dicOutflowNov, dicOutflowDec],s=500,c="k", label="Druffel et al 2005");
     
-        
-        plt.legend(loc=0, fontsize=legendSize);
-        plt.tick_params(labelsize=fontSize)
+        plt.legend(loc="center",bbox_to_anchor=(0.5, 1.05), fontsize=32,ncol=2);
+        plt.tick_params(labelsize=40)
         plt.tight_layout();
         plt.savefig(path.join(plotOutputPath, region+"_seasonal.pdf"));
         plt.savefig(path.join(plotOutputPath, region+"_seasonal.png"));
         #plt.close();
         
         
-        ##################Plot monthly values
-        date = [str(d.year)+"-"+str(format(d.month, "02d")) for d in radiiDataMonths["date"]]; #x vals to plot
+        #### Plot monthly values
+        #date = [str(d.year)+"-"+str(format(d.month, "02d")) for d in radiiDataMonths["date"]]; #x vals to plot
         #date = [datetime.datetime(d.year, d.month, 1) for d in radiiDataMonths["date"]];
-        plt.figure(figsize=figureSize);
-        plt.fill_between(date, radiiSetMean_amp-radiiSetSD_amp, radiiSetMean_amp+radiiSetSD_amp, color='r', alpha=0.4, linewidth=0);
-        plt.plot(date, radiiSetMean_amp, 'r', linewidth=2, label="peak alignment method, $n_r={0}$".format(numRadii_amp));
-        plt.fill_between(date, radiiSetMean_corr-radiiSetSD_corr, radiiSetMean_corr+radiiSetSD_corr, color='b', alpha=0.4, linewidth=0);
-        plt.plot(date, radiiSetMean_corr, 'b', linewidth=2, label="correlation method, $n_r={0}$".format(numRadii_corr));
+        figsize = (28,20);
+        plt.figure(figsize=figsize); 
+        #plt.fill_between(radiiDataMonths.date, radiiSetMean_amp-radiiSetSD_amp, radiiSetMean_amp+radiiSetSD_amp, color='r', alpha=0.4, linewidth=0);
+        #plt.plot(radiiDataMonths.date, radiiSetMean_amp, 'r', linewidth=2, label="peak alignment method, selected radii=${0}$".format(numRadii_amp));
+        plt.fill_between(radiiDataMonths.date, radiiSetMean_corr-radiiSetSD_corr, radiiSetMean_corr+radiiSetSD_corr, color='b', alpha=0.4, linewidth=0);
+        plt.plot(radiiDataMonths.date, radiiSetMean_corr, 'b', linewidth=2, label="correlation method, selected radii=${0}$".format(numRadii_corr));
         
+        plt.ylabel("DIC outflow (Tg C month$^{-1}$)", fontsize=40);
+        plt.xlabel("Time (years)", fontsize=40);
+
+        plt.tick_params(labelsize=40);
+        #wHasData = np.where(np.isfinite(radiiSetMean_amp));
+        #plt.xticks(np.arange(wHasData[0][0], wHasData[0][-1], 12*2));
         
-        wHasData = np.where(np.isfinite(radiiSetMean_amp));
-        plt.xticks(np.arange(wHasData[0][0], wHasData[0][-1], 12*2));
-        plt.ylabel("CT outflow (Tg C month$^{-1}$)", fontsize=fontSize);
-        plt.tick_params(labelsize=fontSize);
+
         # plt.ylim(0, 20);
         
         # ## Add second axis with yearly values
@@ -268,35 +287,37 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
         # #error bar for radiiDataYearsSD_amp
         # ax.plot(years, radiiDataYearsMean_corr, 'b-', linewidth=2, label="annual mean (maximum correlation)"); #do as scatter?
         # ax.fill_between(years, radiiDataYearsMean_corr+radiiDataYearsSD_corr, radiiDataYearsMean_corr-radiiDataYearsSD_corr, color='b', alpha=0.2, linewidth=0);#, hatch="x");
-        # ax.set_ylabel("CT outflow (Tg C year$^{-1}$)");
+        # ax.set_ylabel("DIC outflow (Tg C year$^{-1}$)");
         # ax.set_ylim(0, 60);
         
-        plt.legend(loc=0, fontsize=legendSize);
+        plt.legend(loc="center",bbox_to_anchor=(0.5, 1.05), fontsize=40,ncol=2);
         plt.tight_layout();
         plt.savefig(path.join(plotOutputPath, region+"_monthly.pdf"));
         plt.savefig(path.join(plotOutputPath, region+"_monthly.png"));
         #plt.close();
-    
+        plt.show()
         
-        ################Plot yearly time series
-        plt.figure(figsize=figureSize);
+        #### Plot yearly time series
+        figsize = (28,20);
+        plt.figure(figsize=figsize);  
         years = [datetime.datetime(y, 7, 1) for y in radiiDataYears.index]
-        plt.plot(years, radiiDataYearsMean_amp, 'r', label="annual mean (peak alignment)"); #do as scatter?
-        plt.fill_between(years, radiiDataYearsMean_amp+radiiDataYearsSD_amp, radiiDataYearsMean_amp-radiiDataYearsSD_amp, color='r', alpha=0.4, linewidth=0);
+        #plt.plot(years, radiiDataYearsMean_amp, 'r', label="annual mean (peak alignment)"); #do as scatter?
+        #plt.fill_between(years, radiiDataYearsMean_amp+radiiDataYearsSD_amp, radiiDataYearsMean_amp-radiiDataYearsSD_amp, color='r', alpha=0.4, linewidth=0);
         #error bar for radiiDataYearsSD_amp
         plt.plot(years, radiiDataYearsMean_corr, 'b', label="annual mean (maximum correlation)"); #do as scatter?
         plt.fill_between(years, radiiDataYearsMean_corr+radiiDataYearsSD_corr, radiiDataYearsMean_corr-radiiDataYearsSD_corr, color='b', alpha=0.4, linewidth=0);
         
         #wHasData = np.where(np.isfinite(radiiSetMean_amp));
         #plt.xticks(np.arange(wHasData[0][0], wHasData[0][-1], 12*2));
-        plt.ylabel("CT outflow (Tg C yr$^{-1}$)", fontsize=fontSize);
-        plt.legend(loc=0, fontsize=legendSize);
-        plt.tick_params(labelsize=fontSize);
+        plt.xlabel("Time (years)", fontsize=40);
+        plt.ylabel("DIC outflow (Tg C yr$^{-1}$)", fontsize=40);
+        plt.legend(loc="center",bbox_to_anchor=(0.5, 1.05), fontsize=40,ncol=2);
+        plt.tick_params(labelsize=40);
         plt.tight_layout();
         plt.savefig(path.join(plotOutputPath, region+"_yearly.pdf"));
         plt.savefig(path.join(plotOutputPath, region+"_yearly.png"));
         
-    #Output some summary stats at the end
+        #### Output some summary stats at the end
     for region in regions:
         print(region);
         print("\tMean annual DIC outflow (amp): ", summaryData[region+"_annual_DIC_outflow_amp"], "+/-", summaryData[region+"_annual_DIC_outflow_uncert_amp"]);

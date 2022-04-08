@@ -327,9 +327,8 @@ def subset_from_mask(data, maskNC, maskName, maskValue=1):
 #Returns the name of the best AT and DIC algorithm for a particular input combination and region
 #Intended to be used after the metrics have been computed for each algorithm and region
 #metricsRootDirectory should include the input combination directory, if using input combinations
-def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], useWeightedRMSDe=True, verbose=False):
+def find_best_algorithm(n_threshold,metricsRootDirectory, region, outputVars=["AT", "DIC"], useWeightedRMSDe=True, verbose=False):
     finalScoresTemplatePath = Template(path.join(metricsRootDirectory, "${OUTPUTVAR}/${REGION}/final_scores.csv"));
-    
     rmsdeCol="final_wrmsd" if useWeightedRMSDe else "final_rmsd";
     
     bestAlgorithms = {}; #Store the names of the best algorithms for each output variable
@@ -337,12 +336,18 @@ def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], 
         finalScoresPath = finalScoresTemplatePath.safe_substitute(OUTPUTVAR=outputVar, REGION=region);
         try:
             finalScores = pd.read_csv(finalScoresPath);
+            # below threshold
+            bool_remove=(finalScores["n"] >= n_threshold);
+            finalScores=finalScores.loc[bool_remove,];
+            finalScores.reset_index(drop=True, inplace=True);
         except FileNotFoundError:
             if verbose:
                 print("No output file found at:", finalScoresPath);
             bestAlgorithms[outputVar] = None;
             continue;
         
+        
+            
         if np.all(np.isfinite(finalScores[rmsdeCol])==False):
             if verbose:
                 print("*** All NaN encountered in finalScores.csv", rmsdeCol, "row at", finalScoresPath);
@@ -352,9 +357,14 @@ def find_best_algorithm(metricsRootDirectory, region, outputVars=["AT", "DIC"], 
         
         #Now we know there is at least one non-NaN value, find the best algorithm and store its name
         ibestAlgo = np.nanargmin(finalScores[rmsdeCol]);
+
+        bestAlgobias = finalScores["wbias"][ibestAlgo];
+        bestAlgo_unc_end_end = finalScores["unc_end_end"][ibestAlgo];
+        bestAlgo_RMSD = finalScores["final_rmsd"][ibestAlgo];
+
         bestAlgoName = finalScores["algorithm"][ibestAlgo];
         numAlgosCompared = sum(finalScores[rmsdeCol].isna()==False);
-        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo], numAlgosCompared); #store tuple of algorithm name and selected RMSDe
+        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo], numAlgosCompared,bestAlgobias,bestAlgo_unc_end_end,bestAlgo_RMSD); #store tuple of algorithm name and selected RMSDe
         
         if verbose:
             print("Best algorithm:", outputVar, region, bestAlgoName);

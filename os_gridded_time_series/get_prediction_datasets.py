@@ -23,15 +23,16 @@ import calendar;
 from datetime import datetime, timedelta;
 import tarfile;
 
+import os
 #For downloads requiring authentication use requests directly.
 import requests as rrequests;
 #Disable insecure ssl warnings
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 rrequests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-from ftplib import FTP; #for FTP servers requiring authentication
+from ftplib import FTP, error_perm; #for FTP servers requiring authentication
 
-def download_all_woa_nutrients(destinationRoot=""):
+def download_all_woa_nutrients(destinationRoot):
     def _do_woa_download(urlTemplate, destinationTemplate, name):
         for imonth in range(0, 12):
             monthStr = format(imonth+1, "02d");
@@ -60,19 +61,19 @@ def download_all_woa_nutrients(destinationRoot=""):
                 print("Error downloading", name, monthStr);
                 print(e);
     
-    _do_woa_download(Template("ftp://ftp.nodc.noaa.gov/pub/data.nodc/woa/WOA18/DATA/nitrate/netcdf/all/1.00/woa18_all_n${MM}_01.nc"),
+    _do_woa_download(Template("ftp://ftp-oceans.ncei.noaa.gov//www/sites/woa.1.data.nodc/WOA18/DATA/nitrate/netcdf/all/1.00/woa18_all_n${MM}_01.nc"),
                      Template(path.join(destinationRoot, "WOA_nitrate/woa18_all_n${MM}_01.nc")),
                      "nitrate");
     
-    _do_woa_download(Template("ftp://ftp.nodc.noaa.gov/pub/data.nodc/woa/WOA18/DATA/phosphate/netcdf/all/1.00/woa18_all_p${MM}_01.nc"),
+    _do_woa_download(Template("ftp://ftp-oceans.ncei.noaa.gov//www/sites/woa.1.data.nodc/WOA18/DATA/phosphate/netcdf/all/1.00/woa18_all_p${MM}_01.nc"),
                      Template(path.join(destinationRoot, "WOA_phosphate/woa18_all_p${MM}_01.nc")),
                      "phosphate");
     
-    _do_woa_download(Template("ftp://ftp.nodc.noaa.gov/pub/data.nodc/woa/WOA18/DATA/silicate/netcdf/all/1.00/woa18_all_i${MM}_01.nc"),
+    _do_woa_download(Template("ftp://ftp-oceans.ncei.noaa.gov//www/sites/woa.1.data.nodc/WOA18/DATA/silicate/netcdf/all/1.00/woa18_all_i${MM}_01.nc"),
                      Template(path.join(destinationRoot, "WOA_silicate/woa18_all_i${MM}_01.nc")),
                      "silicate");
     
-    _do_woa_download(Template("ftp://ftp.nodc.noaa.gov/pub/data.nodc/woa/WOA18/DATA/oxygen/netcdf/all/1.00/woa18_all_o${MM}_01.nc"),
+    _do_woa_download(Template("ftp://ftp-oceans.ncei.noaa.gov//www/sites/woa.1.data.nodc/WOA18/DATA/oxygen/netcdf/all/1.00/woa18_all_o${MM}_01.nc"),
                      Template(path.join(destinationRoot, "WOA_dissolved_oxygen/woa18_all_o${MM}_01.nc")),
                      "dissolved oxygen");
 
@@ -319,7 +320,7 @@ def download_oisst_sst(downloadRoot, startYear, endYear):
     print("Completed with:\n\t", len(downloadedFiles), "file(s) downloaded\n\t", len(notDownloadedError), "file(s) skipped due to error downloading.\n\t", len(notDownloadedSkipped), "file(s) skipped to prevent overwriting existing files.");
 
 
-def process_oisst_sst(dataRoot, downloadedRoot, startYear, endYear):
+def process_oisst_sst(dataRoot, downloadedRoot,referenceFilename, startYear, endYear):
     def get_year_month_pairs(startYear, startMonth, endYear, endMonth):
         pairs = [];
         for year in range(startYear, endYear+1):
@@ -352,7 +353,7 @@ def process_oisst_sst(dataRoot, downloadedRoot, startYear, endYear):
         if type(sourceTemplate) is not list:
             sourceTemplate = [sourceTemplate];
         
-        referenceFilename = path.join(path.dirname(__file__), "../aux_data/reference_data", "REFERENCE_FILE_FOR_METADATA-REYNOLDS.nc"); #Path to netCDF reference file.
+        #referenceFilename = path.join(path.dirname(reynoldspathe), "REFERENCE_FILE_FOR_METADATA-REYNOLDS.nc"); #Path to netCDF reference file.
         referenceNc = Dataset(referenceFilename, 'r');
         
         yearMonthsToRun = get_year_month_pairs(startYear, startMonth, stopYear, stopMonth); #inclusive
@@ -360,7 +361,7 @@ def process_oisst_sst(dataRoot, downloadedRoot, startYear, endYear):
         filesSkipped = [];
         filesResampled = [];
         for (year, month) in yearMonthsToRun:
-            currentOutputDir = path.join(destinationRootDirectory, "reynolds_avhrr_only_monthly_resampled_"+str(lonResolution)+"x"+str(latResolution), str(year));
+            currentOutputDir = path.join(downloadedRoot, "OISST_SST/processed/reynolds_avhrr_only_monthly_resampled_"+str(lonResolution)+"x"+str(latResolution), str(year));
             
             if path.exists(currentOutputDir) == False:
                 makedirs(currentOutputDir);
@@ -652,7 +653,9 @@ def process_isas_sss_sst(dataRoot, downloadedRoot, startYear, endYear):
             ncout.close();
             
 
-def download_cci_ostia_sst(downloadedRoot, startYear, endYear):
+
+
+def download_esacci_sst(downloadedRoot, startYear, endYear):
     import cdsapi;
     c = cdsapi.Client();
     
@@ -704,8 +707,8 @@ def download_cci_ostia_sst(downloadedRoot, startYear, endYear):
                     },
                     outputPath);
 
-def uncompress_cci_ostia_sst(downloadedRoot, startYear, endYear):
-    tarPathTemplate = Template(path.join(downloadedRoot, "CCI_OSTIA_SST", "CCI_OSTIA_SST_${YYYY}_${MM}_${DD}.tar.gz"));
+def uncompress_esacci_sst(downloadedRoot, startYear, endYear):
+    tarPathTemplate = Template(path.join(downloadedRoot, "ESACCI_SST_OSTIA", "CCI_OSTIA_SST_${YYYY}_${MM}_${DD}.tar.gz"));
     untarPathTemplate = Template(path.join(downloadedRoot, "CCI_OSTIA_SST", "netCDF", "${YYYY}"));
     
     if startYear < 1981:
@@ -737,7 +740,7 @@ def uncompress_cci_ostia_sst(downloadedRoot, startYear, endYear):
                 
                 if path.exists(path.dirname(untarFilePath)) == False:
                     makedirs(path.dirname(untarFilePath));
-                if path.exists(untarFilePath) == True:
+                if path.exists(untarFilePath) == False:
                     print("Skipping CCI OSTIA SST uncompression to prevent overwriting existing files for:", year, monthStr, dayStr);
                     continue;
                 
@@ -756,7 +759,7 @@ def uncompress_cci_ostia_sst(downloadedRoot, startYear, endYear):
         print("\t", v);
 
 
-def process_cci_ostia_sst(dataRoot, downloadedRoot, startYear, endYear):
+def process_esacci_sst(dataRoot, downloadedRoot, startYear, endYear):
     def process_slice(valData, errData, countData, outputRes=1.0):
         newGrid = np.full((180, 360), np.nan, dtype=float);
         newGridCount = np.zeros((180, 360), dtype=float);
@@ -774,8 +777,8 @@ def process_cci_ostia_sst(dataRoot, downloadedRoot, startYear, endYear):
         return newGrid, newGridCount, newGridErr;
     
     
-    downloadedFileTemplate = Template(path.join(downloadedRoot, "ESACCI_SST_OSTIA", "netCDF", "${YYYY}/${YYYY}${MM}${DD}120000-ESACCI-L4_GHRSST-SST-GMPE-GLOB_CDR2.0-v02.0-fv01.0.nc"));
-    processedFileTemplate = Template(path.join(dataRoot, "ESACCI_SST_OSTIA", "processed", "${YYYY}/ESACCI-SST-OSTIA-LT-v02.0-fv01.1_${YYYY}_${MM}_processed.nc"));
+    downloadedFileTemplate = Template(path.join(downloadedRoot, "ESACCI_SST", "netCDF", "${YYYY}/${YYYY}${MM}${DD}120000-ESACCI-L4_GHRSST-SST-GMPE-GLOB_CDR2.0-v02.0-fv01.0.nc"));
+    processedFileTemplate = Template(path.join(dataRoot, "ESACCI_SST", "processed", "${YYYY}/ESACCI-SST-OSTIA-LT-v02.0-fv01.1_${YYYY}_${MM}_processed.nc"));
     outputRes = 1.0;
     
     #Bound temporal range to data set range
@@ -794,7 +797,7 @@ def process_cci_ostia_sst(dataRoot, downloadedRoot, startYear, endYear):
             daysInMonth = calendar.monthrange(year, imonth+1)[1];
             
             processedFilePath = processedFileTemplate.safe_substitute(YYYY=year, MM=monthStr);
-            if (path.exists(processedFilePath) == True) and (overwrite == False):
+            if (path.exists(processedFilePath) == False) and (overwrite == True):
                 print("Skipping", year, monthStr, "to prevent overwriting existing file.");
                 continue;
             
@@ -881,9 +884,204 @@ def process_cci_ostia_sst(dataRoot, downloadedRoot, startYear, endYear):
             ncout.close();
 
 
-def download_esacci_sss_smos(downloadRoot, startYear, endYear):
-    urlTemplate = Template("ftp://anon-ftp.ceda.ac.uk/neodc/esacci/sea_surface_salinity/data/v01.8/30days/${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv1.8.nc");
-    destinationTemplate = Template(path.join(downloadRoot, "ESACCI_SSS_SMOS", "${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv1.8.nc"));
+
+def download_esacci_sst_2017onwards(downloadedRoot, startYear, endYear, ftpUser, ftpPass):
+   
+    #up until 2016 uses this
+    #https://cds.climate.copernicus.eu/portfolio/dataset/satellite-sea-surface-temperature-ensemble-product
+
+    # Data can be found here C3S is 2017+ and ESACCI is before 2017
+    #USE ftp
+    #https://resources.marine.copernicus.eu/product-detail/SST_GLO_SST_L4_REP_OBSERVATIONS_010_024/DATA-ACCESS
+    
+    urlTemplate = Template("/Core/SST_GLO_SST_L4_REP_OBSERVATIONS_010_024/C3S-GLO-SST-L4-REP-OBS-SST/${YYYY}/${MM}/${YYYY}${MM}${DD}120000-C3S-L4_GHRSST-SSTdepth-OSTIA-GLOB_ICDR2.0-v02.0-fv01.0.nc");
+    destinationTemplate = Template(path.join(downloadedRoot, "ESACCI_SST","netCDF/", "${YYYY}//${YYYY}_${MM}_${DD}120000-ESACCI-L4_GHRSST-SST-GMPE-GLOB_CDR2.0-v02.0-fv01.0.nc"));
+    destinationTemplate_year = Template(path.join(downloadedRoot, "ESACCI_SST", "netCDF//", "${YYYY}"));
+
+    varNames = ["TEMP"];
+    
+    if startYear < 2017:
+        startYear = 2017;
+    #Open ftp connection and log in
+    ftp = FTP("my.cmems-du.eu");
+    ftp.login(ftpUser, ftpPass);
+    
+
+                
+    for year in range(startYear, endYear+1):
+        for month in range(1, 13):            
+            monthStr = format(month, "02d");
+            for day in range(1, calendar.monthrange(year, month)[1]+1):             
+                
+                    dayStr = format(day, "02d");
+                    for varName in varNames:
+                        url = urlTemplate.safe_substitute(YYYY=year, MM=monthStr, DD=dayStr, VARNAME=varName, UNAME=ftpUser, PASS=ftpPass);
+                        destination = destinationTemplate.safe_substitute(YYYY=year, MM=monthStr,DD=dayStr, VARNAME=varName);
+ 
+                        if path.exists(destination) == True:
+                            print("Skipping download of ESACCI SST for: {0} {1} {2} to avoid overwriting existing file.".format(varName, year, monthStr));
+                            continue;
+                        if path.exists(path.dirname(destination)) == False:
+                            makedirs(path.dirname(destination));
+                        
+                        # #Try the download
+                        # try:
+                        #     print("Downloading ESACCI SST {0} {1} {2} (large file)".format(varName, year, monthStr));
+                        #     ftp.retrbinary("RETR "+url, open(destination, 'wb').write);
+                        # except Exception as e:
+                        #     print("Error downloading ESACCI SST for: {0} {1} {2}".format(varName, year, monthStr));
+                        #     print(e);
+                            
+                        try:
+                            with open(destination, "wb") as file_handle:
+                                ftp.retrbinary("RETR "+url, file_handle.write)
+                            print('OK', destination)
+                        except error_perm:
+                            print('ERR', destination)
+                            os.unlink(destination)    
+                    
+    ftp.close();
+
+
+def process_esacci_sst_2017onwards(dataRoot, downloadedRoot, startYear, endYear):
+    def process_slice(valData, errData, outputRes=1.0):
+        newGrid = np.full((180, 360), np.nan, dtype=float);
+        newGridCount = np.zeros((180, 360), dtype=float);
+        newGridErr = np.full((180, 360), np.nan, dtype=float);
+        for ilat, lat in enumerate(np.arange(-90, 90, outputRes)):
+            for ilon, lon in enumerate(np.arange(-180, 180, outputRes)):
+                if iCoordMeshes[ilat, ilon] is not None:
+                    newGrid[ilat, ilon] = np.mean(valData[iCoordMeshes[ilat, ilon]]);
+                    #newGridCount[ilat, ilon] = np.sum(countData[iCoordMeshes[ilat, ilon]]);
+                    newGridCount[ilat, ilon] = len(iCoordMeshes[ilat, ilon][0]) * len(iCoordMeshes[ilat, ilon][0][0]);
+                    newGridErr[ilat, ilon] = np.sqrt(np.sum(errData[iCoordMeshes[ilat, ilon]]**2));
+        
+        newGridErr[newGridCount!=0] = newGridErr[newGridCount!=0] / newGridCount[newGridCount!=0];
+        
+        return newGrid, newGridCount, newGridErr;
+    
+    
+    downloadedFileTemplate = Template(path.join(downloadedRoot,"ESACCI_SST","netCDF/","${YYYY}\\${YYYY}_${MM}_${DD}120000-ESACCI-L4_GHRSST-SST-GMPE-GLOB_CDR2.0-v02.0-fv01.0.nc"));
+    processedFileTemplate = Template(path.join(dataRoot,"ESACCI_SST","processed/", "${YYYY}\\ESACCI-SST-OSTIA-LT-v02.0-fv01.1_${YYYY}_${MM}_processed.nc"));
+    outputRes = 1.0;
+    
+    overwrite = False;
+    
+    iCoordMeshes = None; #Initially this is None but will be calculated exactly once. It's a long calculation so doesn't want to be repeated.
+    skipped = [];
+    for year in range(startYear, endYear+1):
+        for imonth in range(0, 12):
+            monthStr = format(imonth+1, "02d");
+            print("Processing", year, monthStr+"...");
+            daysInMonth = calendar.monthrange(year, imonth+1)[1];
+            
+            processedFilePath = processedFileTemplate.safe_substitute(YYYY=year, MM=monthStr);
+            if (path.exists(processedFilePath) == False) and (overwrite == True):
+                print("Skipping", year, monthStr, "to prevent overwriting existing file.");
+                continue;
+            
+            #Store data for each day of the month
+            monthVals = np.empty((daysInMonth, 180, 360), dtype=float);
+            monthValsErr = np.empty((daysInMonth, 180, 360), dtype=float);
+            monthValsCounts = np.empty((daysInMonth, 180, 360), dtype=float);
+
+            dayVals = np.empty((720*5, 1440*5), dtype=float);
+            dayValsErr = np.empty((720*5, 1440*5), dtype=float);
+            
+            #Read input data
+            for iday in range(0, daysInMonth):
+                dayStr = format(iday+1, "02d");
+                cciPath = downloadedFileTemplate.safe_substitute(YYYY=year, MM=monthStr, DD=dayStr);
+                if path.exists(cciPath) == False:
+                    skipped.append((year, monthStr));
+                    break;
+                cciNC = Dataset(cciPath, 'r');
+                
+                #Calculate binning information
+                if iCoordMeshes is None: #Only do this once because it's computationally expensive but the same for all months
+                    CCILats = cciNC.variables["lat"][:];
+                    CCILons = cciNC.variables["lon"][:];
+                    print("Calculating grid cell mapping...");
+                    iCoordMeshes = np.full((180, 360), None, dtype=object);
+                    for ilat, lat in enumerate(np.arange(-90, 90, outputRes)):
+                        print("Grid cell mapping for latitude", lat);
+                        for ilon, lon in enumerate(np.arange(-180, 180, outputRes)):
+                            wlat = np.where((CCILats >= lat) & (CCILats < (lat+outputRes)));
+                            wlon = np.where((CCILons >= lon) & (CCILons< (lon+outputRes)));
+                            
+                            if (len(wlat[0]) > 0) & (len(wlon[0]) > 0):
+                                iCoordMeshes[ilat, ilon] = np.meshgrid(wlat[0], wlon[0]);
+                             
+                                
+                dayVals[:,:] = cciNC.variables["analysed_sst"][:,:];
+                dayValsErr[:,:] = cciNC.variables["analysis_uncertainty"][:,:]; 
+                
+ 
+                #Calculate means for the month from daily values
+                dayVals[dayVals == -32768.0] = np.nan;
+                dayValsErr[dayValsErr == -32768.0] = np.nan;
+
+                #Process a slice
+                newVals, newCountCount, newValsErr = process_slice(dayVals, dayValsErr);
+                
+                # now add these to a matrix for the month
+                print("Adding", year, monthStr,dayStr, "to monthly matrix");
+
+                monthVals[iday,:,:] = newVals;
+                monthValsErr[iday,:,:] = newValsErr;
+                monthValsCounts[iday,:,:] = newCountCount;
+                
+            #If any of the days were skipped, then move to the next month
+            if (year, monthStr) in skipped:
+                print("Skipping CCI OSTIA SST file for:", year, monthStr);
+                continue;
+            
+            #average the variables to get monthly values
+            print("Averaging", year, monthStr, "to final monthly values");
+            monthVals = np.nanmean(monthVals, axis=0);
+            monthValsErr = np.sqrt(np.nansum(monthValsErr**2, axis=0));
+            monthValsCounts = np.nansum(monthValsCounts, axis=0)
+                
+
+            #Output to new netCDF file
+            if path.exists(path.dirname(processedFilePath)) == False:
+                makedirs(path.dirname(processedFilePath));
+            ncout = Dataset(processedFilePath, 'w');
+            
+            ncout.createDimension("lat", int(180/outputRes));
+            ncout.createDimension("lon", int(360/outputRes));
+            
+            #dimension variables
+            var = ncout.createVariable("lat", float, ("lat",));
+            var.units = "lat (degrees North)";
+            var[:] = np.arange(-90, 90, outputRes)+(0.5*outputRes);
+            var = ncout.createVariable("lon", float, ("lon",));
+            var.units = "lon (degrees East)";
+            var[:] = np.arange(-180, 180, outputRes)+(0.5*outputRes);
+            
+            #data variables
+            var = ncout.createVariable("sst", float, ("lat", "lon"));
+            var.units = "Degrees Kelvin";
+            var.long_name = "Mean monthly sea surface temperature resampled to a 1x1 degree spatial resolution";
+            var[:] = monthVals;
+            
+            var = ncout.createVariable("sst_err", float, ("lat", "lon"));
+            var.units = "Degrees Kelvin";
+            var.long_name = "Uncertainty in the monthly mean sea surface temperature resampled to a 1x1 degree spatial resolution";
+            var[:] = monthValsErr;
+            
+            var = ncout.createVariable("sst_count", int, ("lat", "lon"));
+            var.units = "count (integer)";
+            var.long_name = "Number of samples from the original CCI SST-OSTIA data that were used to calculate resampled grid cell.";
+            var[:] = monthValsCounts;
+            
+            ncout.close();
+def download_esacci_sss(downloadRoot, startYear, endYear):
+    #old version v1.8 only goes to 2018 - used new version v03.21 up to 2020
+    # urlTemplate = Template("ftp://anon-ftp.ceda.ac.uk/neodc/esacci/sea_surface_salinity/data/v01.8/30days/${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv1.8.nc");
+    urlTemplate = Template("ftp://anon-ftp.ceda.ac.uk/neodc/esacci/sea_surface_salinity/data/v03.21/30days/${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv3.21.nc");
+    # info on dataset at https://catalogue.ceda.ac.uk/uuid/7da8723b16e94771be1a2717d8a6e2fe
+    destinationTemplate = Template(path.join(downloadRoot, "ESACCI_SSS", "${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv3.21.nc"));
 
     if startYear < 2010:
         startYear = 2010;
@@ -891,7 +1089,7 @@ def download_esacci_sss_smos(downloadRoot, startYear, endYear):
     for year in range(startYear, endYear+1):
         for imonth in range(0, 12):
             monthStr = format(imonth+1, "02d");
-            print("Downloading ESACCI SSS SMOS for:", year, monthStr+"...");
+            print("Downloading ESACCI SSS  for:", year, monthStr+"...");
         
             #generate source url and destination path
             url = urlTemplate.safe_substitute(YYYY=year, MM=monthStr);
@@ -903,7 +1101,7 @@ def download_esacci_sss_smos(downloadRoot, startYear, endYear):
             
             #Do not overwrite any data
             if path.exists(destination) == True:
-                print("Skipping ESACCI SSS SMOS for:", year, monthStr, "to prevent overwriting existing file.");
+                print("Skipping ESACCI SSS  for:", year, monthStr, "to prevent overwriting existing file.");
                 continue;
     
             #Try the download
@@ -913,11 +1111,11 @@ def download_esacci_sss_smos(downloadRoot, startYear, endYear):
                         shutil.copyfileobj(req, dest);
     
             except Exception as e:
-                print("Error downloading ESACCI SSS SMOS for:", year, monthStr);
+                print("Error downloading ESACCI SSS  for:", year, monthStr);
                 print(e);
 
 
-def process_esacci_sss_smos(dataRoot, downloadedRoot, startYear, endYear):
+def process_esacci_sss(dataRoot, downloadedRoot, startYear, endYear):
     def process_slice(valData, errData, outputRes=1.0):
         newGrid = np.full((180, 360), np.nan, dtype=float);
         newGridCount = np.zeros((180, 360), dtype=float);
@@ -933,8 +1131,8 @@ def process_esacci_sss_smos(dataRoot, downloadedRoot, startYear, endYear):
         
         return newGrid, newGridCount, newGridErr;
     
-    downloadedFileTemplate = Template(path.join(downloadedRoot, "ESACCI_SSS_SMOS", "${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv1.8.nc"));
-    processedFileTemplate = Template(path.join(dataRoot, "ESACCI_SSS_SMOS", "processed", "${YYYY}/ESACCI-SEASURFACESALINITY-L4-CENTRED15Day_${YYYY}_${MM}_processed.nc"));
+    downloadedFileTemplate = Template(path.join(downloadedRoot, "ESACCI_SSS", "${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv3.21.nc"));
+    processedFileTemplate = Template(path.join(dataRoot, "ESACCI_SSS", "processed", "${YYYY}/ESACCI-SEASURFACESALINITY-L4-CENTRED15Day_${YYYY}_${MM}_processed.nc"));
     outputRes = 1.0;
     
     if startYear < 2010:
@@ -947,18 +1145,18 @@ def process_esacci_sss_smos(dataRoot, downloadedRoot, startYear, endYear):
             
             processedFilePath = processedFileTemplate.safe_substitute(YYYY=year, MM=monthStr);
             if path.exists(processedFilePath) == True:
-                print("Skipping ESACCI SSS SMOS for:", year, monthStr, "(to avoid overwriting existing files).");
+                print("Skipping ESACCI SSS  for:", year, monthStr, "(to avoid overwriting existing files).");
                 continue;
             if path.exists(path.dirname(processedFilePath)) == False:
                 makedirs(path.dirname(processedFilePath));
             
             
-            print("Processing ESACCI SSS SMOS for:", year, monthStr+"...");
+            print("Processing ESACCI SSS  for:", year, monthStr+"...");
     
             #Read input data
             cciPath = downloadedFileTemplate.safe_substitute(YYYY=year, MM=monthStr);
             if path.exists(cciPath) == False:
-                print("Skipping ESACCI SSS SMOS for:", year, monthStr, "(no raw downloaded file found).");
+                print("Skipping ESACCI SSS  for:", year, monthStr, "(no raw downloaded file found).");
                 continue;
             cciNC = Dataset(cciPath, 'r');
             salData = cciNC.variables["sss"][0,:,:];
@@ -1180,69 +1378,63 @@ def process_cora_sss_sst(dataRoot, downloadRoot, startYear, endYear):
             psalNC.close();
             tempNC.close();
             
-
+#### main - define directories and designate which datasets to download
 if __name__ == "__main__":
-    # #Setup command line parser, and parse arguments.
-    # description = """Utility for downloading and processing all prediction data sets
-    #     used to calculate gridded surface DIC and AT time series for the OceanSODA project.
-    #     This utility will download and pre-process input files into 1x1 degree monthly files.
-    #     It will avoid overwriting any existing files.
-    #     Processed datasets will located in their own subdirectories of the root path provided.
-    #     Raw downloaded files are stored in a 'downloaded' subdirectory, and can be removed after
-    #     script has finished.
-    #     (This script is in development, use with care)
-    #     """;
-    # clParser = argparse.ArgumentParser(description=description, epilog="Both this script and the FluxEngine are in continual development. Use with care.");
-    # clParser.add_argument("data_root", help="Path to root directory where all data sets will be downloaded to. Processed data sets will also be written to this directory.");    
-    # clParser.add_argument("start_year", help="Data sets will be downloaded and processed from this date forward (inclusive). Whole years only (e.g. 2010).", type=int, default=2010);
-    # clParser.add_argument("end_year", help="Data sets will be downloaded and processed up to and including this date. Whole years only (e.g. 2020).", type=int, default=2018);
-    # clParser.add_argument("--cmems_user", "-u", help="Username for the CMEMS-DU.eu FTP server. If not specified user will be prompted.", type=str, default="");
-    # clParser.add_argument("--cmems_pass", "-p", help="Password for the CMEMS-DU.eu FTP server. If not specified user will be prompted.", type=str, default="");
-    # clArgs = clParser.parse_args();
+
+    dataRoot='K:\downloaded\data\predictiondatasets'
+    downloadedRoot='K:\downloaded\data\predictiondatasets'
+    oceanMaskPath= "C:\\Users\\rps207\\Documents\\Python\\2021-Oceansoda_pre_github\\OceanSODA-master\\aux_data\\World_Seas-IHO-mask.nc"
+    destinationRoot='K:\downloaded\data\predictiondatasets'
+    downloadRoot='K:\downloaded\data\predictiondatasets'
+    referenceFilename='C:\\Users\\rps207\\Documents\\Python\\2021-Oceansoda_pre_github\\OceanSODA-master\\aux_data\\reference_data\\REFERENCE_FILE_FOR_METADATA-REYNOLDS.nc'
+    destinationRootDirectory='K:\downloaded\data\predictiondatasets'
     
-    #Extract command line arguments
-    startYear = 2018; #clArgs.start_year; #year to try to start downloading data for
-    endYear = 2020; #clArgs.end_year; #last year to try to download data for
-    dataRoot = "../data/new_prediction_datasets/"; #clArgs.data_root; #root directory to put processed and downloaded data in
-    cmemsUser = "tholding"; #clArgs.cmems_user; #add username and password here to avoid prompt for my.cmems-du.eu credentials
-    cmemsPass = "CMEMS_Holding_2020#"; #clArgs.cmems_pass; #add username and password here to avoid prompt for my.cmems-du.eu credentials
+    #Password and username for Copernicus CMEMS
+    ftpUser='rsims';
+    ftpPass='CMEMS_Richard_2021';
     
-    #Do not change these paths
-    downloadedRoot = path.join(dataRoot, "downloaded");
-    oceanMaskPath = path.join(path.dirname(__file__), "reference_data", "World_Seas-IHO-mask.nc");
+    download_all_woa_nutrients(destinationRoot)
+    process_all_woa_nutrients(dataRoot, downloadedRoot, oceanMaskPath)
+
+    ###Salinity datasets
     
+    #dataset 1 RSS-SMAP
+    download_rss_smap_sss(dataRoot, 2015, 2021)
+    process_rss_smap_sss(dataRoot, downloadedRoot, 2015, 2021)
     
-    # #Ask for cmems-du.eu credentials if they were not provided
-    # if cmemsUser == "":
-    #     import getpass;
-    #     print("In order to download CORA SSS and SST data, you must provide your username and password for the cmems-du.eu ftp server.");
-    #     cmemsUser = input("cmems-du.eu username: ");
-    #     cmemsPass = getpass.getpass("cmems-du.eu password: ");
+    #dataset 2 ESACCI
+    download_esacci_sss(downloadedRoot, startYear=2010, endYear=2021);
+    process_esacci_sss(dataRoot, downloadedRoot, startYear=2010, endYear=2021);
     
-    # #Do not download CORA data if we don't have login credentials
-    # if cmemsUser != "" and cmemsPass != "":
-    #     download_cora_sss_sst(downloadedRoot, startYear=2019, endYear=2021, ftpUser=cmemsUser, ftpPass=cmemsPass);
-         process_cora_sss_sst(dataRoot, downloadedRoot, startYear=2019, endYear=2021);
-    # else:
-    #     print(" *** No login credentials for cmems-du.eu ftp server, so CORA SSS and SST will be skipped.");
+    #dataset 3
+    #note that the files are no longer hosted there for the 2015 dataset
+    #so i was forced to get them directly from Tom. Is using this please contact Jamie Shutler or 
+    #the authors of that original dataset
+    # download_isas_sss_sst(dataRoot)
+    # uncompress_isas_sss_sst(downloadedRoot)
+    # process_isas_sss_sst(dataRoot, downloadedRoot, startYear=2002, endYear=2015);
     
-    # download_all_woa_nutrients(downloadedRoot);
-    # process_all_woa_nutrients(dataRoot, downloadedRoot, oceanMaskPath);
+    #dataset 4
+    download_cora_sss_sst(downloadRoot, 1990, 2021, ftpUser, ftpPass)
+    process_cora_sss_sst(dataRoot, downloadRoot, startYear=1990, endYear=2021)
+
+    ###Temperature datasets
     
-    #download_rss_smap_sss(downloadedRoot, startYear=2020, endYear=2021); #last processed: May 2020
-    #process_rss_smap_sss(dataRoot, downloadedRoot, startYear=2020, stopYear=2021);
+    #dataset 1 OISST
+    download_oisst_sst(downloadRoot, 1981, 2021)
+    process_oisst_sst(dataRoot, downloadedRoot,referenceFilename,1981, 2021)
     
-    #download_oisst_sst(downloadedRoot, startYear=2020, endYear=2021);
-    #process_oisst_sst(dataRoot, downloadedRoot, startYear=2020, endYear=2021);
-    
-    # download_isas_sss_sst(dataRoot);
-    # uncompress_isas_sss_sst(downloadedRoot);
-    # process_isas_sss_sst(dataRoot, downloadedRoot, startYear=2015, endYear=2021);
-    
-    # download_cci_ostia_sst(downloadedRoot, startYear=2016, endYear=2021);
-    # uncompress_cci_ostia_sst(downloadedRoot, startYear=2016, endYear=2021);
-    # process_cci_ostia_sst(dataRoot, downloadedRoot, startYear=2016, endYear=2021);
-    
-    # download_esacci_sss_smos(downloadedRoot, startYear=2018, endYear=2021);
-    # process_esacci_sss_smos(dataRoot, downloadedRoot, startYear=2018, endYear=2021);
+    #dataset 2 ESACCI OSTIA
+    download_esacci_sst(downloadedRoot, 1981, 2016)
+    uncompress_esacci_sst(downloadedRoot, 2017, 2021)
+    process_esacci_sst(dataRoot, downloadedRoot, 1981, 2016)
+        
+    download_esacci_sst_2017onwards(downloadedRoot, 2017, 2021, ftpUser, ftpPass)
+    process_esacci_sst_2017onwards(dataRoot, downloadedRoot, 2017, 2021)
+
+    #dataset 3 CORA
+    download_cora_sss_sst(downloadRoot, 1990, 2021, ftpUser, ftpPass)
+    process_cora_sss_sst(dataRoot, downloadRoot, startYear=1990, endYear=2021)
+
+
 

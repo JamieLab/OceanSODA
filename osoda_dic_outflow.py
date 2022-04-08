@@ -23,8 +23,10 @@ from os_dic_outflow import process_dic_outflow_transects;
 #numSamples:  number of samples to use when calculating uncertainty
 def main(carbonateParametersTemplate, outputDirectoryRoot, regions, regionMaskPath, gridAreasPath, perimeterRadii=range(1, 25), numSamples=100):
     outputDirectoryTemplate = Template(path.join(outputDirectoryRoot, "${REGION}"));
+    ###run calculate_dic_outflow_from_circle_transects function in calc_dic_outflow_from_transects.py  
     calc_dic_outflow_from_transects.calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, outputDirectoryTemplate, regions, regionMaskPath, gridAreasPath, perimeterRadii, numSamples, verbose=True)
     
+    ###run process_dic_outflow_transects.py
     inputDirectoryTemplate = outputDirectoryTemplate; #the input directory is the output directory from the previous step.
     process_dic_outflow_transects.process_dic_outflow_transects(inputDirectoryTemplate, regions, outputDirectoryRoot);
     

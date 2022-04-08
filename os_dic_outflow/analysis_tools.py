@@ -61,20 +61,20 @@ def calculate_grid_areas(latRes, lonRes):
 
 #Extracts DIC and SSS data for a specific region and time point
 def extract_data(carbonateParameters, regionMask, t):
-    dic = carbonateParameters.variables["DIC_pred"][t,:,:];
+    dic = carbonateParameters.variables["DIC"][t,:,:];
     dic[regionMask != 1] = np.nan;
-    #dic_err = carbonateParameters.getncattr("algorithmRMSDe");
-    dic_err = carbonateParameters.variables["DIC_pred_combined_uncertainty"][t,:,:];
-    dic_err[regionMask != 1] = np.nan;
+    #dic_uncertainty = carbonateParameters.getncattr("algorithmRMSDe");
+    dic_uncertainty = carbonateParameters.variables["DIC_Combined_uncertainty_dueto_RMSD_and_Bias"][t,:,:];
+    dic_uncertainty[regionMask != 1] = np.nan;
     
     sss = carbonateParameters.variables["SSS"][t,:,:];
     sss[regionMask != 1] = np.nan;
     sss[sss.mask] = np.nan;
-    sss_err = carbonateParameters.variables["SSS_err"][t,:,:];
-    sss_err[regionMask != 1] = np.nan;
-    sss_err[sss_err.mask] = np.nan;
+    sss_uncertainty = carbonateParameters.variables["SSS_uncertainty"][t,:,:];
+    sss_uncertainty[regionMask != 1] = np.nan;
+    sss_uncertainty[sss_uncertainty.mask] = np.nan;
     
-    return dic, dic_err, sss, sss_err;
+    return dic, dic_uncertainty, sss, sss_uncertainty;
 
 
 ###############################################
@@ -371,10 +371,10 @@ def create_netCDF_file(outputPath, carbonateParameterNC, numSamples, regionMask,
     
     #data variables
     #Write data to netCDF file
-    var = ncout.createVariable("DIC_pred", float, ("time", "lat", "lon"));
-    var.units = carbonateParameterNC.variables["DIC_pred"].units;
-    var.long_name = carbonateParameterNC.variables["DIC_pred"].long_name;
-    var[:] = carbonateParameterNC.variables["DIC_pred"][:]
+    var = ncout.createVariable("DIC", float, ("time", "lat", "lon"));
+    var.units = carbonateParameterNC.variables["DIC"].units;
+    var.long_name = carbonateParameterNC.variables["DIC"].long_name;
+    var[:] = carbonateParameterNC.variables["DIC"][:]
     
     #Write data to netCDF file
     var = ncout.createVariable("SSS", float, ("time", "lat", "lon"));
@@ -383,10 +383,10 @@ def create_netCDF_file(outputPath, carbonateParameterNC, numSamples, regionMask,
     var[:] = carbonateParameterNC.variables["SSS"][:]
     
     #Write data to netCDF file
-    var = ncout.createVariable("SSS_err", float, ("time", "lat", "lon"));
-    var.units = carbonateParameterNC.variables["SSS_err"].units;
-    var.long_name = carbonateParameterNC.variables["SSS_err"].long_name;
-    var[:] = carbonateParameterNC.variables["SSS_err"][:]
+    var = ncout.createVariable("SSS_uncertainty", float, ("time", "lat", "lon"));
+    var.units = carbonateParameterNC.variables["SSS_uncertainty"].units;
+    var.long_name = carbonateParameterNC.variables["SSS_uncertainty"].long_name;
+    var[:] = carbonateParameterNC.variables["SSS_uncertainty"][:]
     
     var = ncout.createVariable("grid_areas", float, ("lat", "lon"));
     var.units = "m^3";
