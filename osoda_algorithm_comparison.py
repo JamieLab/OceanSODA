@@ -386,6 +386,7 @@ def main(settings, extraAlgosToTest=[]):
             years = utilities.calculate_years_for_input_combination(settings, inputCombination);
             matchupData = utilities.load_matchup_to_dataframe(settings, inputCombination, years=years); #each year is concatinated to create a single dataframe
             
+                        
             #checks on the Matchup databse files to check that they are
             #realistic and fall within the expected range
             
@@ -397,8 +398,8 @@ def main(settings, extraAlgosToTest=[]):
             DIC_min=settings["MDB_flags"]["DIC_min"]; 
             pH_max=settings["MDB_flags"]["pH_max"];
             pH_min=settings["MDB_flags"]["pH_min"];
-            # pCO2_max=settings["MDB_flags"]["pCO2_max"];
-            # pCO2_min=settings["MDB_flags"]["pCO2_min"];
+            pCO2_max=settings["MDB_flags"]["pCO2_max"];
+            pCO2_min=settings["MDB_flags"]["pCO2_min"];
             TA_max=settings["MDB_flags"]["TA_max"];
             TA_min=settings["MDB_flags"]["TA_min"];
             
@@ -446,15 +447,15 @@ def main(settings, extraAlgosToTest=[]):
             states8=mdb_pH_numeric<pH_min;
             index_pH_below=np.where(states8)[0]
             
-            # #pCO2
-            # mdb_pco2 = matchupData["region_pco2w_mean"];
-            # mdb_pco2_numeric=mdb_pco2.values;
-            # #Upper realistic limit 700 ppm
-            # states9=mdb_pco2_numeric>pCO2_max;
-            # index_pco2_exceed=np.where(states9)[0]
-            # #Lower realistic limit <200 ppm
-            # states10=mdb_pco2_numeric<pCO2_min;
-            # index_pco2_below=np.where(states10)[0]
+            #pCO2
+            mdb_pco2 = matchupData["region_pco2w_mean"];
+            mdb_pco2_numeric=mdb_pco2.values;
+            #Upper realistic limit 700 ppm
+            states9=mdb_pco2_numeric>pCO2_max;
+            index_pco2_exceed=np.where(states9)[0]
+            #Lower realistic limit <200 ppm
+            states10=mdb_pco2_numeric<pCO2_min;
+            index_pco2_below=np.where(states10)[0]
             
             #TA
             mdb_TA = matchupData["AT"];
@@ -472,12 +473,11 @@ def main(settings, extraAlgosToTest=[]):
             # now produce a file with all of the out of bounds data points from the mdb
             mdb_flag_warnings_list=['SST greater than maximum value of', 'SST less than minimum value of', 'SSS greater than maximum value of', 'SST less than minimum value of'\
                                     , 'DIC greater than maximum value of', 'DIC less than minimum value of','pH greater than maximum value of','pH less than minimum value of'\
-                                    ,'TA greater than maximum value of','TA less than minimum value of']
+                                    ,'pCO2 greater than maximum value of','pCO2 less than minimum value of','TA greater than maximum value of','TA less than minimum value of']
         
-                                    #,'pCO2 greater than maximum value of','pCO2 less than minimum value of'
-            mdb_flag_index_list=[index_temp_exceed, index_temp_below, index_sal_exceed, index_sal_below, index_DIC_exceed, index_DIC_below,index_pH_exceed,index_pH_below,index_TA_exceed,index_TA_below]
-                                             #index_pco2_exceed,index_pco2_below,
-                               
+            mdb_flag_index_list=[index_temp_exceed, index_temp_below, index_sal_exceed, index_sal_below, index_DIC_exceed, index_DIC_below\
+                                  ,index_pH_exceed,index_pH_below,index_pco2_exceed,index_pco2_below,index_TA_exceed,index_TA_below]
+            
                 
             mdb_flag_limits_list=[SST_max,SST_min,SSS_max,SSS_min,DIC_max, DIC_min,  pH_max, pH_min,pCO2_max, pCO2_min, TA_max,TA_min]  
             
