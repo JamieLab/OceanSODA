@@ -233,18 +233,18 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     except:
                         pass;
                 elif col == "AT":
-                    df[col] = matchupNC.variables["region_at_mean"][:];
+                    df[col] = matchupNC.variables["insitu_ta_mean"][:];
                     try: #If there is a missing data value, filter out missing values and replace with nans
-                        missingValue = matchupNC.variables["region_at_mean"]._FillValue;
+                        missingValue = matchupNC.variables["insitu_ta_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
                             df.loc[df["AT"]==missingValue, "AT"] = np.nan;
                     except:
                         pass;
                     
                 elif col == "DIC":
-                    df[col] = matchupNC.variables["region_dic_mean"][:];
+                    df[col] = matchupNC.variables["insitu_dic_mean"][:];
                     try: #If there is a missing data value, filter out missing values and replace with nans
-                        missingValue = matchupNC.variables["region_dic_mean"]._FillValue;
+                        missingValue = matchupNC.variables["insitu_dic_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
                             df.loc[df["DIC"]==missingValue, "DIC"] = np.nan;
                     except:
@@ -252,14 +252,24 @@ def read_matchup_cols(matchupTemplate, cols, years):
                 # elif col in ["AT", "DIC"]: #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
                 #     df[col] = matchupNC.variables[col+"_mean"][:];
                 else:
-                    df[col] = matchupNC.variables[col][:];
+                    #list variables and check it exists
+                    matchup_var_list=matchupNC.variables.keys() 
+                    if col in matchup_var_list:
+                        print("this will execute")
+                        df[col] = matchupNC.variables[col][:];
+                        try: #If there is a missing data value, filter out missing values and replace with nans
+                            missingValue = matchupNC.variables[col]._FillValue;
+                            if np.isnan(missingValue) == False:
+                                df.loc[df[col]==missingValue, col] = np.nan;
+                        except:
+                            pass;
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables[col]._FillValue;
                         if np.isnan(missingValue) == False:
                             df.loc[df[col]==missingValue, col] = np.nan;
                     except:
-                        pass;
-                
+                        pass;                            
+                        
             except IndexError:
                 print("Couldn't find {0} in the matchup database for year {1}. Continuing without this variable.".format(col, year));
             
