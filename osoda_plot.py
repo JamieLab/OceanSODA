@@ -30,6 +30,7 @@ import cv2
 import csv
 import json
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
+from scipy import stats
 
 
 N = 256
@@ -401,7 +402,7 @@ del atAmazonNC,atCongoNC,dicAmazonNC,dicCongoNC;
 #regions = ["oceansoda_amazon_plume", "oceansoda_congo", "oceansoda_mediterranean"];#, "oceansoda_st_lawrence"];
 #regions = ["oceansoda_amazon_plume", "oceansoda_congo"];#, "oceansoda_st_lawrence"];
 
-regions = ["oceansoda_congo"];#, "oceansoda_st_lawrence"];
+regions = ["oceansoda_amazon_plume"];#, "oceansoda_st_lawrence"];
 
 
 video_vars = ["TA","DIC", "SSS","SST", "pH_free_scale","pCO2", "omega_aragonite", "omega_calcite"];
@@ -511,7 +512,7 @@ for region in regions:
                     "TA_mean_JFM": np.mean(meanAllAT[number_list_jfm]),
                     "TA_mean_AMJ": np.mean(meanAllAT[number_list_amj]),
                     "TA_mean_JAS": np.mean(meanAllAT[number_list_jas]),
-                    "TA_mean_OND": np.mean(meanAllAT[number_list_ond]),
+                    "TA_mean_OND": np.mean(meanAllAT[number_list_ond]),                    
                     
                     "TA_std": np.std(stdAllAT),
                     "TA_std_JFM": np.std(stdAllAT[number_list_jfm]),
