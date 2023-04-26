@@ -170,6 +170,9 @@ def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombi
     bestRMSD_DIC=[]; 
     bestRMSD_AT=[];
     bestuncendtoendDIC=[]; 
+    bestwRMSD_DIC=[]; 
+    bestwRMSD_AT=[];
+    
     if regionOverload is not None:
         regions = regionOverload;
     else:
@@ -190,6 +193,7 @@ def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombi
                 bestbiasAT.append(bestAlgorithmInfo["AT"][3]);
                 bestuncendtoendAT.append(bestAlgorithmInfo["AT"][4]);
                 bestRMSD_AT.append(bestAlgorithmInfo["AT"][5]);
+                bestwRMSD_AT.append(bestAlgorithmInfo["AT"][6]);
 
 
             else: #No best algorithm, fill with default data
@@ -199,6 +203,7 @@ def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombi
                 bestbiasAT.append(np.nan); 
                 bestuncendtoendAT.append(np.nan);
                 bestRMSD_AT.append(np.nan);
+                bestwRMSD_AT.append(np.nan);
 
 
             if bestAlgorithmInfo["DIC"] != None: #If no paired metrics could be calculated (e.g. no overlapping algorithms, no RMSDs reported for algorithms, no matchup data for a region) None is returned instead of a tuple
@@ -208,6 +213,7 @@ def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombi
                 bestbiasDIC.append(bestAlgorithmInfo["DIC"][3]);
                 bestuncendtoendDIC.append(bestAlgorithmInfo["DIC"][4]);
                 bestRMSD_DIC.append(bestAlgorithmInfo["DIC"][5]);
+                bestwRMSD_DIC.append(bestAlgorithmInfo["DIC"][6]);
 
             else: #No best algorithm, fill with default data
                 bestAlgosDIC.append(np.nan);
@@ -216,6 +222,7 @@ def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombi
                 bestbiasDIC.append(np.nan);
                 bestuncendtoendDIC.append(np.nan);
                 bestRMSD_DIC.append(np.nan);
+                bestwRMSD_DIC.append(np.nan);
 
     #Concatinate to a dataframe
     summaryTable = pd.DataFrame();
@@ -231,6 +238,7 @@ def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombi
     summaryTable["AT_bias"] = bestbiasAT;
     summaryTable["AT_uncendtoend"] = bestuncendtoendAT;
     summaryTable["AT_RMSD"] = bestRMSD_AT;
+    summaryTable["AT_wRMSD"] = bestwRMSD_AT;
 
     summaryTable["DIC_best_algorithm"] = bestAlgosDIC;
     summaryTable["DIC_RMSDe"] = bestRMSDesDIC;
@@ -239,6 +247,7 @@ def create_summary_table(n_threshold,settings, inputCombinationNames, inputCombi
     summaryTable["DIC_bias"] = bestbiasDIC;
     summaryTable["DIC_uncendtoend"] = bestuncendtoendDIC;
     summaryTable["DIC_RMSD"] = bestRMSD_DIC;
+    summaryTable["DIC_wRMSD"] = bestwRMSD_DIC;
 
     summaryTable["n_years"] = [0]*len(summaryTable);
     summaryTable["min_year"] = [0]*len(summaryTable);
@@ -294,23 +303,23 @@ def get_best_algorithms(_summaryTable, regions, minTimeSpanYears = 0, minMatchup
     else:
         summaryTable = _summaryTable;
     
-    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared","bias","uncendtoend","RMSD", "n_years", "min_year", "max_year"]);
+    overallBestAlgos = pd.DataFrame(columns=["region", "output_var", "input_combination", "algo_name", "RMSDe", "n", "algos_compared","bias","uncendtoend","RMSD","wRMSD", "n_years", "min_year", "max_year"]);
     for region in regions:
         #find best AT algorithm info by sorting a subset of the summary table for just this region, and only include entries where the time range meets the criteria
         regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears) & (summaryTable["AT_n"] >= minMatchupsTA)];
         if len(regionTable) > 0: #if there are any entries left, sort and select the best
-            regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared","AT_bias","AT_uncendtoend","AT_RMSD", "DIC_RMSDe"], ascending=[True, False, False,True, True,True, True]);
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"],  regionTable.iloc[0]["AT_algos_compared"],regionTable.iloc[0]["AT_bias"], regionTable.iloc[0]["AT_uncendtoend"], regionTable.iloc[0]["AT_RMSD"],regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            regionTable = regionTable.sort_values(by=["AT_RMSDe", "AT_n", "AT_algos_compared","AT_bias","AT_uncendtoend","AT_RMSD","AT_wRMSD", "DIC_RMSDe"], ascending=[True, False, False,True,True, True,True, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["AT_best_algorithm"], regionTable.iloc[0]["AT_RMSDe"], regionTable.iloc[0]["AT_n"],  regionTable.iloc[0]["AT_algos_compared"],regionTable.iloc[0]["AT_bias"], regionTable.iloc[0]["AT_uncendtoend"], regionTable.iloc[0]["AT_RMSD"],regionTable.iloc[0]["AT_wRMSD"],regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
         else: #no entries, so inserts nans
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan, 0, 0, 0];
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "AT", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan,np.nan, 0, 0, 0];
         
         #find best DIC algorithm info by sorting a subset of the summary table for just this region
         regionTable = summaryTable[(summaryTable["region"] == region) & (summaryTable["n_years"] >= minTimeSpanYears) & (summaryTable["DIC_n"] >= minMatchupsDIC)];
         if len(regionTable) > 0: #if there are any entries left, sort and select the best
-            regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared","DIC_bias","DIC_uncendtoend","DIC_RMSD","AT_RMSDe"], ascending=[True, False, False,True,True,True, True]);
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"],regionTable.iloc[0]["DIC_bias"],regionTable.iloc[0]["DIC_uncendtoend"],regionTable.iloc[0]["DIC_RMSD"],  regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
+            regionTable = regionTable.sort_values(by=["DIC_RMSDe", "DIC_n", "DIC_algos_compared","DIC_bias","DIC_uncendtoend","DIC_RMSD","DIC_wRMSD","AT_RMSDe"], ascending=[True, False, False,True,True,True,True, True]);
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", regionTable.iloc[0]["input_combination"], regionTable.iloc[0]["DIC_best_algorithm"], regionTable.iloc[0]["DIC_RMSDe"], regionTable.iloc[0]["DIC_n"], regionTable.iloc[0]["DIC_algos_compared"],regionTable.iloc[0]["DIC_bias"],regionTable.iloc[0]["DIC_uncendtoend"],regionTable.iloc[0]["DIC_RMSD"],regionTable.iloc[0]["DIC_wRMSD"],   regionTable.iloc[0]["n_years"], regionTable.iloc[0]["min_year"], regionTable.iloc[0]["max_year"]];
         else: #no entries, so insert nans
-            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan, 0, 0, 0];
+            overallBestAlgos.loc[len(overallBestAlgos)] = [region, "DIC", np.nan, np.nan, np.nan, np.nan,np.nan, np.nan, np.nan,np.nan,np.nan, 0, 0, 0];
         
     return overallBestAlgos;
 
@@ -377,6 +386,7 @@ def main(settings, extraAlgosToTest=[]):
             years = utilities.calculate_years_for_input_combination(settings, inputCombination);
             matchupData = utilities.load_matchup_to_dataframe(settings, inputCombination, years=years); #each year is concatinated to create a single dataframe
             
+                        
             #checks on the Matchup databse files to check that they are
             #realistic and fall within the expected range
             
@@ -395,7 +405,11 @@ def main(settings, extraAlgosToTest=[]):
             
             #SST
             mdb_SST = matchupData["SST"];
-            mdb_SST_numeric=mdb_SST.values-273.15;#unit conversion
+            
+            if np.nanmean(mdb_SST.values) > 200.0: #Convert SST from C to K, if required
+                mdb_SST_numeric=mdb_SST.values-273.15;#unit conversion
+            else:
+                mdb_SST_numeric=mdb_SST.values
             #Upper realistic limit 
             states=mdb_SST_numeric>SST_max;
             index_temp_exceed=np.where(states)[0]
@@ -424,7 +438,7 @@ def main(settings, extraAlgosToTest=[]):
             index_DIC_below=np.where(states6)[0] 
             
             #pH
-            mdb_pH = matchupData["region_ph_mean"];
+            mdb_pH = matchupData["region_pH_mean"];
             mdb_pH_numeric=mdb_pH.values;
             #Upper realistic limit 8.5
             states7=mdb_pH_numeric>pH_max;

@@ -64,7 +64,7 @@ def extract_data(carbonateParameters, regionMask, t):
     dic = carbonateParameters.variables["DIC"][t,:,:];
     dic[regionMask != 1] = np.nan;
     #dic_uncertainty = carbonateParameters.getncattr("algorithmRMSDe");
-    dic_uncertainty = carbonateParameters.variables["DIC_Combined_uncertainty_dueto_RMSD_and_Bias"][t,:,:];
+    dic_uncertainty = carbonateParameters.variables["DIC_uncertainty"][t,:,:];
     dic_uncertainty[regionMask != 1] = np.nan;
     
     sss = carbonateParameters.variables["SSS"][t,:,:];
@@ -347,12 +347,12 @@ def create_netCDF_file(outputPath, carbonateParameterNC, numSamples, regionMask,
     ncout.createDimension("lat", len(carbonateParameterNC.variables["lat"]));
     ncout.createDimension("lon", len(carbonateParameterNC.variables["lon"]));
     ncout.createDimension("month", 12);
-    ncout.DICAlgorithmName = carbonateParameterNC.getncattr("algorithmName");
-    ncout.DICAlgorithmRMSDe = carbonateParameterNC.getncattr("algorithmRMSDe");
-    ncout.DICAlgorithmSampleSize = carbonateParameterNC.getncattr("sampleSize");
-    ncout.DICAlgorithmNumAlgosCompared = carbonateParameterNC.getncattr("num_algos_compared");
-    ncout.DICAlgorithmInputCombinationName = carbonateParameterNC.getncattr("input_combination_name");
-    ncout.region = carbonateParameterNC.getncattr("region");
+    ncout.DICAlgorithmName = carbonateParameterNC.getncattr("DIC_algorithm_Name");
+    ncout.DICAlgorithmRMSDe = carbonateParameterNC.getncattr("DIC_algorithm_RMSDe");
+    ncout.DICAlgorithmSampleSize = carbonateParameterNC.getncattr("DIC_algorithm_evaluation_sampleSize_in_matchupdatabase");
+    ncout.DICAlgorithmNumAlgosCompared = carbonateParameterNC.getncattr("DIC_algorithm_evaluation_number_algos_compared");
+    ncout.DICAlgorithmInputCombinationName = carbonateParameterNC.getncattr("DIC_algorithm_input_combination_usedincode");
+    ncout.region = carbonateParameterNC.getncattr("DIC_algorithm_evaluation_region");
     ncout.numSamplesForUncertaintyAnalysis = numSamples;
     
     #dimension variables

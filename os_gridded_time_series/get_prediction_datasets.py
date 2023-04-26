@@ -1076,6 +1076,9 @@ def process_esacci_sst_2017onwards(dataRoot, downloadedRoot, startYear, endYear)
             var[:] = monthValsCounts;
             
             ncout.close();
+            
+            
+            
 def download_esacci_sss(downloadRoot, startYear, endYear):
     #old version v1.8 only goes to 2018 - used new version v03.21 up to 2020
     # urlTemplate = Template("ftp://anon-ftp.ceda.ac.uk/neodc/esacci/sea_surface_salinity/data/v01.8/30days/${YYYY}/ESACCI-SEASURFACESALINITY-L4-SSS-MERGED_OI_Monthly_CENTRED_15Day_25km-${YYYY}${MM}15-fv1.8.nc");
@@ -1393,48 +1396,48 @@ if __name__ == "__main__":
     ftpUser='rsims';
     ftpPass='CMEMS_Richard_2021';
     
-    download_all_woa_nutrients(destinationRoot)
-    process_all_woa_nutrients(dataRoot, downloadedRoot, oceanMaskPath)
+    # download_all_woa_nutrients(destinationRoot)
+    # process_all_woa_nutrients(dataRoot, downloadedRoot, oceanMaskPath)
 
-    ###Salinity datasets
+    # ###Salinity datasets
     
-    #dataset 1 RSS-SMAP
-    download_rss_smap_sss(dataRoot, 2015, 2021)
-    process_rss_smap_sss(dataRoot, downloadedRoot, 2015, 2021)
+    # #dataset 1 RSS-SMAP
+    # download_rss_smap_sss(dataRoot, 2015, 2021)
+    # process_rss_smap_sss(dataRoot, downloadedRoot, 2015, 2021)
     
-    #dataset 2 ESACCI
-    download_esacci_sss(downloadedRoot, startYear=2010, endYear=2021);
-    process_esacci_sss(dataRoot, downloadedRoot, startYear=2010, endYear=2021);
+    # #dataset 2 ESACCI
+    # download_esacci_sss(downloadedRoot, startYear=2010, endYear=2021);
+    # process_esacci_sss(dataRoot, downloadedRoot, startYear=2010, endYear=2021);
     
-    #dataset 3
-    #note that the files are no longer hosted there for the 2015 dataset
-    #so i was forced to get them directly from Tom. Is using this please contact Jamie Shutler or 
-    #the authors of that original dataset
-    # download_isas_sss_sst(dataRoot)
-    # uncompress_isas_sss_sst(downloadedRoot)
-    # process_isas_sss_sst(dataRoot, downloadedRoot, startYear=2002, endYear=2015);
+    # #dataset 3
+    # #note that the files are no longer hosted there for the 2015 dataset
+    # #so i was forced to get them directly from Tom. Is using this please contact Jamie Shutler or 
+    # #the authors of that original dataset
+    # # download_isas_sss_sst(dataRoot)
+    # # uncompress_isas_sss_sst(downloadedRoot)
+    # # process_isas_sss_sst(dataRoot, downloadedRoot, startYear=2002, endYear=2015);
     
-    #dataset 4
-    download_cora_sss_sst(downloadRoot, 1990, 2021, ftpUser, ftpPass)
-    process_cora_sss_sst(dataRoot, downloadRoot, startYear=1990, endYear=2021)
+    # #dataset 4
+    # download_cora_sss_sst(downloadRoot, 1990, 2021, ftpUser, ftpPass)
+    # process_cora_sss_sst(dataRoot, downloadRoot, startYear=1990, endYear=2021)
 
-    ###Temperature datasets
+    # ###Temperature datasets
     
-    #dataset 1 OISST
-    download_oisst_sst(downloadRoot, 1981, 2021)
-    process_oisst_sst(dataRoot, downloadedRoot,referenceFilename,1981, 2021)
+    # #dataset 1 OISST
+    # download_oisst_sst(downloadRoot, 1981, 2021)
+    # process_oisst_sst(dataRoot, downloadedRoot,referenceFilename,1981, 2021)
     
-    #dataset 2 ESACCI OSTIA
-    download_esacci_sst(downloadedRoot, 1981, 2016)
-    uncompress_esacci_sst(downloadedRoot, 2017, 2021)
-    process_esacci_sst(dataRoot, downloadedRoot, 1981, 2016)
+    # #dataset 2 ESACCI OSTIA
+    # download_esacci_sst(downloadedRoot, 1981, 2016)
+    # uncompress_esacci_sst(downloadedRoot, 2017, 2021)
+    # process_esacci_sst(dataRoot, downloadedRoot, 1981, 2016)
         
     download_esacci_sst_2017onwards(downloadedRoot, 2017, 2021, ftpUser, ftpPass)
     process_esacci_sst_2017onwards(dataRoot, downloadedRoot, 2017, 2021)
 
-    #dataset 3 CORA
-    download_cora_sss_sst(downloadRoot, 1990, 2021, ftpUser, ftpPass)
-    process_cora_sss_sst(dataRoot, downloadRoot, startYear=1990, endYear=2021)
+    # #dataset 3 CORA
+    # download_cora_sss_sst(downloadRoot, 1990, 2021, ftpUser, ftpPass)
+    # process_cora_sss_sst(dataRoot, downloadRoot, startYear=1990, endYear=2021)
 
 
 

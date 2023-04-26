@@ -26,9 +26,7 @@ import faulthandler;
 faulthandler.enable();
 
 runPairedMetrics = True;
-runBasicMetrics = True;
-
-
+runBasicMetrics = False;
 
 
 
@@ -43,15 +41,15 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                        "inputUncertaintyName": None, #"ethz_ta_stddev", #propagated input data uncertainty
                        "combinedUncertainty": 21.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
-                      {"name": "ethz_dic", #Human readable name, this can be set to anything and is only used as a label
-                       "outputVar": "DIC", #DIC or AT
-                       "matchupVariableName": "ethz_dic_mean", #netCDF variable name of the model output (algorithm prediction)
-                       "algoRMSD": 16.3, #netCDF variable name of the RMSD of the (original) algorithm fit
-                       "inputUncertaintyName": None, #"ethz_dic_stddev", #propagated input data uncertainty
-                       "combinedUncertainty": 16.3, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
-                       },
+                      # {"name": "ethz_dic", #Human readable name, this can be set to anything and is only used as a label
+                      #  "outputVar": "DIC", #DIC or AT
+                      #  "matchupVariableName": "ethz_dic_mean", #netCDF variable name of the model output (algorithm prediction)
+                      #  "algoRMSD": 16.3, #netCDF variable name of the RMSD of the (original) algorithm fit
+                      #  "inputUncertaintyName": None, #"ethz_dic_stddev", #propagated input data uncertainty
+                      #  "combinedUncertainty": 16.3, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                      #  },
                       {"name": "ethz_ph", #Human readable name, this can be set to anything and is only used as a label
-                       "outputVar":"region_ph_mean", # "region_ph_mean", #DIC or AT
+                       "outputVar":"insitu_ph_mean", # "insitu_ph_mean", #DIC or AT
                        "matchupVariableName": "ethz_ph_mean", #netCDF variable name of the model output (algorithm prediction)
                        "algoRMSD": 0.024, #netCDF variable name of the RMSD of the (original) algorithm fit
                        "inputUncertaintyName": None, #"ethz_ph_stddev", #propagated input data uncertainty
@@ -65,7 +63,7 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                        "combinedUncertainty": 14.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
                        {"name": "cmems_ph", #Human readable name, this can be set to anything and is only used as a label
-                        "outputVar":"region_ph_mean", #"region_ph_mean", #DIC or AT
+                        "outputVar":"insitu_ph_mean", #"insitu_ph_mean", #DIC or AT
                         "matchupVariableName": "cmems_ph_mean", #netCDF variable name of the model output (algorithm prediction)
                         "algoRMSD": 0.03, #netCDF variable name of the RMSD of the (original) algorithm fit
                         "inputUncertaintyName": None, #propagated input data uncertainty
@@ -78,21 +76,21 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                         "inputUncertaintyName": None, #propagated input data uncertainty
                         "combinedUncertainty": 17.97, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                         },
-                       {"name": "pml_at", #Human readable name, this can be set to anything and is only used as a label
-                        "outputVar": "AT", #DIC or AT
-                        "matchupVariableName": "pml_ta_mu", #netCDF variable name of the model output (algorithm prediction)
-                        "algoRMSD": 17.0, #netCDF variable name of the RMSD of the (original) algorithm fit
-                        "inputUncertaintyName": None, #propagated input data uncertainty
-                        "combinedUncertainty": 22.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
-                        },
+                       # {"name": "pml_at", #Human readable name, this can be set to anything and is only used as a label
+                       #  "outputVar": "AT", #DIC or AT
+                       #  "matchupVariableName": "pml_ta_mu", #netCDF variable name of the model output (algorithm prediction)
+                       #  "algoRMSD": 17.0, #netCDF variable name of the RMSD of the (original) algorithm fit
+                       #  "inputUncertaintyName": None, #propagated input data uncertainty
+                       #  "combinedUncertainty": 22.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
+                       #  },
                     ];
 
 settings = osoda_global_settings.get_default_settings();
 outputRoot=path.join("output/example_test_custom_algo_metrics/");
 diagnosticPlots = False;
 regions = list(settings["regions"]);
-sstDatasetName = "SST-ESACCI-OSTIA"; #This is the matchup database variable name corresponding to the SST dataset used as input for the Ethz data
-sssDatasetName = "SSS-CORA"; #This is the matchup database variable name corresponding to the SSS dataset used as input for the Ethz data
+sstDatasetName = "SST-ESACCI"; #This is the matchup database variable name corresponding to the SST dataset used as input for the Ethz data
+sssDatasetName = "SSS-ESACCI"; #This is the matchup database variable name corresponding to the SSS dataset used as input for the Ethz data
 
 name_amazon={};
 out_amazon={};
@@ -182,7 +180,7 @@ if runPairedMetrics == True:
         index_DIC_below=np.where(states6)[0] 
         
         #pH
-        mdb_pH = matchupData["region_ph_mean"];
+        mdb_pH = matchupData["region_pH_mean"];
         mdb_pH_numeric=mdb_pH.values;
         #Upper realistic limit 8.5
         states7=mdb_pH_numeric>pH_max;
@@ -356,7 +354,7 @@ if runPairedMetrics == True:
             
             
             basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores = \
-                            metrics.calc_all_metrics(algorithmOutputGroup, matchupData, settings);
+                            metrics.calc_all_metrics(algorithmOutputGroup, matchupData, settings,currentOutputVar);
             print("Completed metrics for", currentOutputVar);
             
             ###########################
@@ -365,15 +363,15 @@ if runPairedMetrics == True:
             print("Writing metrics to: ", outputDirectory);
             osoda_algorithm_comparison.write_metrics_to_file(outputDirectory, matchupData, basicMetrics, nIntersectMatrix, pairedScoreMatrix, pairedWScoreMatrix, pairedRmsdMatrix, pairedWRmsdMatrix, finalScores, algorithmOutputGroup);
         
-        
+        n_threshold=30
         #Calculate summary table for weighted metrics and output to file
-        summaryTable_weighted = osoda_algorithm_comparison.create_summary_table(settings, [combinationName], [combinationMap], useWeighted=True, regionOverload = regions);
+        summaryTable_weighted = osoda_algorithm_comparison.create_summary_table(n_threshold,settings, [combinationName], [combinationMap], useWeighted=True, regionOverload = regions);
         summaryTableOutputPath = path.join(outputRoot, combinationName, "summary_best_algos.csv");
         summaryTable_weighted.to_csv(summaryTableOutputPath, sep=",", index=False);     
         print("Full weighted summary table written to:", path.abspath(summaryTableOutputPath));
            
         #Calculate summary table for unweighted metrics and output to fill
-        summaryTable_unweighted = osoda_algorithm_comparison.create_summary_table(settings, [combinationName], [combinationMap], useWeighted=False, regionOverload = regions);
+        summaryTable_unweighted = osoda_algorithm_comparison.create_summary_table(n_threshold,settings, [combinationName], [combinationMap], useWeighted=False, regionOverload = regions);
         summaryTableOutputPathUnweighted = path.join(outputRoot, combinationName, "summary_best_algos_unweighted.csv");
         summaryTable_unweighted.to_csv(summaryTableOutputPathUnweighted, sep=",", index=False);     
         print("Full unweighted summary table written to:", path.abspath(summaryTableOutputPathUnweighted));
@@ -395,7 +393,7 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                        "combinedUncertainty": 16.3, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
                       {"name": "ethz_ph", #Human readable name, this can be set to anything and is only used as a label
-                       "outputVar":"region_ph_mean", # "region_ph_mean", #DIC or AT
+                       "outputVar":"insitu_ph_mean", # "insitu_ph_mean", #DIC or AT
                        "matchupVariableName": "ethz_ph_mean", #netCDF variable name of the model output (algorithm prediction)
                        "algoRMSD":None, # value from algo - 0.024, #netCDF variable name of the RMSD of the (original) algorithm fit
                        "inputUncertaintyName": None, #"ethz_ph_stddev", #propagated input data uncertainty
@@ -409,7 +407,7 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                        "combinedUncertainty": 14.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                        },
                        {"name": "cmems_ph", #Human readable name, this can be set to anything and is only used as a label
-                        "outputVar":"region_ph_mean", #"region_ph_mean", #DIC or AT
+                        "outputVar":"insitu_ph_mean", #"insitu_ph_mean", #DIC or AT
                         "matchupVariableName": "cmems_ph_mean", #netCDF variable name of the model output (algorithm prediction)
                         "algoRMSD":None,# 0.03, #netCDF variable name of the RMSD of the (original) algorithm fit
                         "inputUncertaintyName": None, #propagated input data uncertainty
@@ -430,6 +428,8 @@ customAlgorithmInfo = [{"name": "ethz_at", #Human readable name, this can be set
                         "combinedUncertainty": 22.0, #netCDF variable name of the propagated uncertainty combining input data uncertainty with algorithm fit uncertainty
                         },
                     ];
+
+
 #note that in this configuration the basic metrics have not been subset at all meaning
 #they are comparing globally
 if runBasicMetrics == True:
@@ -465,7 +465,7 @@ if runBasicMetrics == True:
     NaN = np.nan
     matchupData["hydrogen_free"]  = NaN
     
-    loopsize=matchupData.region_ph_mean.size
+    loopsize=matchupData.insitu_ph_mean.size
     for ph_loop in range(0,loopsize):
         #if the ph value is nan make new variable nan
         if math.isnan(matchupData.region_ph_mean[ph_loop])==True:
@@ -473,12 +473,12 @@ if runBasicMetrics == True:
             pass
             #do nothing - no ph data to temp adjust
             #look for ph - ta pairing
-        elif math.isnan(matchupData.region_ph_mean[ph_loop])==False and math.isnan(matchupData.AT[ph_loop])==False:
+        elif math.isnan(matchupData.insitu_ph_mean[ph_loop])==False and math.isnan(matchupData.AT[ph_loop])==False:
             #CO2SYS tHE DATA
             #print("use ta and ph")
             kwargs = dict(
             par1 = matchupData.AT[ph_loop],  # Value of the first parameter
-            par2 = matchupData.region_ph_mean[ph_loop],  # Value of the second parameter
+            par2 = matchupData.insitu_ph_mean[ph_loop],  # Value of the second parameter
             par1_type = 1,  # The first parameter supplied is of type "1", which is "alkalinity"
             par2_type = 3,  # The second parameter supplied is of type "2", which is "pH"
             salinity = matchupData.SSS[ph_loop],  # Salinity of the sample
@@ -492,15 +492,15 @@ if runBasicMetrics == True:
             opt_k_bisulfate = 1,);  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
             results = pyco2.sys(**kwargs);
             matchupData["ph_corr_insitu_temp"][ph_loop]=results["pH_out"];
-            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["region_ph_mean_err"][ph_loop]
+            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["insitu_ph_mean_err"][ph_loop]
             matchupData["hydrogen_free"][ph_loop]=results["hydrogen_free_out"]*1e-6;
         #look for ph - pco2 pairing
-        elif math.isnan(matchupData.region_ph_mean[ph_loop])==False and math.isnan(matchupData.region_pco2w_mean[ph_loop])==False:
+        elif math.isnan(matchupData.insitu_ph_mean[ph_loop])==False and math.isnan(matchupData.region_pco2w_mean[ph_loop])==False:
             #print("use ta and pco2")
             #CO2SYS tHE DATA
             kwargs = dict(
             par1 = matchupData.region_pco2w_mean[ph_loop],  # Value of the first parameter
-            par2 = matchupData.region_ph_mean[ph_loop],  # Value of the second parameter
+            par2 = matchupData.insitu_ph_mean[ph_loop],  # Value of the second parameter
             par1_type = 4,  # The first parameter supplied is of type "1", which is "PCO2"
             par2_type = 3,  # The second parameter supplied is of type "2", which is "pH"
             salinity = matchupData.SSS[ph_loop],  # Salinity of the sample
@@ -514,15 +514,15 @@ if runBasicMetrics == True:
             opt_k_bisulfate = 1,)  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
             results = pyco2.sys(**kwargs)
             matchupData["ph_corr_insitu_temp"][ph_loop]=results["pH_out"]
-            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["region_ph_mean_err"][ph_loop]
+            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["insitu_ph_mean_err"][ph_loop]
             matchupData["hydrogen_free"][ph_loop]=results["hydrogen_free_out"]*1e-6;
         #look for ph - dic pairing
-        elif math.isnan(matchupData.region_ph_mean[ph_loop])==False and math.isnan(matchupData.DIC[ph_loop])==False:
+        elif math.isnan(matchupData.insitu_ph_mean[ph_loop])==False and math.isnan(matchupData.DIC[ph_loop])==False:
             #print("use ta and dic")
             #CO2SYS tHE DATA
             kwargs = dict(
             par1 = matchupData.DIC[ph_loop],  # Value of the first parameter
-            par2 = matchupData.region_ph_mean[ph_loop],  # Value of the second parameter
+            par2 = matchupData.insitu_ph_mean[ph_loop],  # Value of the second parameter
             par1_type = 2,  # The first parameter supplied is of type "1", which is "DIC"
             par2_type = 3,  # The second parameter supplied is of type "2", which is "pH"
             salinity = matchupData.SSS[ph_loop],  # Salinity of the sample
@@ -536,7 +536,7 @@ if runBasicMetrics == True:
             opt_k_bisulfate = 1,)  # Choice of HSO4- dissociation constants KSO4 ("1" means "Dickson")
             results = pyco2.sys(**kwargs)
             matchupData["ph_corr_insitu_temp"][ph_loop]=results["pH_out"]
-            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["region_ph_mean_err"][ph_loop]
+            matchupData["ph_corr_insitu_temp_err"][ph_loop]=matchupData["insitu_ph_mean_err"][ph_loop]
             matchupData["hydrogen_free"][ph_loop]=results["hydrogen_free_out"]*1e-6;
         #if there is no secondary carbonate variable the correction is not possible 
         else:

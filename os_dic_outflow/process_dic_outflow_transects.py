@@ -262,17 +262,19 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
         #### Plot monthly values
         #date = [str(d.year)+"-"+str(format(d.month, "02d")) for d in radiiDataMonths["date"]]; #x vals to plot
         #date = [datetime.datetime(d.year, d.month, 1) for d in radiiDataMonths["date"]];
-        figsize = (28,20);
+        figsize = (20,12);
         plt.figure(figsize=figsize); 
         #plt.fill_between(radiiDataMonths.date, radiiSetMean_amp-radiiSetSD_amp, radiiSetMean_amp+radiiSetSD_amp, color='r', alpha=0.4, linewidth=0);
         #plt.plot(radiiDataMonths.date, radiiSetMean_amp, 'r', linewidth=2, label="peak alignment method, selected radii=${0}$".format(numRadii_amp));
-        plt.fill_between(radiiDataMonths.date, radiiSetMean_corr-radiiSetSD_corr, radiiSetMean_corr+radiiSetSD_corr, color='b', alpha=0.4, linewidth=0);
-        plt.plot(radiiDataMonths.date, radiiSetMean_corr, 'b', linewidth=2, label="correlation method, selected radii=${0}$".format(numRadii_corr));
+        plt.fill_between(radiiDataMonths.date, radiiSetMean_corr-radiiSetSD_corr, radiiSetMean_corr+radiiSetSD_corr, color='k', alpha=0.4, linewidth=0);
+        plt.plot(radiiDataMonths.date, radiiSetMean_corr, 'k', linewidth=2, label="correlation method, selected radii=${0}$".format(numRadii_corr));
         
-        plt.ylabel("DIC outflow (Tg C month$^{-1}$)", fontsize=40);
-        plt.xlabel("Time (years)", fontsize=40);
+        plt.ylabel("DIC outflow (Tg C month$^{-1}$)", fontsize=28);
+        plt.xlabel("Time (years)", fontsize=28);
 
-        plt.tick_params(labelsize=40);
+        plt.tick_params(labelsize=28);
+        plt.tick_params(axis="y",direction="in" ,width=3,length=6)
+        plt.tick_params(axis="x",direction="in", width=3,length=6)
         #wHasData = np.where(np.isfinite(radiiSetMean_amp));
         #plt.xticks(np.arange(wHasData[0][0], wHasData[0][-1], 12*2));
         
@@ -290,10 +292,12 @@ def process_dic_outflow_transects(inputDataRootTemplate, regions, outputDirector
         # ax.set_ylabel("DIC outflow (Tg C year$^{-1}$)");
         # ax.set_ylim(0, 60);
         
-        plt.legend(loc="center",bbox_to_anchor=(0.5, 1.05), fontsize=40,ncol=2);
+        #plt.legend(loc="center",bbox_to_anchor=(0.5, 1.05), fontsize=28,ncol=2);
         plt.tight_layout();
         plt.savefig(path.join(plotOutputPath, region+"_monthly.pdf"));
         plt.savefig(path.join(plotOutputPath, region+"_monthly.png"));
+        plt.savefig(path.join(plotOutputPath, region+"_monthly.eps"), format='eps');
+
         #plt.close();
         plt.show()
         

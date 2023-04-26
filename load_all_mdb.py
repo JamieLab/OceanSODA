@@ -37,6 +37,10 @@ for inputCombinationName, inputCombination in zip(specificVariableToDatabaseMapN
     
 regionMaskPath=settings["regionMasksPath"]
 
+
+
+
+
 ## find all matchups in amazom region
 region="oceansoda_amazon_plume"
 if regionMaskPath != None:
@@ -48,11 +52,11 @@ if regionMaskPath != None:
 np.nanstd(subsetData_amazon.AT)
 np.nanstd(subsetData_amazon.DIC)
 np.nanstd(subsetData_amazon.region_pco2w_mean)
-np.nanstd(subsetData_amazon.region_ph_mean)
-np.nanmean(subsetData_amazon.region_ph_mean)
+np.nanstd(subsetData_amazon.region_pH_mean)
+np.nanmean(subsetData_amazon.region_pH_mean)
 # for ph in ha terms
-(-np.log10(np.nanstd(10**-(subsetData_amazon.region_ph_mean))+np.nanmean(10**-(subsetData_amazon.region_ph_mean))))-(-np.log10(np.nanmean(10**-(subsetData_amazon.region_ph_mean))))
-(-np.log10(np.nanmean(10**-(subsetData_amazon.region_ph_mean))))
+(-np.log10(np.nanstd(10**-(subsetData_amazon.region_pH_mean))+np.nanmean(10**-(subsetData_amazon.region_pH_mean))))-(-np.log10(np.nanmean(10**-(subsetData_amazon.region_pH_mean))))
+(-np.log10(np.nanmean(10**-(subsetData_amazon.region_pH_mean))))
 
 
 
@@ -66,10 +70,10 @@ if regionMaskPath != None:
 np.nanstd(subsetData_congo.AT)
 np.nanstd(subsetData_congo.DIC)
 np.nanstd(subsetData_congo.region_pco2w_mean)
-np.nanstd(subsetData_congo.region_ph_mean)
-np.nanmean(subsetData_congo.region_ph_mean)
+np.nanstd(subsetData_congo.region_pH_mean)
+np.nanmean(subsetData_congo.region_pH_mean)
 
 # for ph in ha terms
-(-np.log10(np.nanstd(10**-(subsetData_congo.region_ph_mean))+np.nanmean(10**-(subsetData_congo.region_ph_mean))))-(-np.log10(np.nanmean(10**-(subsetData_congo.region_ph_mean))))
-(-np.log10(np.nanmean(10**-(subsetData_congo.region_ph_mean))))
+(-np.log10(np.nanstd(10**-(subsetData_congo.region_pH_mean))+np.nanmean(10**-(subsetData_congo.region_pH_mean))))-(-np.log10(np.nanmean(10**-(subsetData_congo.region_pH_mean))))
+(-np.log10(np.nanmean(10**-(subsetData_congo.region_pH_mean))))
 

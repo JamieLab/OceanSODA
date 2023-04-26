@@ -197,10 +197,14 @@ def load_matchup_to_dataframe(settings, datasetInfoMap, years=None, commonNames=
                     except:
                         pass;
                 except IndexError:
-                    print("Missing uncertainty data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupErrorName);
+                    print("Missing uncertainty data: ", year, commonName, datasetInfoMap[commonName].datasetName, datasetInfoMap[commonName].matchupDatabaseError);
+        
         #Convert any C temperature units to K
+        #if 'SST' in df.values:
         if np.nanmean(df["SST"]) < 200.0: #Convert SST from C to K, if required
-            df["SST"][np.isfinite(df["SST"])] += 273.15;
+            df["SST"]=df["SST"]+ 273.15 ;
+                
+                
         dfList.append(df);
         matchupNC.close();
     matchupData = pd.concat(dfList, ignore_index=True);
@@ -229,18 +233,18 @@ def read_matchup_cols(matchupTemplate, cols, years):
                     except:
                         pass;
                 elif col == "AT":
-                    df[col] = matchupNC.variables["region_at_mean"][:];
+                    df[col] = matchupNC.variables["insitu_ta_mean"][:];
                     try: #If there is a missing data value, filter out missing values and replace with nans
-                        missingValue = matchupNC.variables["region_at_mean"]._FillValue;
+                        missingValue = matchupNC.variables["insitu_ta_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
                             df.loc[df["AT"]==missingValue, "AT"] = np.nan;
                     except:
                         pass;
                     
                 elif col == "DIC":
-                    df[col] = matchupNC.variables["region_dic_mean"][:];
+                    df[col] = matchupNC.variables["insitu_dic_mean"][:];
                     try: #If there is a missing data value, filter out missing values and replace with nans
-                        missingValue = matchupNC.variables["region_dic_mean"]._FillValue;
+                        missingValue = matchupNC.variables["insitu_dic_mean"]._FillValue;
                         if np.isnan(missingValue) == False:
                             df.loc[df["DIC"]==missingValue, "DIC"] = np.nan;
                     except:
@@ -248,14 +252,24 @@ def read_matchup_cols(matchupTemplate, cols, years):
                 # elif col in ["AT", "DIC"]: #some variables have different names in the matchup. This is hacky, but manually matches the commonName and matchupdatabase names. This is probably ok, as these are unlikely to change. Should really look into the variable:matchup mapping in the global settings file
                 #     df[col] = matchupNC.variables[col+"_mean"][:];
                 else:
-                    df[col] = matchupNC.variables[col][:];
+                    #list variables and check it exists
+                    matchup_var_list=matchupNC.variables.keys() 
+                    if col in matchup_var_list:
+                        print("this will execute")
+                        df[col] = matchupNC.variables[col][:];
+                        try: #If there is a missing data value, filter out missing values and replace with nans
+                            missingValue = matchupNC.variables[col]._FillValue;
+                            if np.isnan(missingValue) == False:
+                                df.loc[df[col]==missingValue, col] = np.nan;
+                        except:
+                            pass;
                     try: #If there is a missing data value, filter out missing values and replace with nans
                         missingValue = matchupNC.variables[col]._FillValue;
                         if np.isnan(missingValue) == False:
                             df.loc[df[col]==missingValue, col] = np.nan;
                     except:
-                        pass;
-                
+                        pass;                            
+                        
             except IndexError:
                 print("Couldn't find {0} in the matchup database for year {1}. Continuing without this variable.".format(col, year));
             
@@ -273,7 +287,7 @@ def read_matchup_cols(matchupTemplate, cols, years):
 #Converts time in seconds to data
 #   dt: time delta in seconds from the base date (pandas series)
 #   baseDate: base date from which the change in time (dt) is from
-def convert_time_to_date(dt, baseDate=pd.datetime(1980, 1, 1)):
+def convert_time_to_date(dt, baseDate=pd.datetime(1950, 1, 1)):
     dates = baseDate + pd.to_timedelta(dt, 'S');
     return dates;
 
@@ -361,10 +375,11 @@ def find_best_algorithm(n_threshold,metricsRootDirectory, region, outputVars=["A
         bestAlgobias = finalScores["wbias"][ibestAlgo];
         bestAlgo_unc_end_end = finalScores["unc_end_end"][ibestAlgo];
         bestAlgo_RMSD = finalScores["final_rmsd"][ibestAlgo];
+        bestAlgo_wRMSD = finalScores["final_wrmsd"][ibestAlgo];
 
         bestAlgoName = finalScores["algorithm"][ibestAlgo];
         numAlgosCompared = sum(finalScores[rmsdeCol].isna()==False);
-        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo], numAlgosCompared,bestAlgobias,bestAlgo_unc_end_end,bestAlgo_RMSD); #store tuple of algorithm name and selected RMSDe
+        bestAlgorithms[outputVar] = (bestAlgoName, finalScores[rmsdeCol][ibestAlgo], numAlgosCompared,bestAlgobias,bestAlgo_unc_end_end,bestAlgo_RMSD,bestAlgo_wRMSD); #store tuple of algorithm name and selected RMSDe
         
         if verbose:
             print("Best algorithm:", outputVar, region, bestAlgoName);

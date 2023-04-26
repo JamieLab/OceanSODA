@@ -86,7 +86,7 @@ def calculate_dic_outflow_from_circle_transects(carbonateParametersTemplate, out
     
     #Convenient definitions
     plumeSalinityThreshold = 35.0; #Below this salinity is considered plume
-    lonRes = latRes = 1.0;
+    lonRes = latRes = 1;
     makePlots = True; #Create and save plots?
     closePlots = True; #Close plots automatically to avoid cluttering screen
     #Serves as the centre point for circle perimeters

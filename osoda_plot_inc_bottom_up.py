@@ -30,7 +30,6 @@ import cv2
 import csv
 import json
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-from scipy import stats
 
 
 N = 256
@@ -400,10 +399,7 @@ del atAmazonNC,atCongoNC,dicAmazonNC,dicCongoNC;
     #### load data, calculate stats and make tables
 
 #regions = ["oceansoda_amazon_plume", "oceansoda_congo", "oceansoda_mediterranean"];#, "oceansoda_st_lawrence"];
-#regions = ["oceansoda_amazon_plume", "oceansoda_congo"];#, "oceansoda_st_lawrence"];
-
-regions = ["oceansoda_amazon_plume"];#, "oceansoda_st_lawrence"];
-
+regions = ["oceansoda_amazon_plume", "oceansoda_congo"];#, "oceansoda_st_lawrence"];
 
 video_vars = ["TA","DIC", "SSS","SST", "pH_free_scale","pCO2", "omega_aragonite", "omega_calcite"];
 #video_vars = ["SSS"];
@@ -423,7 +419,7 @@ for region in regions:
     minPlumeDIC, minNotPlumeDIC, minAllDIC, _, _, _, _ = extract_var_mins(dicNC, "DIC");
     maxPlumeDIC, maxNotPlumeDIC, maxAllDIC, _, _, _, _ = extract_var_maxs(dicNC, "DIC");
     meanPlumeDICuncertainty, meanNotPlumeDICuncertainty, meanAllDICuncertainty, _, _, _, _ = extract_var_means(dicNC, "DIC_uncertainty");
-    meanPlumeDICuncertainty_botup, meanNotPlumeDICuncertainty_botup, meanAllDICuncertainty_botup, _, _, _, _ = extract_var_means(dicNC, "DIC_uncertainty");
+    meanPlumeDICuncertainty_botup, meanNotPlumeDICuncertainty_botup, meanAllDICuncertainty_botup, _, _, _, _ = extract_var_means(dicNC, "DIC_pred_combined_uncertainty");
 
     #AT
     meanPlumeAT, meanNotPlumeAT, meanAllAT, _, _, _, _ = extract_var_means(atNC, "TA");
@@ -431,7 +427,7 @@ for region in regions:
     minPlumeAT, minNotPlumeAT, minAllAT, _, _, _, _ = extract_var_mins(atNC, "TA");
     maxPlumeAT, maxNotPlumeAT, maxAllAT, _, _, _, _ = extract_var_maxs(atNC, "TA");
     meanPlumeATuncertainty, meanNotPlumeATuncertainty, meanAllATuncertainty, _, _, _, _ = extract_var_means(atNC, "TA_uncertainty");
-    meanPlumeATuncertainty_botup, meanNotPlumeATuncertainty_botup, meanAllATuncertainty_botup, _, _, _, _ = extract_var_means(atNC, "TA_uncertainty");
+    meanPlumeATuncertainty_botup, meanNotPlumeATuncertainty_botup, meanAllATuncertainty_botup, _, _, _, _ = extract_var_means(atNC, "TA_pred_combined_uncertainty");
 
     #pH
     meanPlumepH_dic, meanNotPlumepH_dic, meanAllpH_dic, _, _, _, _ = extract_var_means(dicNC, "pH_free_scale");
@@ -512,7 +508,7 @@ for region in regions:
                     "TA_mean_JFM": np.mean(meanAllAT[number_list_jfm]),
                     "TA_mean_AMJ": np.mean(meanAllAT[number_list_amj]),
                     "TA_mean_JAS": np.mean(meanAllAT[number_list_jas]),
-                    "TA_mean_OND": np.mean(meanAllAT[number_list_ond]),                    
+                    "TA_mean_OND": np.mean(meanAllAT[number_list_ond]),
                     
                     "TA_std": np.std(stdAllAT),
                     "TA_std_JFM": np.std(stdAllAT[number_list_jfm]),
@@ -1935,7 +1931,7 @@ for region in regions:
         if region == "oceansoda_congo" and plot_var == "pH_free_scale":
             contPlot1 = f3_ax.pcolor(dates,lons,  data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
             f3_ax.set_ylabel("Longitude \n ($^\circ$E)", fontsize=36);
-            contPlot2 = f3_ax.pcolor(dates,lons,  data_masked,vmin=maxvar, vmax=maxvar,  cmap=newcmp);
+            contPlot2 = f3_ax.pcolor(dates,lons,  data_masked,vmin=maxvar, vmax=np.nanmax(data),  cmap=newcmp);
         elif region == "oceansoda_congo" and plot_var == "pCO2":
             contPlot1 = f3_ax.pcolor(dates,lons,  data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
             f3_ax.set_ylabel("Longitude \n ($^\circ$E)", fontsize=36);
@@ -1943,11 +1939,11 @@ for region in regions:
         elif region == "oceansoda_congo" and plot_var == "omega_aragonite":
             contPlot1 = f3_ax.pcolor(dates,lons,  data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
             f3_ax.set_ylabel("Longitude \n ($^\circ$E)", fontsize=36);
-            contPlot2 = f3_ax.pcolor(dates,lons,  data_masked,vmin=maxvar, vmax=maxvar,  cmap=newcmp);
+            contPlot2 = f3_ax.pcolor(dates,lons,  data_masked,vmin=maxvar, vmax=np.nanmax(data),  cmap=newcmp);
         elif region == "oceansoda_congo" and plot_var == "omega_calcite":
             contPlot1 = f3_ax.pcolor(dates,lons,  data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
             f3_ax.set_ylabel("Longitude \n ($^\circ$E)", fontsize=36);
-            contPlot2 = f3_ax.pcolor(dates,lons,  data_masked,vmin=maxvar, vmax=maxvar,  cmap=newcmp);
+            contPlot2 = f3_ax.pcolor(dates,lons,  data_masked,vmin=maxvar, vmax=np.nanmax(data),  cmap=newcmp);
         elif region == "oceansoda_congo":
             contPlot1 = f3_ax.pcolor(dates,lons,  data, vmin=minvar, vmax=maxvar, cmap=cmap_touse);
             f3_ax.set_ylabel("Longitude \n ($^\circ$E)", fontsize=36);
