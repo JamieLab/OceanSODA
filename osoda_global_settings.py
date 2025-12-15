@@ -16,7 +16,7 @@ class DatasetInfo:
         self.predictionDatasetTemplate = predictionDatasetTemplate;
         self.predictionDatasetVariable = predictionDatasetVariable;
         self.predictionDatasetError = predictionDatasetError;
-    
+
     def __str__(self):
         return "DatasetInfo: "+" ".join([self.commonName, self.dataset]);
 
@@ -48,14 +48,14 @@ COMMON_NAMES = ["date", #datetime object (converted from time in seconds since 1
 #Returns a dictionary containing the global settings
 def get_default_settings():
     settings = {};
-    
+
     ######################
     ### Set file paths ###
     projectRoot = path.dirname(__file__);
     projectRoot_second = 'K:\\downloaded\\data\\predictiondatasets\\';
 
     settings["projectRoot"] = projectRoot;
-    
+
     settings["dataPathRoot"] = path.join(projectRoot, "data"); #Where data is stored. This data is not included in the repository (e.g. matchup database and gridded prediction data sets)
     settings["matchupDatasetTemplate"] = Template(path.join(settings["dataPathRoot"], "matchup_datasets/oceansoda-mmdb_final/", "OCEANSODA-MMDB-${YYYY}-fv01.nc")); #Location of the matchup dataset
     # settings["predictionDatasetsRoot"] = path.join(settings["dataPathRoot"], "prediction_datasets");
@@ -63,29 +63,29 @@ def get_default_settings():
 
     settings["riverDischargeDataRoot"] = path.join(settings["dataPathRoot"], "gauging_station_discharge");
     settings["reefLocationsDataPath"] = path.join(settings["dataPathRoot"], "reefbase", "ReefLocations.csv");
-    
+
     settings["auxDataPathRoot"] = path.join(projectRoot, "aux_data"); #Aux data includes small data files (e.g. masks) which are included with the repository
-    settings["regionMasksPath"] = path.join(settings["auxDataPathRoot"], "osoda_region_masks_v2.nc"); #Where OSODA region masks can be found    
-    settings["gridAreasPath"] = path.join(settings["auxDataPathRoot"], "grid_areas_1.0x1.0.csv"); #Where OSODA region masks can be found    
+    settings["regionMasksPath"] = path.join(settings["auxDataPathRoot"], "osoda_region_masks_v2.nc"); #Where OSODA region masks can be found
+    settings["gridAreasPath"] = path.join(settings["auxDataPathRoot"], "grid_areas_1.0x1.0.csv"); #Where OSODA region masks can be found
     #Mask files and variable for the depth mask and distance to coast mask. Set the boolean 'subsetWithDistToCoast' and 'subsetWithDepthMask' below to turn on/off turn off.
     settings["depthMaskPath"] = path.join(settings["auxDataPathRoot"], "depth_mask_500m.nc");
     settings["depthMaskVar"] = "depth_mask";
     settings["distToCoastMaskPath"] = path.join(settings["auxDataPathRoot"], "distance_to_land_mask_300km.nc");
     settings["distToCoastMaskVar"] = "dist_to_coast_mask";
-    
-    
+
+
     settings["outputPathRoot"] = path.join(projectRoot, "output"); #Root directory to write outputs
     settings["outputPathMetrics"] = path.join(settings["outputPathRoot"], "algo_metrics"); #Where algorithm metrics outputs are written
-    
+
     settings["bestGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions/gridded_${REGION}_${LATRES}degx${LONRES}deg_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'best' version of the optimal algorithms
     settings["longGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range/gridded_${REGION}_${LATRES}degx${LONRES}deg_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the 'long' version of the optimal algorithms
     settings["longunweightedGriddedTimeSeriesPathTemplate"] = Template(path.join(settings["outputPathRoot"], "gridded_predictions_min_year_range_unweighted/gridded_${REGION}_${LATRES}degx${LONRES}deg_${OUTPUTVAR}.nc")); #path for predicted gridded time series using the unweighted 'long' version of the optimal algorithms
 
     #other output directories here
-    
+
     settings["logDirectoryRoot"] = path.join(settings["outputPathRoot"], "logs"); #Log files written here
-    
-    
+
+
     #Some algorithms use additional data sets (e.g. gridded masks). These can be specified here as key : value pairs,
     #   where the key is the class name of the algorithm and the value is the path to the data set
     algoDataPath = path.join(settings["auxDataPathRoot"], "algo_specific_masks");
@@ -99,34 +99,35 @@ def get_default_settings():
                                               "Sasse2013_dic" : path.join(algoDataPath, "sasse2013_masks_tmh.nc"),
                                               "Takahashi2013_at" : path.join(algoDataPath, "takahashi2013_masks_tmh.nc"),
                                               };
-    
+
     ##############################################
     ### Parameters to control script behaviour ###
     #Which years to analysis for
     settings["years"] = range(1957, 2021);
-    
+    #settings["years"] = range(1993,1994)
+
     settings["algorithmInternalSpatialMasks"] = False; #Allow algorithms to use their own spatial masks to further subset matchup data (e.g. in addition to the OceanSODA region masks)
     settings["useErrorRatios"] = True; #rather than static error for in situ AT and DIC
     settings["assessUsingWeightedRMSDe"] = True; #When calculating the 'best' algorithm, should it use the weighted version of RMSDe? (True=yes, False=no, weighted RMSDe is not available for algorithms which do not report uncertainty)
-    
+
     #Use the ocean depth and distance to coast masks to remove shallow/coastal data?
     settings["subsetWithDepthMask"] = False
     settings["subsetWithDistToCoast"] = False;
-    
+
     #nominal 'state-of-the-art' in situ measurement errors used in PATHFINDERS
     #These are substituted when no other uncertainty data is availablefor DIC and AT in the matchup database.
     settings["insituError"] = {"DIC": 2.5,
                                "AT": 2.5};
-    
+
     settings["totalinsituuncetainty"] = {"DIC": 10,
                                          "AT": 10};
     #Nominal 'state-of-the-art' in situ measurement errors as a percentage of the measured value. These are the same as used for PATHFINDERS
     #These are substituted when no other uncertainty data is availablefor DIC and AT in the matchup database.
     settings["insituErrorRatio"] = {"DIC": 0.005, #0.5% nominal 'state-of-the-art' errors: Bockmon, E.E. and Dickson, A.G., 2015. An inter-laboratory comparison assessing the quality of seawater carbon dioxide measurements. Marine Chemistry, 171, pp.36-43.
                                     "AT": 0.005}; #0.5% nominal 'state-of-the-art' errors: Bockmon, E.E. and Dickson, A.G., 2015. An inter-laboratory comparison assessing the quality of seawater carbon dioxide measurements. Marine Chemistry, 171, pp.36-43.
-    
+
     # Filter Matchupdatabased based on these flags
-    
+
     settings["MDB_flags"] = {"SST_max": 40,
                                          "SST_min": -10,
                                          "SSS_max": 50,
@@ -137,7 +138,7 @@ def get_default_settings():
                                          "pH_min": 6,
                                          "pCO2_max": 3000,
                                          "pCO2_min": 100,
-                                         "TA_max": 3000, 
+                                         "TA_max": 3000,
                                          "TA_min": 500};
 
 
@@ -162,16 +163,16 @@ def get_default_settings():
                                             DatasetInfo(commonName="SSS", datasetName="SSS-RSS-SMAP", matchupVariableName="remss_smap_sss_mean", matchupDatabaseError="remss_smap_sss_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "RSS_SMAP_SSS/RSS_smap_SSS_L3_monthly_${YYYY}_${MM}_FNL_v04.0_processed.nc")), predictionDatasetVariable="sss", predictionDatasetError="sss_err"),
                                             DatasetInfo(commonName="SSS", datasetName="SSS-ISAS", matchupVariableName="isas15_salinity_mean", matchupDatabaseError="isas15_salinity_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "ISAS_SSS_SST/processed/${YYYY}/ISAS15_DM_${YYYY}_${MM}_processed.nc")), predictionDatasetVariable="PSAL", predictionDatasetError="PSAL_err"),
                                             #DatasetInfo(commonName="SSS", datasetName="region_sss_mean", matchupVariableName="insitu_sss_mean", matchupDatabaseError="insitu_sss_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
-                                            ],                                                                                                                                                                                            
+                                            ],
                                     "OC": DatasetInfo(commonName="OC", datasetName="OC-ESACCI", matchupVariableName="cci_oc_chloro-a_mean", matchupDatabaseError="cci_oc_chloro-a_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]), #ocean colour
                                     "Chla": DatasetInfo(commonName="Chla", datasetName="OC-ESACCI", matchupVariableName="cci_oc_chloro-a_mean", matchupDatabaseError="cci_oc_chloro-a_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second,"ESA_CCI_V5/chlor_a/${YYYY}/ESACCI-OC-L3S-CHLOR_A-MERGED-1D_DAILY_4km_GEO_PML_OCx-${YYYY}${MM}${DD}-fv5.0.nc")), predictionDatasetVariable="chlor_a", predictionDatasetError="chlor_a_log10_rmsd"),###TODO
                                     "DO": DatasetInfo(commonName="DO", datasetName="DO-WOA", matchupVariableName="woa18_oxygen_mean", matchupDatabaseError="woa18_oxygen_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second,  "WOA_dissolved_oxygen/woa18_all_o${MM}_processed.nc")), predictionDatasetVariable="o_an", predictionDatasetError="o_uncertainty"),
                                     "NO3": DatasetInfo(commonName="NO3", datasetName="NO3-WOA", matchupVariableName="woa18_nitrate_mean", matchupDatabaseError="woa18_nitrate_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_nitrate/woa18_all_n${MM}_processed.nc")), predictionDatasetVariable="n_an", predictionDatasetError="n_uncertainty"),
                                     "PO4": DatasetInfo(commonName="PO4", datasetName="PO4-WOA", matchupVariableName="woa18_phosphate_mean", matchupDatabaseError="woa18_phosphate_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second, "WOA_phosphate/woa18_all_p${MM}_processed.nc")), predictionDatasetVariable="p_an", predictionDatasetError="p_uncertainty"),
                                     "SiO4":DatasetInfo(commonName="SiO4", datasetName="SiO4-WOA", matchupVariableName="woa18_silicate_mean", matchupDatabaseError="woa18_silicate_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"], predictionDatasetTemplate=Template(path.join(projectRoot_second,"WOA_silicate/woa18_all_i${MM}_processed.nc")), predictionDatasetVariable="i_an", predictionDatasetError="i_uncertainty"),
-                                    "DIC": DatasetInfo(commonName="DIC", datasetName="DIC-matchup", matchupVariableName="insitu_dic_mean", matchupDatabaseError="insitu_dic_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),                
+                                    "DIC": DatasetInfo(commonName="DIC", datasetName="DIC-matchup", matchupVariableName="insitu_dic_mean", matchupDatabaseError="insitu_dic_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                     "AT": DatasetInfo(commonName="AT", datasetName="AT-matchup", matchupVariableName="insitu_ta_mean", matchupDatabaseError="insitu_ta_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
-                                   
+
                                     "depth": DatasetInfo(commonName="depth", datasetName="depth-matchup", matchupVariableName="depth_mean", matchupDatabaseError="depth_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                     "distance": DatasetInfo(commonName="distance", datasetName="distance-matchup", matchupVariableName="insitu_dist2coast_mean", matchupDatabaseError="insitu_dist2coast_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
                                     "region_pH_mean": DatasetInfo(commonName="pH", datasetName="pH-matchup", matchupVariableName="insitu_ph_mean", matchupDatabaseError="insitu_ph_stddev", matchupDatabaseTemplate=settings["matchupDatasetTemplate"]),
@@ -304,11 +305,11 @@ def get_default_settings():
                                                                       dic_algorithms.Hassoun2015_basins_dic,
                                                                       ],
                                           };
-    
+
     ### Derived settings (do not change - these are lists/values derived from the settings above for convenience)
     settings["regions"] = settings["algorithmRegionMapping"].keys();
-    
-    
+
+
     ##########Refactoring ended here.
 
     return settings;
@@ -319,7 +320,7 @@ def get_default_settings():
 def get_dic_algorithm_list():
     from algorithms.base_algorithm import BaseAlgorithm;
     import algorithms.dic_algorithms
-    
+
     algoList = [];
     for attrName in dir(algorithms.dic_algorithms):
         attr = getattr(algorithms.dic_algorithms, attrName);
@@ -335,7 +336,7 @@ def get_dic_algorithm_list():
 def get_at_algorithm_list():
     from algorithms.base_algorithm import BaseAlgorithm;
     import algorithms.at_algorithms
-    
+
     algoList = [];
     for attrName in dir(algorithms.at_algorithms):
         attr = getattr(algorithms.at_algorithms, attrName);
@@ -344,9 +345,3 @@ def get_at_algorithm_list():
                 if (attr == BaseAlgorithm) == False: #Don't add the base class itself
                     algoList.append(attr);
     return algoList;
-
-
-
-
-
-
