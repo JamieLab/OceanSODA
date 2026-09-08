@@ -500,8 +500,8 @@ coastal_depth_definition = 1000
 # depth = np.array(c['elevation'])
 # c.close()
 
-import osoda_algorithm_metrics_custom_algos_config
-customAlgorithmInfo= osoda_algorithm_metrics_custom_algos_config.customAlgorithmInfo
+import osoda_algorithm_metrics_custom_algos_config_aragonite as algo_config
+customAlgorithmInfo= algo_config.customAlgorithmInfo
 
 #note that in this configuration the basic metrics have not been subset at all meaning
 #they are comparing globally

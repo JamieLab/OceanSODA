@@ -12,6 +12,7 @@ import os
 import geopandas as gpd
 from shapely.geometry import Point
 from math import cos, sin, asin, sqrt, radians
+import PyCO2SYS as pyCO2
 
 def calc_distance(lon1, lat1, lon2, lat2):
     """
@@ -133,6 +134,30 @@ def add_coastline(mmdb,coastline_file,start_yr=1980,end_yr=2024):
             c.variables['distance_to_coast'].source = coastline_file
             c.close()
 
+def add_insitu_aragonite(mmdb,start_yr=1980,end_yr=2024):
+    for i in range(start_yr,end_yr+1):
+        mmdb_file = mmdb.replace('%Y',str(i))
+        mm = os.path.exists(mmdb_file)
+        if mm:
+            print('Adding argonite saturation information for year: '+str(i))
+            c = Dataset(mmdb_file,'a')
+            dic = np.array(c['insitu_dic_mean']); dic[dic == c.variables['insitu_dic_mean']._FillValue] = np.nan
+            ta = np.array(c['insitu_ta_mean']); ta[ta == c.variables['insitu_ta_mean']._FillValue] = np.nan
+            temp = np.array(c['insitu_temp_mean']); temp[temp == c.variables['insitu_temp_mean']._FillValue] = np.nan
+            sal = np.array(c['insitu_sal_mean']); sal[sal == c.variables['insitu_sal_mean']._FillValue] = np.nan
+            py_out = pyCO2.sys(par1 = dic,
+                par2 = ta,
+                par1_type = 2,
+                par2_type = 1,
+                temperature=temp,
+                salinity = sal
+                )
+            if 'insitu_aragonite_mean' not in list(c.variables.keys()):
+                print('Variable doesnt already exist...')
+                var = c.createVariable('insitu_aragonite_mean','double',('region_id'),fill_value=np.nan)
+            c.variables['insitu_aragonite_mean'][:] = py_out['saturation_aragonite']
+            c.close()
+
 mmdb_file_struct = 'F:/OceanSODA/data/matchup_datasets/oceansoda/OCEANSODA-MMDB-%Y-fv01.nc'
 natural_earth_coastline_file = './data/coastline/ne_10m_coastline/ne_10m_coastline.shp'
 gebco_bathymetry_file = 'F:/Data/Bathymetry/GEBCO_2023.nc'
@@ -155,4 +180,6 @@ gebco_bathymetry_file = 'F:/Data/Bathymetry/GEBCO_2023.nc'
 # merge_mmdb(mmdb_file_struct,extra_file_struct,extra_name = extra)
 
 # add_bathymetry(mmdb_file_struct,gebco_bathymetry_file)
-add_coastline(mmdb_file_struct,natural_earth_coastline_file)
+# add_coastline(mmdb_file_struct,natural_earth_coastline_file)
+
+add_insitu_aragonite(mmdb_file_struct)
